@@ -68,13 +68,13 @@ public without sharing class MetaPageService {
     // Update form count per page
     public static void refreshPageFormCounts() {
         List<AggregateResult> counts = [
-            SELECT Page_ID__c, COUNT(Id) cnt 
+            SELECT Page_ID__c pageId, COUNT(Id) cnt 
             FROM Meta_Form__c 
             GROUP BY Page_ID__c
         ];
         Map<String, Integer> countMap = new Map<String, Integer>();
         for (AggregateResult ar : counts) {
-            countMap.put((String) ar.get('Page_ID__c'), (Integer) ar.get('cnt'));
+            countMap.put((String) ar.get('pageId'), (Integer) ar.get('cnt'));
         }
         List<Meta_Page__c> pages = [SELECT Id, Page_ID__c, Forms_Count__c FROM Meta_Page__c];
         for (Meta_Page__c pg : pages) {
