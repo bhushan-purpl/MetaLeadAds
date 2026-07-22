@@ -2,14 +2,10 @@
   "packageDirectories": [
     {
       "path": "meta-lead-ads-package",
-      "default": true
-    },
-    {
+      "default": true,
+      "package": "MetaLeadAds",
       "versionName": "ver 0.1",
       "versionNumber": "0.1.0.NEXT",
-      "path": "force-app",
-      "default": false,
-      "package": "MetaLeadAds",
       "versionDescription": "Meta Lead Capture for salesforce"
     }
   ],
