@@ -29,6 +29,11 @@
                 <default>false</default>
                 <label>Failed</label>
             </value>
+            <value>
+                <fullName>Success - Lead Creation Disabled</fullName>
+                <default>false</default>
+                <label>Success - Lead Creation Disabled</label>
+            </value>
         </valueSetDefinition>
     </valueSet>
 </CustomField>
