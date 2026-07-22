@@ -1,0 +1,16 @@
+{
+  "packageDirectories": [
+    {
+      "path": "meta-lead-ads-package",
+      "default": true
+    },
+    {
+      "path": "force-app",
+      "default": false
+    }
+  ],
+  "name": "MetaLeadAds",
+  "namespace": "purpl",
+  "sfdcLoginUrl": "https://login.salesforce.com",
+  "sourceApiVersion": "64.0"
+}

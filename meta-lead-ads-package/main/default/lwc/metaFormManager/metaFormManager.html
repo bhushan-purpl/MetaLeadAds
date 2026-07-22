@@ -1,0 +1,75 @@
+<template>
+    <div class="form-manager">
+        <!-- Header -->
+        <div class="fm-header">
+            <div class="fm-back" onclick={handleBack}>
+                <lightning-icon icon-name="utility:chevronleft" size="x-small"></lightning-icon>
+                <span>All Pages</span>
+            </div>
+            <div class="fm-title-group">
+                <h2 class="fm-title">{pageName}</h2>
+                <p class="fm-subtitle">{totalForms} forms found</p>
+            </div>
+            <lightning-button label="Sync Forms" icon-name="utility:refresh" variant="brand" onclick={handleSyncForms} disabled={isLoading}></lightning-button>
+        </div>
+
+        <template if:true={isLoading}>
+            <div class="loading-wrap">
+                <lightning-spinner alternative-text="Loading..." size="medium"></lightning-spinner>
+            </div>
+        </template>
+
+        <template if:false={isLoading}>
+            <template if:true={hasForms}>
+                <div class="form-table">
+                    <div class="form-table-header">
+                        <span>Form Name</span>
+                        <span>Questions</span>
+                        <span>Status</span>
+                        <span>Mapping</span>
+                        <span>Actions</span>
+                    </div>
+                    <template for:each={forms} for:item="form">
+                        <div key={form.Id} class="form-row">
+                            <span class="form-name">{form.Form_Name__c}</span>
+                            <span class="form-questions">{form.Question_Count__c}</span>
+                            <span><span class={form.statusClass}>{form.Status__c}</span></span>
+                            <span><span class={form.mappedClass}>{form.mappedLabel}</span></span>
+                            <span class="form-actions">
+                                <lightning-button-icon
+                                    icon-name="utility:settings"
+                                    variant="border-filled"
+                                    alternative-text="Map Fields"
+                                    title="Map Fields"
+                                    onclick={handleMapForm}
+                                    data-form-id={form.Form_ID__c}
+                                    data-form-name={form.Form_Name__c}>
+                                </lightning-button-icon>
+                                <lightning-button-icon
+                                    icon-name="utility:user"
+                                    variant="border-filled"
+                                    alternative-text="Assignment"
+                                    title="Set Assignment"
+                                    onclick={handleAssignment}
+                                    data-form-id={form.Form_ID__c}
+                                    data-form-name={form.Form_Name__c}>
+                                </lightning-button-icon>
+                            </span>
+                        </div>
+                    </template>
+                </div>
+            </template>
+            <template if:false={hasForms}>
+                <div class="empty-state">
+                    <lightning-icon icon-name="utility:form" size="large"></lightning-icon>
+                    <h3>No forms found</h3>
+                    <p>Click "Sync Forms" to fetch forms from this Facebook Page</p>
+                </div>
+            </template>
+        </template>
+
+        <template if:true={errorMessage}>
+            <div class="error-box">{errorMessage}</div>
+        </template>
+    </div>
+</template>

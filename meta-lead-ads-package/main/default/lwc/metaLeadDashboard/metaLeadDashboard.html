@@ -1,0 +1,207 @@
+<template>
+    <div class="dashboard-container">
+
+        <!-- ════════════════════════════════ -->
+        <!-- HEADER                           -->
+        <!-- ════════════════════════════════ -->
+        <div class="dash-header">
+            <div class="dash-header-left">
+                <div class="dash-logo">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/5/51/Facebook_f_logo_%282019%29.svg" alt="Meta" class="fb-logo-img"/>
+                </div>
+                <div>
+                    <h1 class="dash-title">Meta Lead Ads Manager</h1>
+                    <p class="dash-subtitle">Production-grade Facebook Lead Ads integration for Salesforce</p>
+                </div>
+            </div>
+            <div class="dash-header-right">
+                <template if:false={isConnected}>
+                    <lightning-button label="Connect Facebook" icon-name="utility:user" variant="brand" onclick={handleConnect}></lightning-button>
+                </template>
+                <template if:true={isConnected}>
+                    <span class="conn-badge">
+                        <lightning-icon icon-name="utility:check" size="xx-small"></lightning-icon>
+                        Connected
+                    </span>
+                    <lightning-button label="Disconnect" variant="destructive-text" onclick={handleDisconnect}></lightning-button>
+                </template>
+            </div>
+        </div>
+
+        <!-- ════════════════════════════════ -->
+        <!-- STATS ROW                        -->
+        <!-- ════════════════════════════════ -->
+        <div class="stats-row">
+            <div class="stat-tile">
+                <div class="stat-icon blue"><lightning-icon icon-name="utility:socialshare" size="small"></lightning-icon></div>
+                <div class="stat-body">
+                    <span class="stat-num">{stats.connectedPages}</span>
+                    <span class="stat-lbl">Connected Pages</span>
+                </div>
+            </div>
+            <div class="stat-tile">
+                <div class="stat-icon purple"><lightning-icon icon-name="utility:form" size="small"></lightning-icon></div>
+                <div class="stat-body">
+                    <span class="stat-num">{stats.totalForms}</span>
+                    <span class="stat-lbl">Forms Synced</span>
+                </div>
+            </div>
+            <div class="stat-tile">
+                <div class="stat-icon green"><lightning-icon icon-name="utility:connected_apps" size="small"></lightning-icon></div>
+                <div class="stat-body">
+                    <span class="stat-num">{stats.mappedForms}</span>
+                    <span class="stat-lbl">Mapped Forms</span>
+                </div>
+            </div>
+            <div class="stat-tile">
+                <div class="stat-icon orange"><lightning-icon icon-name="utility:warning" size="small"></lightning-icon></div>
+                <div class="stat-body">
+                    <span class="stat-num">{stats.unmappedForms}</span>
+                    <span class="stat-lbl">Unmapped Forms</span>
+                </div>
+            </div>
+            <div class="stat-tile">
+                <div class="stat-icon teal"><lightning-icon icon-name="utility:clock" size="small"></lightning-icon></div>
+                <div class="stat-body">
+                    <span class="stat-num stat-sm">{stats.lastLeadFormatted}</span>
+                    <span class="stat-lbl">Last Lead</span>
+                </div>
+            </div>
+            <div class="stat-tile">
+                <div class="stat-icon gray"><lightning-icon icon-name="utility:refresh" size="small"></lightning-icon></div>
+                <div class="stat-body">
+                    <span class="stat-num stat-sm">{stats.lastSyncFormatted}</span>
+                    <span class="stat-lbl">Last Sync</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ════════════════════════════════ -->
+        <!-- NAVIGATION TABS                  -->
+        <!-- ════════════════════════════════ -->
+        <div class="nav-tabs">
+            <button class={tab1Class} onclick={showPages} data-tab="pages">
+                <lightning-icon icon-name="utility:socialshare" size="xx-small"></lightning-icon>
+                Pages
+            </button>
+            <button class={tab2Class} onclick={showMapping} data-tab="mapping">
+                <lightning-icon icon-name="utility:settings" size="xx-small"></lightning-icon>
+                Field Mapping
+            </button>
+            <button class={tab3Class} onclick={showLogs} data-tab="logs">
+                <lightning-icon icon-name="utility:record_lookup" size="xx-small"></lightning-icon>
+                Lead Logs
+            </button>
+        </div>
+
+        <!-- ════════════════════════════════ -->
+        <!-- TAB: PAGES                       -->
+        <!-- ════════════════════════════════ -->
+        <template if:true={showPagesTab}>
+            <div class="tab-content">
+                <template if:false={showFormsView}>
+                    <c-meta-page-manager onpageselect={handlePageSelect}></c-meta-page-manager>
+                </template>
+                <template if:true={showFormsView}>
+                    <c-meta-form-manager
+                        page-id={selectedPageId}
+                        page-name={selectedPageName}
+                        onback={handleBackToPages}
+                        onmapform={handleMapForm}
+                        onassignment={handleAssignment}>
+                    </c-meta-form-manager>
+                </template>
+            </div>
+        </template>
+
+        <!-- ════════════════════════════════ -->
+        <!-- TAB: FIELD MAPPING               -->
+        <!-- ════════════════════════════════ -->
+        <template if:true={showMappingTab}>
+            <div class="tab-content">
+                <c-meta-mapping-wizard></c-meta-mapping-wizard>
+            </div>
+        </template>
+
+        <!-- ════════════════════════════════ -->
+        <!-- TAB: LEAD LOGS                   -->
+        <!-- ════════════════════════════════ -->
+        <template if:true={showLogsTab}>
+            <div class="tab-content">
+                <div class="logs-header">
+                    <h3 class="logs-title">Recent Integration Logs</h3>
+                    <lightning-button label="Refresh" icon-name="utility:refresh" variant="neutral" size="small" onclick={loadStats}></lightning-button>
+                </div>
+                <template if:true={hasLogs}>
+                    <div class="logs-table">
+                        <div class="logs-table-head">
+                            <span>Leadgen ID</span>
+                            <span>Page ID</span>
+                            <span>Form ID</span>
+                            <span>Status</span>
+                            <span>Created</span>
+                        </div>
+                        <template for:each={recentLogs} for:item="log">
+                            <div key={log.Id} class="log-row">
+                                <span class="log-id">{log.Meta_Lead_ID__c}</span>
+                                <span class="log-cell">{log.Page_ID__c}</span>
+                                <span class="log-cell">{log.Form_ID__c}</span>
+                                <span><span class={log.statusClass}>{log.Processing_Status__c}</span></span>
+                                <span class="log-date">{log.formattedDate}</span>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+                <template if:false={hasLogs}>
+                    <div class="empty-state">
+                        <lightning-icon icon-name="utility:record_lookup" size="large"></lightning-icon>
+                        <h3>No logs yet</h3>
+                        <p>Logs will appear here when leads arrive from Facebook Lead Ads.</p>
+                    </div>
+                </template>
+            </div>
+        </template>
+
+        <!-- Assignment Modal -->
+        <template if:true={showAssignmentModal}>
+            <section class="slds-modal slds-fade-in-open">
+                <div class="slds-modal__container">
+                    <div class="slds-modal__header">
+                        <h2 class="slds-modal__title">Lead Assignment — {assignmentFormName}</h2>
+                        <lightning-button-icon icon-name="utility:close" onclick={closeAssignmentModal} alternative-text="Close" class="slds-modal__close" variant="bare-inverse"></lightning-button-icon>
+                    </div>
+                    <div class="slds-modal__content slds-p-around_medium">
+                        <lightning-radio-group
+                            name="ownerType"
+                            label="Assign Leads To"
+                            options={ownerTypeOptions}
+                            value={assignmentOwnerType}
+                            onchange={handleOwnerTypeChange}
+                            type="radio">
+                        </lightning-radio-group>
+                        <div class="slds-m-top_medium">
+                            <lightning-combobox
+                                label="Select Owner"
+                                value={assignmentOwnerId}
+                                options={ownerOptions}
+                                placeholder="Choose..."
+                                onchange={handleOwnerChange}>
+                            </lightning-combobox>
+                        </div>
+                    </div>
+                    <div class="slds-modal__footer">
+                        <lightning-button label="Cancel" onclick={closeAssignmentModal}></lightning-button>
+                        <lightning-button label="Save Assignment" variant="brand" onclick={handleSaveAssignment}></lightning-button>
+                    </div>
+                </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </template>
+
+        <!-- Error -->
+        <template if:true={errorMessage}>
+            <div class="error-box slds-m-top_medium">{errorMessage}</div>
+        </template>
+
+    </div>
+</template>

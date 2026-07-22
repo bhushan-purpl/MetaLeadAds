@@ -1,0 +1,61 @@
+.connect-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem 1rem;
+    text-align: center;
+}
+
+.fb-icon-wrapper {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #1877F2, #42a5f5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 20px rgba(24, 119, 242, 0.35);
+}
+
+.fb-logo {
+    width: 44px;
+    height: 44px;
+}
+
+.status-banner {
+    display: flex;
+    align-items: center;
+    padding: 0.6rem 1rem;
+    border-radius: 6px;
+    font-weight: 600;
+}
+
+.success-banner {
+    background: #ecfdf5;
+    border: 1px solid #6ee7b7;
+    color: #065f46;
+}
+
+.error-banner {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    background: #fef2f2;
+    border: 1px solid #fca5a5;
+    border-radius: 6px;
+    color: #991b1b;
+    font-size: 0.875rem;
+}
+
+.empty-state {
+    padding: 2rem;
+    text-align: center;
+    color: #6b7280;
+    background: #f9fafb;
+    border-radius: 8px;
+    border: 1px dashed #d1d5db;
+}
+
+.connect-btn {
+    margin-top: 1rem;
+}

@@ -1,0 +1,169 @@
+<template>
+    <lightning-card title={cardTitle} icon-name="utility:socialshare">
+        <div class="slds-p-around_medium">
+
+            <!-- ══════════════════════════════════════════════════════ -->
+            <!-- STATE 1: Not Connected                                  -->
+            <!-- ══════════════════════════════════════════════════════ -->
+            <template if:true={isDisconnected}>
+                <div class="connect-container">
+                    <div class="fb-icon-wrapper">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/5/51/Facebook_f_logo_%282019%29.svg" 
+                             alt="Facebook" 
+                             class="fb-logo" />
+                    </div>
+                    <h2 class="slds-text-heading_medium slds-m-top_medium">Connect Your Meta Account</h2>
+                    <p class="slds-text-body_regular slds-m-top_small slds-m-bottom_large">
+                        Connect your Facebook account to start receiving Lead Ads directly into Salesforce.
+                    </p>
+                    <lightning-button
+                        label="Connect Facebook"
+                        icon-name="utility:user"
+                        variant="brand"
+                        onclick={handleConnectFacebook}
+                        class="connect-btn">
+                    </lightning-button>
+                </div>
+            </template>
+
+            <!-- ══════════════════════════════════════════════════════ -->
+            <!-- STATE 2: Connected - Select & Subscribe a Page         -->
+            <!-- ══════════════════════════════════════════════════════ -->
+            <template if:true={isConnected}>
+
+                <!-- Connection Status Banner -->
+                <div class="status-banner success-banner slds-m-bottom_medium">
+                    <lightning-icon icon-name="utility:check" size="x-small" class="slds-m-right_x-small"></lightning-icon>
+                    <span>Meta Account Connected</span>
+                    <lightning-button
+                        label="Disconnect"
+                        variant="destructive-text"
+                        size="small"
+                        onclick={handleDisconnect}
+                        class="slds-m-left_auto">
+                    </lightning-button>
+                </div>
+
+                <!-- Page Selector -->
+                <div class="slds-grid slds-gutters slds-wrap slds-m-bottom_medium">
+                    <div class="slds-col slds-size_1-of-1 slds-medium-size_8-of-12">
+                        <lightning-combobox
+                            name="page"
+                            label="Select Facebook Page to Subscribe"
+                            placeholder="Choose a Facebook Page..."
+                            options={pageOptions}
+                            value={selectedPageId}
+                            onchange={handlePageChange}
+                            disabled={isLoadingPages}>
+                        </lightning-combobox>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-medium-size_4-of-12 slds-align-bottom">
+                        <lightning-button
+                            label={subscribeButtonLabel}
+                            icon-name="utility:connected_apps"
+                            variant="success"
+                            onclick={handleSubscribe}
+                            disabled={isSubscribeDisabled}>
+                        </lightning-button>
+                    </div>
+                </div>
+
+                <!-- Loading Spinner for Pages -->
+                <template if:true={isLoadingPages}>
+                    <lightning-spinner alternative-text="Loading pages..." size="small"></lightning-spinner>
+                </template>
+
+                <!-- Active Subscriptions Table -->
+                <template if:true={hasSubscriptions}>
+                    <div class="slds-m-top_large">
+                        <h3 class="slds-text-heading_small slds-m-bottom_small">
+                            <lightning-icon icon-name="utility:connected_apps" size="x-small" class="slds-m-right_x-small"></lightning-icon>
+                            Active Subscriptions
+                        </h3>
+                        <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-m-top_small">
+                            <thead>
+                                <tr class="slds-line-height_reset">
+                                    <th scope="col"><div class="slds-truncate">Page Name</div></th>
+                                    <th scope="col"><div class="slds-truncate">Page ID</div></th>
+                                    <th scope="col"><div class="slds-truncate">Enable Logs</div></th>
+                                    <th scope="col"><div class="slds-truncate">Create Leads</div></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template for:each={activeSubscriptions} for:item="sub">
+                                    <tr key={sub.Id}>
+                                        <td data-label="Page Name"><div class="slds-truncate">{sub.Page_Name__c}</div></td>
+                                        <td data-label="Page ID"><div class="slds-truncate">{sub.Page_ID__c}</div></td>
+                                        <td data-label="Enable Logs">
+                                            <lightning-input type="toggle" 
+                                                             data-id={sub.Id}
+                                                             data-type="logs"
+                                                             checked={sub.Enable_Logs__c}
+                                                             onchange={handleToggleChange}
+                                                             message-toggle-active="" 
+                                                             message-toggle-inactive="">
+                                            </lightning-input>
+                                        </td>
+                                        <td data-label="Create Leads">
+                                            <lightning-input type="toggle" 
+                                                             data-id={sub.Id}
+                                                             data-type="leads"
+                                                             checked={sub.Enable_Lead_Creation__c}
+                                                             onchange={handleToggleChange}
+                                                             message-toggle-active="" 
+                                                             message-toggle-inactive="">
+                                            </lightning-input>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </template>
+
+                <!-- Integration Logs Section -->
+                <div class="slds-m-top_large">
+                    <div class="slds-grid slds-gutters slds-m-bottom_small">
+                        <div class="slds-col">
+                            <h3 class="slds-text-heading_small">
+                                <lightning-icon icon-name="utility:record_lookup" size="x-small" class="slds-m-right_x-small"></lightning-icon>
+                                Recent Incoming Leads Log
+                            </h3>
+                        </div>
+                        <div class="slds-col slds-no-flex">
+                            <lightning-button
+                                label="Refresh Logs"
+                                icon-name="utility:refresh"
+                                variant="neutral"
+                                size="small"
+                                onclick={loadLogs}>
+                            </lightning-button>
+                        </div>
+                    </div>
+                    <template if:true={hasLogs}>
+                        <lightning-datatable
+                            data={integrationLogs}
+                            columns={logColumns}
+                            key-field="Id"
+                            hide-checkbox-column>
+                        </lightning-datatable>
+                    </template>
+                    <template if:false={hasLogs}>
+                        <div class="empty-state">
+                            <p>No logs yet. Logs will appear here when leads arrive from Facebook.</p>
+                        </div>
+                    </template>
+                </div>
+            </template>
+
+            <!-- Toast / Error Messages -->
+            <template if:true={errorMessage}>
+                <div class="error-banner slds-m-top_medium">
+                    <lightning-icon icon-name="utility:error" size="x-small" class="slds-m-right_x-small"></lightning-icon>
+                    {errorMessage}
+                </div>
+            </template>
+
+        </div>
+    </lightning-card>
+</template>

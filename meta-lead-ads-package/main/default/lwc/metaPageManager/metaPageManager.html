@@ -1,0 +1,79 @@
+<template>
+    <div class="page-manager-container">
+        <!-- Header -->
+        <div class="pm-header">
+            <div class="pm-title-group">
+                <div class="pm-icon-ring">
+                    <lightning-icon icon-name="utility:socialshare" size="small"></lightning-icon>
+                </div>
+                <div>
+                    <h1 class="pm-title">Facebook Pages</h1>
+                    <p class="pm-subtitle">Manage connected pages and sync lead forms</p>
+                </div>
+            </div>
+            <div class="pm-actions">
+                <lightning-button label="Sync Pages" icon-name="utility:refresh" variant="brand" onclick={handleSyncPages} disabled={isLoading}></lightning-button>
+            </div>
+        </div>
+
+        <!-- Stats row -->
+        <div class="stats-row">
+            <div class="stat-card">
+                <span class="stat-num">{totalPages}</span>
+                <span class="stat-lbl">Total Pages</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-num">{connectedPages}</span>
+                <span class="stat-lbl">Connected</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-num">{totalForms}</span>
+                <span class="stat-lbl">Forms Synced</span>
+            </div>
+        </div>
+
+        <template if:true={isLoading}>
+            <div class="loading-wrap">
+                <lightning-spinner alternative-text="Loading pages..." size="medium"></lightning-spinner>
+                <p class="loading-text">Syncing from Meta...</p>
+            </div>
+        </template>
+
+        <!-- Page Cards -->
+        <template if:false={isLoading}>
+            <template if:true={hasPages}>
+                <div class="page-grid">
+                    <template for:each={pages} for:item="page">
+                        <div key={page.Id} class="page-card" onclick={handlePageClick} data-id={page.Page_ID__c} data-name={page.Page_Name__c}>
+                            <div class="page-card-avatar">
+                                <span class="avatar-initials">{page.initials}</span>
+                            </div>
+                            <div class="page-card-info">
+                                <h3 class="page-card-name">{page.Page_Name__c}</h3>
+                                <p class="page-card-id">ID: {page.Page_ID__c}</p>
+                                <div class="page-card-meta">
+                                    <span class="forms-badge">{page.Forms_Count__c} Forms</span>
+                                    <span class={page.statusClass}>{page.Status__c}</span>
+                                </div>
+                            </div>
+                            <div class="page-card-arrow">
+                                <lightning-icon icon-name="utility:chevronright" size="x-small"></lightning-icon>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </template>
+            <template if:false={hasPages}>
+                <div class="empty-state">
+                    <lightning-icon icon-name="utility:socialshare" size="large"></lightning-icon>
+                    <h3>No pages connected yet</h3>
+                    <p>Click "Sync Pages" to fetch your Facebook pages</p>
+                </div>
+            </template>
+        </template>
+
+        <template if:true={errorMessage}>
+            <div class="error-box">{errorMessage}</div>
+        </template>
+    </div>
+</template>
