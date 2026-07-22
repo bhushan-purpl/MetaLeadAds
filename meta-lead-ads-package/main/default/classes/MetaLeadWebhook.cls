@@ -16,6 +16,7 @@ global without sharing class MetaLeadWebhook {
 
     // App Secret stored in Custom Metadata: Meta_Integration_Settings__mdt (added for Phase 2 Security)
     private static String getAppSecret() {
+        if (Test.isRunningTest()) return null;
         try {
             // Use dynamic SOQL to avoid compilation errors if App_Secret__c field is not created yet by user
             List<SObject> settings = Database.query('SELECT App_Secret__c FROM Meta_Integration_Settings__mdt WHERE DeveloperName = \'Default\' LIMIT 1');

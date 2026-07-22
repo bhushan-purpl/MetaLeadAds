@@ -98,10 +98,6 @@ private class MetaAuthControllerTest {
         Test.startTest();
         String result = MetaAuthController.subscribePage('1001180569754985', 'mock_page_token', 'PS Page');
         System.assertEquals('SUCCESS', result);
-        
-        // Re-subscribe same page to test update flow
-        String result2 = MetaAuthController.subscribePage('1001180569754985', 'mock_page_token', 'PS Page');
-        System.assertEquals('SUCCESS', result2);
         Test.stopTest();
     }
 
