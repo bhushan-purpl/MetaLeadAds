@@ -229,6 +229,14 @@ public without sharing class MetaAuthController {
     // ─────────────────────────────────────────────────────────────────
     private static Meta_Integration_Settings__mdt getConfig() {
         Meta_Integration_Settings__mdt config = Meta_Integration_Settings__mdt.getInstance('Default');
+        if (Test.isRunningTest() && config == null) {
+            return new Meta_Integration_Settings__mdt(
+                App_ID__c = 'mock_app_id',
+                App_Secret__c = 'mock_secret',
+                Graph_API_Version__c = 'v17.0',
+                Redirect_URI__c = 'https://mock.uri'
+            );
+        }
         if (config == null || String.isBlank(config.App_ID__c)) {
             throw new AuraHandledException('Facebook App configuration not found. Please set App ID in Meta_Integration_Settings__mdt (Default record).');
         }

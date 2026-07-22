@@ -95,8 +95,10 @@ public class MetaLeadCalloutJob implements Queueable, Database.AllowsCallouts {
                 }
 
                 if (isLeadCreationEnabled == false) {
-                    logRec.Processing_Status__c = 'Success - Lead Creation Disabled';
-                    logRec.Error_Message__c = 'Lead creation is disabled for this page via UI toggle.';
+                    // Skip lead creation if disabled, but still log it as Success
+                    System.debug('Lead creation is disabled for this page.');
+                    logRec.Processing_Status__c = 'Success';
+                    logRec.Error_Message__c = 'Success - Lead Creation Disabled by Configuration';
                     logsToUpdate.add(logRec);
                     continue; // Skip callout and lead creation
                 }

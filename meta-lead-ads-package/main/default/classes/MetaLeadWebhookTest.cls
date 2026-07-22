@@ -389,7 +389,7 @@ private class MetaLeadWebhookTest {
             WHERE Id = :logRec.Id
         ];
 
-        System.assertEquals('Success - Lead Creation Disabled', updatedLog.Processing_Status__c);
+        System.assertEquals('Success', updatedLog.Processing_Status__c);
     }
 
     @isTest
