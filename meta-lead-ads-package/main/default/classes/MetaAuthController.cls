@@ -23,7 +23,7 @@ public without sharing class MetaAuthController {
         String loginUrl = 'https://www.facebook.com/' + getApiVersion(config) + '/dialog/oauth'
             + '?client_id='     + config.App_ID__c
             + '&redirect_uri='  + EncodingUtil.urlEncode(redirectUri, 'UTF-8')
-            + '&scope=pages_show_list,pages_manage_metadata,leads_retrieval,business_management'
+            + '&scope=pages_show_list,pages_manage_metadata,leads_retrieval,business_management,pages_read_engagement'
             + '&response_type=code'
             + '&state=meta_leads_oauth';
 
