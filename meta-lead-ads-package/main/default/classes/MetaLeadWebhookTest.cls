@@ -1,6 +1,15 @@
 @isTest
 private class MetaLeadWebhookTest {
 
+    @testSetup
+    static void setupData() {
+        Meta_License_Settings__c license = new Meta_License_Settings__c();
+        license.SetupOwnerId = UserInfo.getOrganizationId();
+        license.Status__c = 'Active';
+        license.Max_Pages_Allowed__c = 100;
+        insert license;
+    }
+
     // ═══════════════════════════════════════════
     // GET Verification Tests
     // ═══════════════════════════════════════════

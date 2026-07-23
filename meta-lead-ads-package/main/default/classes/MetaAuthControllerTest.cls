@@ -93,6 +93,11 @@ private class MetaAuthControllerTest {
 
     @isTest
     static void testSubscribePage_Success() {
+        Meta_License_Settings__c license = new Meta_License_Settings__c();
+        license.SetupOwnerId = UserInfo.getOrganizationId();
+        license.Max_Pages_Allowed__c = 10;
+        insert license;
+
         Test.setMock(HttpCalloutMock.class, new MetaAuthMock(200, '{"success":true}'));
 
         Test.startTest();

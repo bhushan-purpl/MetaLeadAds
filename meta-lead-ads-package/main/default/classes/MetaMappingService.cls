@@ -152,6 +152,21 @@ public without sharing class MetaMappingService {
         return allFields;
     }
 
+    // ─── Validate limit before mapping ───────────────────────────────────────────
+    @AuraEnabled
+    public static void validateMappingLimit(String formId) {
+        List<Meta_Form__c> forms = [SELECT Id, Is_Mapped__c FROM Meta_Form__c WHERE Form_ID__c = :formId LIMIT 1];
+        Boolean isCurrentlyMapped = forms.isEmpty() ? false : forms[0].Is_Mapped__c;
+
+        if (!isCurrentlyMapped) {
+            Integer mappedCount = [SELECT count() FROM Meta_Form__c WHERE Is_Mapped__c = true];
+            Integer maxAllowed = MetaLicenseService.getMaxPages();
+            if (mappedCount >= maxAllowed) {
+                throw new AuraHandledException('License Limit Reached: You can only map up to ' + maxAllowed + ' forms. Please upgrade your license to map more forms.');
+            }
+        }
+    }
+
     // ─── Save mappings ────────────────────────────────────────────────────────
     @AuraEnabled
     public static String saveMappings(String formId, String mappingsJson) {
@@ -161,8 +176,17 @@ public without sharing class MetaMappingService {
             List<Meta_Field_Mapping__c> existing = [SELECT Id FROM Meta_Field_Mapping__c WHERE Form_ID__c = :formId];
             if (!existing.isEmpty()) delete existing;
 
-            List<Meta_Form__c> forms = [SELECT Id FROM Meta_Form__c WHERE Form_ID__c = :formId LIMIT 1];
+            List<Meta_Form__c> forms = [SELECT Id, Is_Mapped__c FROM Meta_Form__c WHERE Form_ID__c = :formId LIMIT 1];
             Id formRecId = forms.isEmpty() ? null : forms[0].Id;
+            Boolean isCurrentlyMapped = forms.isEmpty() ? false : forms[0].Is_Mapped__c;
+
+            if (!isCurrentlyMapped) {
+                Integer mappedCount = [SELECT count() FROM Meta_Form__c WHERE Is_Mapped__c = true];
+                Integer maxAllowed = MetaLicenseService.getMaxPages();
+                if (mappedCount >= maxAllowed) {
+                    throw new AuraHandledException('License Limit Reached: You can only map up to ' + maxAllowed + ' forms. Please upgrade your license to map more forms.');
+                }
+            }
 
             List<Meta_Field_Mapping__c> toInsert = new List<Meta_Field_Mapping__c>();
             for (Object obj : mappingData) {

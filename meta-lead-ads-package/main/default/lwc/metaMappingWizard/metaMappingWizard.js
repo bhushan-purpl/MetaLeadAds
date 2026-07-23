@@ -8,6 +8,7 @@ import getAutoSuggestions     from '@salesforce/apex/MetaMappingService.getAutoS
 import saveMappings           from '@salesforce/apex/MetaMappingService.saveMappings';
 import getLeadFields          from '@salesforce/apex/MetaMappingService.getLeadFields';
 import getPicklistValues      from '@salesforce/apex/MetaMappingService.getPicklistValues';
+import validateMappingLimit   from '@salesforce/apex/MetaMappingService.validateMappingLimit';
 
 export default class MetaMappingWizard extends LightningElement {
 
@@ -55,6 +56,20 @@ export default class MetaMappingWizard extends LightningElement {
     }
 
     async goToStep3() {
+        this.isLoadingForms = true;
+        try {
+            await validateMappingLimit({ formId: this.selectedFormId });
+        } catch (e) {
+            this.dispatchEvent(new ShowToastEvent({
+                title: 'Limit Reached',
+                message: e.body ? e.body.message : 'License limit reached.',
+                variant: 'error'
+            }));
+            this.isLoadingForms = false;
+            return;
+        }
+        this.isLoadingForms = false;
+
         this.currentStep = 3;
         // Wait for BOTH lead fields AND form fields to load together
         // so sfFieldOptions is populated before the comboboxes try to render their selected values

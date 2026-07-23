@@ -3,6 +3,12 @@ private class MetaMappingServiceTest {
 
     @testSetup
     static void setupData() {
+        Meta_License_Settings__c license = new Meta_License_Settings__c(
+            SetupOwnerId = UserInfo.getOrganizationId(),
+            Status__c = 'Active',
+            Max_Pages_Allowed__c = 100
+        );
+        insert license;
         Meta_Form__c form = new Meta_Form__c(
             Form_ID__c = '12345',
             Name = 'Test Form',

@@ -65,6 +65,14 @@ global without sharing class MetaLeadWebhook {
         RestResponse res = RestContext.response;
         String body = req.requestBody.toString();
 
+        // ── 0. License Verification ──
+        if (!MetaLicenseService.isLicenseActive()) {
+            System.debug('License is not active or expired. Rejecting webhook processing.');
+            res.statusCode = 200; // Return 200 so Meta stops retrying
+            res.responseBody = Blob.valueOf('License Expired or Inactive');
+            return;
+        }
+
         // ── 1. Source Validation (Rate Limiting / Bot Prevention) ──
         String userAgent = req.headers.get('User-Agent');
         System.debug('User-Agent: ' + userAgent);
