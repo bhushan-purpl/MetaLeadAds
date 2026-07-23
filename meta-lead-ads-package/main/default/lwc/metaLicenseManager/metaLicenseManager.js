@@ -57,6 +57,10 @@ export default class MetaLicenseManager extends LightningElement {
         }
     }
 
+    get isTrial() {
+        return this.licenseStatus === 'Trial';
+    }
+
     updateUI(settings) {
         this.licenseStatus = settings.Status__c || 'Unknown';
         this.licenseExpiry = settings.Expiration_Date__c || 'N/A';

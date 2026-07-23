@@ -8,7 +8,12 @@
 
             <!-- Status Section -->
             <div class="slds-box slds-m-bottom_medium slds-theme_default">
-                <p class="slds-text-heading_small slds-m-bottom_small">Current License Status</p>
+                <p class="slds-text-heading_small slds-m-bottom_small">
+                    Current License Status
+                    <template if:true={isTrial}>
+                        <lightning-badge label="Trial Mode" class="slds-theme_warning slds-m-left_small"></lightning-badge>
+                    </template>
+                </p>
                 <p>Status: <strong>{licenseStatus}</strong></p>
                 <p>Expires: <strong>{licenseExpiry}</strong></p>
                 <p>Page Mapping Limit: <strong>{maxPages}</strong></p>
