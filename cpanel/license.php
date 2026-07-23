@@ -186,6 +186,15 @@ header('Content-Type: text/html');
             
             $stmt = $pdo->prepare("INSERT INTO licenses (license_key, status, expiration_date, max_pages) VALUES (?, 'Unclaimed', ?, ?)");
             $stmt->execute([$new_key, $expiry, $max_pages]);
+            
+            // Redirect to avoid form resubmission on refresh
+            header("Location: ?new_key=" . urlencode($new_key));
+            exit;
+        }
+
+        // Show success message if redirected
+        if (isset($_GET['new_key'])) {
+            $new_key = htmlspecialchars($_GET['new_key']);
             echo "<p style='color:green'>Generated New Key: <strong>$new_key</strong></p>";
         }
         ?>
