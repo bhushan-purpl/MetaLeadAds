@@ -109,27 +109,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Update Org ID if it was a pre-generated blank key
         if (empty($license['org_id'])) {
             // Prevent UNIQUE constraint violation if Org already has a Trial record
-            $checkStmt = $pdo->prepare("SELECT id FROM licenses WHERE org_id = ?");
+            $checkStmt = $pdo->prepare("SELECT id, company_name, admin_email FROM licenses WHERE org_id = ?");
             $checkStmt->execute([$org_id]);
             $existingOrg = $checkStmt->fetch();
 
+            $company_name = 'Unknown';
+            $admin_email = 'Unknown';
+
             if ($existingOrg) {
-                // Update the existing Trial row with the new key's limits
-                $updStmt = $pdo->prepare("UPDATE licenses SET license_key = ?, status = 'Active', expiration_date = ?, max_pages = ? WHERE org_id = ?");
-                $updStmt->execute([
-                    $license['license_key'],
-                    $license['expiration_date'],
-                    $license['max_pages'],
-                    $org_id
-                ]);
-                // Delete the original blank key row
+                // Preserve the company data
+                $company_name = $existingOrg['company_name'];
+                $admin_email = $existingOrg['admin_email'];
+
+                // Delete the old trial row to free up the UNIQUE org_id
                 $delStmt = $pdo->prepare("DELETE FROM licenses WHERE id = ?");
-                $delStmt->execute([$license['id']]);
-            } else {
-                // No existing trial found, just attach Org ID to this key
-                $stmt = $pdo->prepare("UPDATE licenses SET org_id = ?, status = 'Active' WHERE id = ?");
-                $stmt->execute([$org_id, $license['id']]);
+                $delStmt->execute([$existingOrg['id']]);
             }
+
+            // Now safely update the new key row
+            $stmt = $pdo->prepare("UPDATE licenses SET org_id = ?, company_name = ?, admin_email = ?, status = 'Active' WHERE id = ?");
+            $stmt->execute([$org_id, $company_name, $admin_email, $license['id']]);
             $license['status'] = 'Active';
         }
 
