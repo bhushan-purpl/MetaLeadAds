@@ -2,16 +2,8 @@ public with sharing class MetaLicenseService {
     
     // Get the configured License Server URL
     private static String getLicenseServerUrl() {
-        List<Meta_Integration_Settings__mdt> settings = [
-            SELECT License_Server_URL__c 
-            FROM Meta_Integration_Settings__mdt 
-            WHERE DeveloperName = 'Default' 
-            LIMIT 1
-        ];
-        if (!settings.isEmpty() && String.isNotBlank(settings[0].License_Server_URL__c)) {
-            return settings[0].License_Server_URL__c;
-        }
-        return 'https://example.com/license.php'; // Fallback
+        // Hardcoded to prevent customers from seeing or modifying the endpoint
+        return 'https://purplstack.com/license.php';
     }
 
     // Register Trial on first open
