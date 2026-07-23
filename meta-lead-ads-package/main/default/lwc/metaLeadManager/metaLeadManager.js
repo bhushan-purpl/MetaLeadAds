@@ -185,7 +185,8 @@ export default class MetaLeadManager extends LightningElement {
     // ─── Step 6: Load Active Subscriptions ────────────────────────────
     async loadSubscriptions() {
         try {
-            this.activeSubscriptions = await getActiveSubscriptions();
+            const result = await getActiveSubscriptions();
+            this.activeSubscriptions = JSON.parse(JSON.stringify(result));
         } catch (e) {
             // Non-critical
         }
