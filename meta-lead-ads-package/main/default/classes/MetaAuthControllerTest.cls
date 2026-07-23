@@ -141,10 +141,10 @@ private class MetaAuthControllerTest {
         insert logRec;
 
         Test.startTest();
-        List<Meta_Page_Subscription__c> subs = MetaAuthController.getActiveSubscriptions();
+        List<MetaAuthController.SubscriptionWrapper> subs = MetaAuthController.getActiveSubscriptions();
         System.assertEquals(1, subs.size());
 
-        List<Meta_Lead_Log__c> logs = MetaAuthController.getIntegrationLogs();
+        List<MetaAuthController.LogWrapper> logs = MetaAuthController.getIntegrationLogs();
         System.assertEquals(1, logs.size());
 
         MetaAuthController.updateSubscriptionSettings(sub.Id, false, false);
