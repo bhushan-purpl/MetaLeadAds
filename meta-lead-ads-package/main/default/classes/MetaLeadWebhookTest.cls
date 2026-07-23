@@ -380,6 +380,7 @@ private class MetaLeadWebhookTest {
         insert logRec;
 
         Test.startTest();
+        Test.setMock(HttpCalloutMock.class, new MetaGraphAPIMock(true));
         System.enqueueJob(new MetaLeadCalloutJob(new List<Id>{logRec.Id}));
         Test.stopTest();
 

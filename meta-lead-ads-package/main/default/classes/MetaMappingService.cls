@@ -192,15 +192,37 @@ public without sharing class MetaMappingService {
     }
 
     // ─── Get existing mappings ────────────────────────────────────────────────
+    public class MappingWrapper {
+        @AuraEnabled public String Id;
+        @AuraEnabled public String Form_ID;
+        @AuraEnabled public String Facebook_Field;
+        @AuraEnabled public String Salesforce_Field;
+        @AuraEnabled public String Salesforce_Object;
+        @AuraEnabled public Boolean Is_UTM;
+        @AuraEnabled public Boolean Active;
+    }
+
     @AuraEnabled(cacheable=false)
-    public static List<Meta_Field_Mapping__c> getMappings(String formId) {
-        return [
+    public static List<MappingWrapper> getMappings(String formId) {
+        List<MappingWrapper> wrappers = new List<MappingWrapper>();
+        for (Meta_Field_Mapping__c m : [
             SELECT Id, Form_ID__c, Facebook_Field__c, Salesforce_Field__c,
                    Salesforce_Object__c, Is_UTM__c, Active__c
             FROM Meta_Field_Mapping__c
             WHERE Form_ID__c = :formId AND Active__c = true
             ORDER BY Is_UTM__c ASC, Facebook_Field__c ASC
-        ];
+        ]) {
+            MappingWrapper w = new MappingWrapper();
+            w.Id = m.Id;
+            w.Form_ID = m.Form_ID__c;
+            w.Facebook_Field = m.Facebook_Field__c;
+            w.Salesforce_Field = m.Salesforce_Field__c;
+            w.Salesforce_Object = m.Salesforce_Object__c;
+            w.Is_UTM = m.Is_UTM__c;
+            w.Active = m.Active__c;
+            wrappers.add(w);
+        }
+        return wrappers;
     }
 
     // ─── Get all Salesforce Lead fields for dropdown ──────────────────────────

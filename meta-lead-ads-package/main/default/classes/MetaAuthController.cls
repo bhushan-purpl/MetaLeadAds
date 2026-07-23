@@ -134,10 +134,17 @@ public without sharing class MetaAuthController {
             Boolean success = (Boolean) result.get('success');
 
             if (success == true) {
-                // Save the page subscription record in Salesforce
+                // Check License Limits
+                Integer maxPages = MetaLicenseService.getMaxPages();
+                Integer currentPages = [SELECT count() FROM Meta_Page_Subscription__c WHERE Status__c = 'Active'];
+                
                 List<Meta_Page_Subscription__c> existing = [
                     SELECT Id FROM Meta_Page_Subscription__c WHERE Page_ID__c = :pageId LIMIT 1
                 ];
+
+                if (existing.isEmpty() && currentPages >= maxPages) {
+                    throw new AuraHandledException('License Limit Reached: You can only map up to ' + maxPages + ' pages. Please upgrade your license.');
+                }
 
                 Meta_Page_Subscription__c sub;
                 if (!existing.isEmpty()) {
@@ -225,6 +232,7 @@ public without sharing class MetaAuthController {
         @AuraEnabled public String Id;
         @AuraEnabled public String Meta_Lead_ID;
         @AuraEnabled public String Page_ID;
+        @AuraEnabled public String Form_ID;
         @AuraEnabled public String Processing_Status;
         @AuraEnabled public String Error_Message;
         @AuraEnabled public Datetime CreatedDate;
@@ -234,7 +242,7 @@ public without sharing class MetaAuthController {
     public static List<LogWrapper> getIntegrationLogs() {
         List<LogWrapper> wrappers = new List<LogWrapper>();
         for (Meta_Lead_Log__c log : [
-            SELECT Id, Meta_Lead_ID__c, Page_ID__c, Processing_Status__c, Error_Message__c, CreatedDate
+            SELECT Id, Meta_Lead_ID__c, Page_ID__c, Form_ID__c, Processing_Status__c, Error_Message__c, CreatedDate
             FROM Meta_Lead_Log__c
             ORDER BY CreatedDate DESC
             LIMIT 50
@@ -243,6 +251,7 @@ public without sharing class MetaAuthController {
             w.Id = log.Id;
             w.Meta_Lead_ID = log.Meta_Lead_ID__c;
             w.Page_ID = log.Page_ID__c;
+            w.Form_ID = log.Form_ID__c;
             w.Processing_Status = log.Processing_Status__c;
             w.Error_Message = log.Error_Message__c;
             w.CreatedDate = log.CreatedDate;

@@ -15,7 +15,7 @@ private class MetaPageServiceTest {
         Test.setMock(HttpCalloutMock.class, new PageMock());
         
         Test.startTest();
-        List<Meta_Page__c> pages = MetaPageService.syncPages();
+        List<MetaPageService.PageWrapper> pages = MetaPageService.syncPages();
         Test.stopTest();
         
         System.assert(pages.size() > 0);
@@ -26,7 +26,7 @@ private class MetaPageServiceTest {
         insert new Meta_Page__c(Page_ID__c = '111', Page_Name__c = 'Page1', Active__c = true);
         
         Test.startTest();
-        List<Meta_Page__c> pages = MetaPageService.getPages();
+        List<MetaPageService.PageWrapper> pages = MetaPageService.getPages();
         Test.stopTest();
         
         System.assertEquals(1, pages.size());

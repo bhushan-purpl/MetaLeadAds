@@ -48,7 +48,7 @@ private class MetaMappingServiceTest {
     @isTest
     static void testGetMappings() {
         Test.startTest();
-        List<Meta_Field_Mapping__c> mappings = MetaMappingService.getMappings('12345');
+        List<MetaMappingService.MappingWrapper> mappings = MetaMappingService.getMappings('12345');
         Test.stopTest();
         System.assertEquals(1, mappings.size());
     }

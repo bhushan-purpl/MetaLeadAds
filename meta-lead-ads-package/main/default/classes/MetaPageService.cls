@@ -21,9 +21,35 @@ public without sharing class MetaPageService {
         return null;
     }
 
+    public class PageWrapper {
+        @AuraEnabled public String Id;
+        @AuraEnabled public String Page_ID;
+        @AuraEnabled public String Page_Name;
+        @AuraEnabled public String Status;
+        @AuraEnabled public Boolean Active;
+        @AuraEnabled public Datetime Last_Sync;
+        @AuraEnabled public Decimal Forms_Count;
+    }
+
+    private static List<PageWrapper> wrapPages(List<Meta_Page__c> pages) {
+        List<PageWrapper> wrappers = new List<PageWrapper>();
+        for (Meta_Page__c p : pages) {
+            PageWrapper w = new PageWrapper();
+            w.Id = p.Id;
+            w.Page_ID = p.Page_ID__c;
+            w.Page_Name = p.Page_Name__c;
+            w.Status = p.Status__c;
+            w.Active = p.Active__c;
+            w.Last_Sync = p.Last_Sync__c;
+            w.Forms_Count = p.Forms_Count__c;
+            wrappers.add(w);
+        }
+        return wrappers;
+    }
+
     // Called from LWC to sync all pages the user manages
     @AuraEnabled
-    public static List<Meta_Page__c> syncPages() {
+    public static List<PageWrapper> syncPages() {
         String token = getUserToken();
         if (String.isBlank(token)) throw new AuraHandledException('Not connected to Facebook.');
 
@@ -57,12 +83,14 @@ public without sharing class MetaPageService {
             upsert pagesToUpsert Page_ID__c;
         }
 
-        return [SELECT Id, Page_ID__c, Page_Name__c, Status__c, Active__c, Last_Sync__c, Forms_Count__c FROM Meta_Page__c WHERE Active__c = true ORDER BY Page_Name__c];
+        List<Meta_Page__c> records = [SELECT Id, Page_ID__c, Page_Name__c, Status__c, Active__c, Last_Sync__c, Forms_Count__c FROM Meta_Page__c WHERE Active__c = true ORDER BY Page_Name__c];
+        return wrapPages(records);
     }
 
     @AuraEnabled(cacheable=false)
-    public static List<Meta_Page__c> getPages() {
-        return [SELECT Id, Page_ID__c, Page_Name__c, Status__c, Active__c, Last_Sync__c, Forms_Count__c FROM Meta_Page__c WHERE Active__c = true ORDER BY Page_Name__c];
+    public static List<PageWrapper> getPages() {
+        List<Meta_Page__c> records = [SELECT Id, Page_ID__c, Page_Name__c, Status__c, Active__c, Last_Sync__c, Forms_Count__c FROM Meta_Page__c WHERE Active__c = true ORDER BY Page_Name__c];
+        return wrapPages(records);
     }
 
     // Update form count per page

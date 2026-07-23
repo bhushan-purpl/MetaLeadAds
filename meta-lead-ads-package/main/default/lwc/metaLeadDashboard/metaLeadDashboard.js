@@ -101,8 +101,8 @@ export default class MetaLeadDashboard extends LightningElement {
             };
             this.recentLogs = (data.recentLogs || []).map(log => ({
                 ...log,
-                statusClass:   log.Processing_Status__c === 'Success' ? 'badge-success' :
-                               log.Processing_Status__c === 'Failed'  ? 'badge-error'   : 'badge-pending',
+                statusClass:   log.Processing_Status === 'Success' ? 'badge-success' :
+                               log.Processing_Status === 'Failed'  ? 'badge-error'   : 'badge-pending',
                 formattedDate: log.CreatedDate ? this.formatDate(log.CreatedDate) : '--'
             }));
         } catch (e) { /* silent */ }
@@ -146,8 +146,8 @@ export default class MetaLeadDashboard extends LightningElement {
         try {
             const existing = await getAssignment({ formId: this.assignmentFormId });
             if (existing) {
-                this.assignmentOwnerType = existing.Owner_Type__c || 'Queue';
-                this.assignmentOwnerId   = existing.Owner_ID__c   || '';
+                this.assignmentOwnerType = existing.Owner_Type || 'Queue';
+                this.assignmentOwnerId   = existing.Owner_ID   || '';
             }
         } catch (e) { /* silent */ }
 

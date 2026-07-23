@@ -1,6 +1,363 @@
 <template>
-    <div class="slds-box slds-theme_default">
-        <h2 class="slds-text-heading_medium">Mapping Wizard Loading...</h2>
-        <p>Please deploy the full metaMappingWizard code here.</p>
+    <div class="wizard-container">
+
+        <!-- ══════════════════════════════════════════════ -->
+        <!-- STEP INDICATOR                                  -->
+        <!-- ══════════════════════════════════════════════ -->
+        <div class="step-indicator">
+            <div class={stepClass1}>
+                <div class="step-circle">1</div>
+                <span class="step-label">Select Page</span>
+            </div>
+            <div class="step-line"></div>
+            <div class={stepClass2}>
+                <div class="step-circle">2</div>
+                <span class="step-label">Select Form</span>
+            </div>
+            <div class="step-line"></div>
+            <div class={stepClass3}>
+                <div class="step-circle">3</div>
+                <span class="step-label">Map Fields</span>
+            </div>
+        </div>
+
+        <!-- ══════════════════════════════════════════════ -->
+        <!-- STEP 1: Select Page                            -->
+        <!-- ══════════════════════════════════════════════ -->
+        <template if:true={isStep1}>
+            <div class="step-content">
+                <h2 class="step-heading">Select a Facebook Page</h2>
+                <p class="step-desc">Choose the page whose lead forms you want to configure.</p>
+                <template if:true={isLoadingPages}>
+                    <lightning-spinner alternative-text="Loading pages..." size="medium"></lightning-spinner>
+                </template>
+                <div class="page-select-grid">
+                    <template for:each={pages} for:item="page">
+                        <div key={page.Id} class={page.cardClass} onclick={handleSelectPage}
+                             data-id={page.Page_ID} data-name={page.Page_Name}>
+                            <div class="ps-avatar">{page.initials}</div>
+                            <div class="ps-info">
+                                <h4>{page.Page_Name}</h4>
+                                <p>{page.Forms_Count} forms</p>
+                            </div>
+                            <template if:true={page.isSelected}>
+                                <lightning-icon icon-name="utility:check" size="x-small" class="check-icon"></lightning-icon>
+                            </template>
+                        </div>
+                    </template>
+                </div>
+                <div class="step-footer">
+                    <span></span>
+                    <lightning-button label="Next: Select Form" variant="brand" onclick={goToStep2}
+                        disabled={noPageSelected} icon-name="utility:chevronright" icon-position="right">
+                    </lightning-button>
+                </div>
+            </div>
+        </template>
+
+        <!-- ══════════════════════════════════════════════ -->
+        <!-- STEP 2: Select Form                            -->
+        <!-- ══════════════════════════════════════════════ -->
+        <template if:true={isStep2}>
+            <div class="step-content">
+                <h2 class="step-heading">Select a Lead Form</h2>
+                <p class="step-desc">Choose the form you want to map fields for from <strong>{selectedPageName}</strong>.</p>
+
+                <!-- ── Search Box ── -->
+                <div class="form-search-bar">
+                    <lightning-icon icon-name="utility:search" size="x-small"></lightning-icon>
+                    <input type="search"
+                           class="form-search-input"
+                           placeholder="🔍  Search forms by name..."
+                           value={formSearchTerm}
+                           oninput={handleFormSearch} />
+                    <template if:true={formSearchTerm}>
+                        <span class="search-count">{forms.length} result(s)</span>
+                    </template>
+                </div>
+
+                <template if:true={isLoadingForms}>
+                    <lightning-spinner alternative-text="Loading forms..." size="medium"></lightning-spinner>
+                </template>
+                <div class="form-select-list">
+                    <template for:each={forms} for:item="form">
+                        <div key={form.Id} class={form.cardClass} onclick={handleSelectForm}
+                             data-id={form.Form_ID} data-name={form.Form_Name}>
+                            <div class="fs-icon">
+                                <lightning-icon icon-name="utility:form" size="small"></lightning-icon>
+                            </div>
+                            <div class="fs-info">
+                                <h4>{form.Form_Name}</h4>
+                                <p>{form.Question_Count} Questions &nbsp;·&nbsp; <span class={form.mappedClass}>{form.mappedLabel}</span></p>
+                            </div>
+                            <template if:true={form.isSelected}>
+                                <lightning-icon icon-name="utility:check" size="x-small" class="check-icon"></lightning-icon>
+                            </template>
+                        </div>
+                    </template>
+                    <!-- No results message -->
+                    <template if:true={noFormsFound}>
+                        <div class="no-forms-found">
+                            <lightning-icon icon-name="utility:search" size="small"></lightning-icon>
+                            <p>No forms found matching "<strong>{formSearchTerm}</strong>"</p>
+                        </div>
+                    </template>
+                </div>
+                <div class="step-footer">
+                    <lightning-button label="Back" onclick={goToStep1} icon-name="utility:chevronleft"></lightning-button>
+                    <lightning-button label="Next: Map Fields" variant="brand" onclick={goToStep3}
+                        disabled={noFormSelected} icon-name="utility:chevronright" icon-position="right">
+                    </lightning-button>
+                </div>
+            </div>
+        </template>
+
+        <!-- ══════════════════════════════════════════════ -->
+        <!-- STEP 3: Map Fields                             -->
+        <!-- ══════════════════════════════════════════════ -->
+        <template if:true={isStep3}>
+            <div class="step-content step3-layout">
+
+                <!-- Left panel: mapping tables -->
+                <div class="mapping-panel">
+                    <div class="mapping-header">
+                        <div>
+                            <h2 class="step-heading" style="margin:0">Field Mapping</h2>
+                            <p class="step-desc" style="margin:0">{selectedFormName} &nbsp;·&nbsp; {selectedPageName}</p>
+                        </div>
+                        <lightning-button label="Auto Map" icon-name="utility:magic_wand" variant="neutral" onclick={handleAutoMap}></lightning-button>
+                    </div>
+
+                    <template if:true={isLoadingFields}>
+                        <lightning-spinner alternative-text="Loading fields..." size="medium"></lightning-spinner>
+                    </template>
+
+                    <!-- TABLE HEADER (reusable markup via inline) -->
+                    <template if:false={isLoadingFields}>
+
+                        <!-- ── Section 1: Standard Fields (Blue) ── -->
+                        <template if:true={hasStandardFields}>
+                            <div class="section-header section-standard">
+                                <lightning-icon icon-name="utility:socialshare" size="xx-small"></lightning-icon>
+                                <span>Standard Fields</span>
+                                <span class="section-badge">{standardCount}</span>
+                            </div>
+                            <div class="mapping-table">
+                                <div class="mapping-table-head standard-head">
+                                    <span>Facebook Form Field</span><span></span><span>Salesforce Lead Field</span>
+                                </div>
+                                <template for:each={standardFields} for:item="row">
+                                    <div key={row.id} class="mapping-row">
+                                        <div class="fb-field-cell">
+                                            <lightning-icon icon-name="utility:socialshare" size="xx-small" class="fb-icon"></lightning-icon>
+                                            <div class="fb-field-info">
+                                                <span class="fb-field-name">{row.label}</span>
+                                                <span class="fb-field-key">({row.facebookField})</span>
+                                            </div>
+                                        </div>
+                                        <div class="arrow-cell">
+                                            <lightning-icon icon-name="utility:arrowright" size="xx-small"></lightning-icon>
+                                        </div>
+                                        <div class="sf-field-cell">
+                                            <lightning-combobox name={row.id} data-id={row.id} value={row.sfField} placeholder="-- None --" options={sfFieldOptions} onchange={handleMappingChange} variant="label-hidden"></lightning-combobox>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+
+                        <!-- ── Section 2: Custom Questions (Green) ── -->
+                        <template if:true={hasCustomFields}>
+                            <div class="section-header section-custom">
+                                <lightning-icon icon-name="utility:questions_and_answers" size="xx-small"></lightning-icon>
+                                <span>Custom Questions</span>
+                                <span class="section-badge">{customCount}</span>
+                            </div>
+                            <div class="mapping-table">
+                                <div class="mapping-table-head custom-head">
+                                    <span>Custom Question</span><span></span><span>Salesforce Lead Field</span>
+                                </div>
+                                <template for:each={customFields} for:item="row">
+                                    <div key={row.id} class="mapping-row">
+                                        <div class="fb-field-cell">
+                                            <lightning-icon icon-name="utility:questions_and_answers" size="xx-small" class="custom-icon"></lightning-icon>
+                                            <div class="fb-field-info">
+                                                <span class="fb-field-name">{row.label}</span>
+                                                <span class="fb-field-key">({row.facebookField})</span>
+                                            </div>
+                                        </div>
+                                        <div class="arrow-cell">
+                                            <lightning-icon icon-name="utility:arrowright" size="xx-small"></lightning-icon>
+                                        </div>
+                                        <div class="sf-field-cell">
+                                            <lightning-combobox name={row.id} data-id={row.id} value={row.sfField} placeholder="-- None --" options={sfFieldOptions} onchange={handleMappingChange} variant="label-hidden"></lightning-combobox>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+
+                        <!-- ── Section 3: Hidden Fields (Orange) ── -->
+                        <template if:true={hasHiddenFields}>
+                            <div class="section-header section-hidden">
+                                <lightning-icon icon-name="utility:hide" size="xx-small"></lightning-icon>
+                                <span>Hidden Fields</span>
+                                <span class="section-badge">{hiddenCount}</span>
+                            </div>
+                            <div class="mapping-table">
+                                <div class="mapping-table-head hidden-head">
+                                    <span>Hidden Field</span><span></span><span>Salesforce Lead Field</span>
+                                </div>
+                                <template for:each={hiddenFields} for:item="row">
+                                    <div key={row.id} class="mapping-row">
+                                        <div class="fb-field-cell">
+                                            <lightning-icon icon-name="utility:hide" size="xx-small" class="hidden-icon"></lightning-icon>
+                                            <div class="fb-field-info">
+                                                <span class="fb-field-name">{row.label}</span>
+                                                <span class="fb-field-key">({row.facebookField})</span>
+                                            </div>
+                                        </div>
+                                        <div class="arrow-cell">
+                                            <lightning-icon icon-name="utility:arrowright" size="xx-small"></lightning-icon>
+                                        </div>
+                                        <div class="sf-field-cell">
+                                            <lightning-combobox name={row.id} data-id={row.id} value={row.sfField} placeholder="-- None --" options={sfFieldOptions} onchange={handleMappingChange} variant="label-hidden"></lightning-combobox>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+
+                        <!-- ── Section 4: Tracking Parameters (Purple) ── -->
+                        <template if:true={hasTrackingFields}>
+                            <div class="section-header section-tracking">
+                                <lightning-icon icon-name="utility:link" size="xx-small"></lightning-icon>
+                                <span>Tracking Parameters</span>
+                                <span class="section-badge">{trackingCount}</span>
+                                <span class="section-hint">&nbsp;UTMs, Campaign, Ad, Click IDs</span>
+                            </div>
+                            <div class="mapping-table">
+                                <div class="mapping-table-head tracking-head">
+                                    <span>Tracking Field</span><span></span><span>Salesforce Lead Field</span>
+                                </div>
+                                <template for:each={trackingFields} for:item="row">
+                                    <div key={row.id} class="mapping-row tracking-row">
+                                        <div class="fb-field-cell">
+                                            <lightning-icon icon-name="utility:link" size="xx-small" class="tracking-icon"></lightning-icon>
+                                            <div class="fb-field-info">
+                                                <span class="fb-field-name">{row.label}</span>
+                                                <span class="fb-field-key">({row.facebookField})</span>
+                                            </div>
+                                        </div>
+                                        <div class="arrow-cell">
+                                            <lightning-icon icon-name="utility:arrowright" size="xx-small"></lightning-icon>
+                                        </div>
+                                        <div class="sf-field-cell">
+                                            <lightning-combobox name={row.id} data-id={row.id} value={row.sfField} placeholder="-- None --" options={sfFieldOptions} onchange={handleMappingChange} variant="label-hidden"></lightning-combobox>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+
+                        <!-- ── Section 5: Static Values (Teal) ── -->
+                        <div class="section-header section-static">
+                            <lightning-icon icon-name="utility:text" size="xx-small"></lightning-icon>
+                            <span>Hardcoded / Static Values</span>
+                            <span class="section-badge">{staticCount}</span>
+                            <span class="section-hint">&nbsp;Constant values sent to Salesforce</span>
+                        </div>
+                        <div class="mapping-table">
+                            <div class="mapping-table-head static-head">
+                                <span>Static Text Value</span><span></span><span>Salesforce Lead Field</span>
+                            </div>
+                            <template for:each={staticFields} for:item="row">
+                                <div key={row.id} class="mapping-row static-row">
+                                    <div class="fb-field-cell">
+                                        <lightning-icon icon-name="utility:text" size="xx-small" class="static-icon"></lightning-icon>
+                                        <div class="fb-field-info" style="flex:1; margin-right:8px;">
+                                            <!-- Show picklist dropdown if SF field is a picklist, else show text input -->
+                                            <template if:true={row.isPicklistMode}>
+                                                <lightning-combobox
+                                                    name={row.id}
+                                                    data-id={row.id}
+                                                    value={row.sampleValue}
+                                                    placeholder="-- Select Value --"
+                                                    options={row.picklistOptions}
+                                                    onchange={handleStaticPicklistValueChange}
+                                                    variant="label-hidden">
+                                                </lightning-combobox>
+                                            </template>
+                                            <template if:false={row.isPicklistMode}>
+                                                <input type="text" class="slds-input" placeholder="Enter text (e.g. Meta Lead)" value={row.sampleValue} data-id={row.id} oninput={handleStaticValueChange} />
+                                            </template>
+                                        </div>
+                                    </div>
+                                    <div class="arrow-cell">
+                                        <lightning-icon icon-name="utility:arrowright" size="xx-small"></lightning-icon>
+                                    </div>
+                                    <div class="sf-field-cell">
+                                        <lightning-combobox name={row.id} data-id={row.id} value={row.sfField} placeholder="-- None --" options={sfFieldOptions} onchange={handleStaticSfFieldChange} variant="label-hidden"></lightning-combobox>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                        <!-- Button to add new static value -->
+                        <div class="slds-m-top_small slds-m-bottom_medium">
+                            <lightning-button label="Add Static Value" icon-name="utility:add" variant="base" onclick={handleAddStaticMapping}></lightning-button>
+                        </div>
+
+                    </template>
+                    <!-- end if:false isLoadingFields -->
+
+                    <div class="step-footer">
+                        <lightning-button label="Back" onclick={goToStep2Back} icon-name="utility:chevronleft"></lightning-button>
+                        <lightning-button label={saveLabel} variant="brand" onclick={handleSaveMapping}
+                            disabled={isSaving} icon-name="utility:save">
+                        </lightning-button>
+                    </div>
+                </div>
+
+                <!-- Right panel: Lead Preview -->
+                <div class="preview-panel">
+                    <div class="preview-header">
+                        <lightning-icon icon-name="utility:preview" size="x-small"></lightning-icon>
+                        <span>Lead Preview</span>
+                    </div>
+                    <div class="preview-section">
+                        <p class="preview-section-title">Facebook Data (Sample)</p>
+                        <template for:each={allMappings} for:item="row">
+                            <div key={row.id} class="preview-row">
+                                <span class="preview-key">{row.facebookField}:</span>
+                                <span class="preview-val">{row.sampleValue}</span>
+                            </div>
+                        </template>
+                    </div>
+                    <div class="preview-arrow">
+                        <lightning-icon icon-name="utility:arrowdown" size="small"></lightning-icon>
+                        <span>Salesforce Lead</span>
+                    </div>
+                    <div class="preview-section sf-preview-section">
+                        <p class="preview-section-title">Salesforce Lead Record</p>
+                        <template for:each={mappedPreview} for:item="prev">
+                            <div key={prev.sfField} class="preview-row">
+                                <span class="preview-key">{prev.sfField}:</span>
+                                <span class="preview-val sf-val">{prev.sampleValue}</span>
+                            </div>
+                        </template>
+                        <template if:false={hasMappedFields}>
+                            <p class="no-mapping-hint">No fields mapped yet. Use Auto Map or select fields above.</p>
+                        </template>
+                    </div>
+                </div>
+
+            </div>
+        </template>
+
+        <!-- Error -->
+        <template if:true={errorMessage}>
+            <div class="error-box slds-m-top_medium">{errorMessage}</div>
+        </template>
+
     </div>
 </template>

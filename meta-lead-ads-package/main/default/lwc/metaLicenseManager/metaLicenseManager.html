@@ -1,0 +1,42 @@
+<template>
+    <lightning-card title="License Manager" icon-name="custom:custom43">
+        <div class="slds-m-around_medium">
+            
+            <template if:true={isLoading}>
+                <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
+            </template>
+
+            <!-- Status Section -->
+            <div class="slds-box slds-m-bottom_medium slds-theme_default">
+                <p class="slds-text-heading_small slds-m-bottom_small">Current License Status</p>
+                <p>Status: <strong>{licenseStatus}</strong></p>
+                <p>Expires: <strong>{licenseExpiry}</strong></p>
+                <p>Page Mapping Limit: <strong>{maxPages}</strong></p>
+                <template if:true={licenseKey}>
+                    <p class="slds-m-top_x-small">Current Key: <code>{licenseKey}</code></p>
+                </template>
+            </div>
+
+            <!-- Activation Section -->
+            <div class="slds-box slds-theme_default">
+                <p class="slds-text-heading_small slds-m-bottom_small">Activate New License</p>
+                
+                <lightning-input 
+                    type="text" 
+                    label="Activation Key" 
+                    value={inputKey} 
+                    onchange={handleKeyChange}
+                    class="slds-m-bottom_small">
+                </lightning-input>
+                
+                <lightning-button 
+                    label="Validate & Activate" 
+                    variant="brand" 
+                    onclick={handleActivate}
+                    disabled={isActivateDisabled}>
+                </lightning-button>
+            </div>
+
+        </div>
+    </lightning-card>
+</template>

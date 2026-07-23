@@ -44,16 +44,16 @@
             <template if:true={hasPages}>
                 <div class="page-grid">
                     <template for:each={pages} for:item="page">
-                        <div key={page.Id} class="page-card" onclick={handlePageClick} data-id={page.Page_ID__c} data-name={page.Page_Name__c}>
+                        <div key={page.Id} class="page-card" onclick={handlePageClick} data-id={page.Page_ID} data-name={page.Page_Name}>
                             <div class="page-card-avatar">
                                 <span class="avatar-initials">{page.initials}</span>
                             </div>
                             <div class="page-card-info">
-                                <h3 class="page-card-name">{page.Page_Name__c}</h3>
-                                <p class="page-card-id">ID: {page.Page_ID__c}</p>
+                                <h3 class="page-card-name">{page.Page_Name}</h3>
+                                <p class="page-card-id">ID: {page.Page_ID}</p>
                                 <div class="page-card-meta">
-                                    <span class="forms-badge">{page.Forms_Count__c} Forms</span>
-                                    <span class={page.statusClass}>{page.Status__c}</span>
+                                    <span class="forms-badge">{page.Forms_Count} Forms</span>
+                                    <span class={page.statusClass}>{page.Status}</span>
                                 </div>
                             </div>
                             <div class="page-card-arrow">

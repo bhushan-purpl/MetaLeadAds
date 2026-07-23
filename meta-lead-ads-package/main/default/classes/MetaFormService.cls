@@ -21,8 +21,34 @@ public without sharing class MetaFormService {
         throw new AuraHandledException('No access token found for page: ' + pageId);
     }
 
+    public class FormWrapper {
+        @AuraEnabled public String Id;
+        @AuraEnabled public String Form_ID;
+        @AuraEnabled public String Form_Name;
+        @AuraEnabled public String Page_ID;
+        @AuraEnabled public Decimal Question_Count;
+        @AuraEnabled public String Status;
+        @AuraEnabled public Boolean Is_Mapped;
+    }
+
+    private static List<FormWrapper> wrapForms(List<Meta_Form__c> forms) {
+        List<FormWrapper> wrappers = new List<FormWrapper>();
+        for (Meta_Form__c f : forms) {
+            FormWrapper w = new FormWrapper();
+            w.Id = f.Id;
+            w.Form_ID = f.Form_ID__c;
+            w.Form_Name = f.Form_Name__c;
+            w.Page_ID = f.Page_ID__c;
+            w.Question_Count = f.Question_Count__c;
+            w.Status = f.Status__c;
+            w.Is_Mapped = f.Is_Mapped__c;
+            wrappers.add(w);
+        }
+        return wrappers;
+    }
+
     @AuraEnabled
-    public static List<Meta_Form__c> syncForms(String pageId) {
+    public static List<FormWrapper> syncForms(String pageId) {
         String token = getPageToken(pageId);
         String endpoint = 'https://graph.facebook.com/' + getApiVersion() + '/' + pageId + '/leadgen_forms?access_token=' + token + '&fields=id,name,question_count,status';
         HttpRequest req = new HttpRequest();
@@ -55,12 +81,14 @@ public without sharing class MetaFormService {
         }
         if (!formsToUpsert.isEmpty()) upsert formsToUpsert Form_ID__c;
         MetaPageService.refreshPageFormCounts();
-        return [SELECT Id, Form_ID__c, Form_Name__c, Page_ID__c, Question_Count__c, Status__c, Is_Mapped__c FROM Meta_Form__c WHERE Page_ID__c = :pageId ORDER BY Form_Name__c];
+        List<Meta_Form__c> records = [SELECT Id, Form_ID__c, Form_Name__c, Page_ID__c, Question_Count__c, Status__c, Is_Mapped__c FROM Meta_Form__c WHERE Page_ID__c = :pageId ORDER BY Form_Name__c];
+        return wrapForms(records);
     }
 
     @AuraEnabled(cacheable=false)
-    public static List<Meta_Form__c> getForms(String pageId) {
-        return [SELECT Id, Form_ID__c, Form_Name__c, Page_ID__c, Question_Count__c, Status__c, Is_Mapped__c FROM Meta_Form__c WHERE Page_ID__c = :pageId ORDER BY Form_Name__c];
+    public static List<FormWrapper> getForms(String pageId) {
+        List<Meta_Form__c> records = [SELECT Id, Form_ID__c, Form_Name__c, Page_ID__c, Question_Count__c, Status__c, Is_Mapped__c FROM Meta_Form__c WHERE Page_ID__c = :pageId ORDER BY Form_Name__c];
+        return wrapForms(records);
     }
 
     @AuraEnabled

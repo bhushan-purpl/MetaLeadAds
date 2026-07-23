@@ -143,10 +143,10 @@
                         </div>
                         <template for:each={recentLogs} for:item="log">
                             <div key={log.Id} class="log-row">
-                                <span class="log-id">{log.Meta_Lead_ID__c}</span>
-                                <span class="log-cell">{log.Page_ID__c}</span>
-                                <span class="log-cell">{log.Form_ID__c}</span>
-                                <span><span class={log.statusClass}>{log.Processing_Status__c}</span></span>
+                                <span class="log-id">{log.Meta_Lead_ID}</span>
+                                <span class="log-cell">{log.Page_ID}</span>
+                                <span class="log-cell">{log.Form_ID}</span>
+                                <span><span class={log.statusClass}>{log.Processing_Status}</span></span>
                                 <span class="log-date">{log.formattedDate}</span>
                             </div>
                         </template>

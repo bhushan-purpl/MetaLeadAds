@@ -1,14 +1,32 @@
 public without sharing class MetaLeadAssignmentService {
 
+    public class AssignmentWrapper {
+        @AuraEnabled public String Id;
+        @AuraEnabled public String Form_ID;
+        @AuraEnabled public String Owner_Type;
+        @AuraEnabled public String Owner_ID;
+        @AuraEnabled public String Owner_Name;
+        @AuraEnabled public Boolean Active;
+    }
+
     @AuraEnabled(cacheable=false)
-    public static Meta_Lead_Assignment__c getAssignment(String formId) {
+    public static AssignmentWrapper getAssignment(String formId) {
         List<Meta_Lead_Assignment__c> assignments = [
             SELECT Id, Form__c, Form_ID__c, Owner_Type__c, Owner_ID__c, Owner_Name__c, Active__c
             FROM Meta_Lead_Assignment__c
             WHERE Form_ID__c = :formId AND Active__c = true
             LIMIT 1
         ];
-        return assignments.isEmpty() ? null : assignments[0];
+        if (assignments.isEmpty()) return null;
+        
+        AssignmentWrapper w = new AssignmentWrapper();
+        w.Id = assignments[0].Id;
+        w.Form_ID = assignments[0].Form_ID__c;
+        w.Owner_Type = assignments[0].Owner_Type__c;
+        w.Owner_ID = assignments[0].Owner_ID__c;
+        w.Owner_Name = assignments[0].Owner_Name__c;
+        w.Active = assignments[0].Active__c;
+        return w;
     }
 
     @AuraEnabled

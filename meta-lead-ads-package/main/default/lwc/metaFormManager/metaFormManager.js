@@ -52,9 +52,9 @@ export default class MetaFormManager extends LightningElement {
     enrichForms(raw) {
         return (raw || []).map(f => ({
             ...f,
-            statusClass:  f.Status__c === 'Active' ? 'badge badge-success' : 'badge badge-neutral',
-            mappedLabel:  f.Is_Mapped__c ? 'Mapped' : 'Unmapped',
-            mappedClass:  f.Is_Mapped__c ? 'badge badge-mapped' : 'badge badge-unmapped'
+            statusClass:  f.Status === 'Active' ? 'badge badge-success' : 'badge badge-neutral',
+            mappedLabel:  f.Is_Mapped ? 'Mapped' : 'Unmapped',
+            mappedClass:  f.Is_Mapped ? 'badge badge-mapped' : 'badge badge-unmapped'
         }));
     }
 

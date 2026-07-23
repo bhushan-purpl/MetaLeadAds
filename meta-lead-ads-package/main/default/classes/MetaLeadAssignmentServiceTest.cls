@@ -12,7 +12,7 @@ private class MetaLeadAssignmentServiceTest {
         String res = MetaLeadAssignmentService.saveAssignment('111', 'User', UserInfo.getUserId(), 'Test User');
         System.assertEquals('SUCCESS', res);
         
-        Meta_Lead_Assignment__c assignment = MetaLeadAssignmentService.getAssignment('111');
+        MetaLeadAssignmentService.AssignmentWrapper assignment = MetaLeadAssignmentService.getAssignment('111');
         System.assertNotEquals(null, assignment);
         
         List<Map<String, String>> users = MetaLeadAssignmentService.getUsers();

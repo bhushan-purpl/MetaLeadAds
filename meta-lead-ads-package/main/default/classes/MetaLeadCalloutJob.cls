@@ -43,6 +43,8 @@ public class MetaLeadCalloutJob implements Queueable, Database.AllowsCallouts {
                               ? settings.Graph_API_Version__c
                               : 'v25.0';
 
+        Boolean isLicenseActive = MetaLicenseService.isLicenseActive();
+
         Map<String, String> pageTokenCache = new Map<String, String>();
         
         List<Lead> leadsToInsert = new List<Lead>();
@@ -57,6 +59,13 @@ public class MetaLeadCalloutJob implements Queueable, Database.AllowsCallouts {
             }
 
             try {
+                if (!isLicenseActive) {
+                    logRec.Processing_Status__c = 'Failed';
+                    logRec.Error_Message__c = 'Failed - License Expired. Please renew your license.';
+                    logsToUpdate.add(logRec);
+                    continue;
+                }
+
                 String leadgenId = logRec.Meta_Lead_ID__c;
 
                 String accessToken = pageTokenCache.get(logRec.Page_ID__c);
@@ -94,14 +103,7 @@ public class MetaLeadCalloutJob implements Queueable, Database.AllowsCallouts {
                     }
                 }
 
-                if (isLeadCreationEnabled == false) {
-                    // Skip lead creation if disabled, but still log it as Success
-                    System.debug('Lead creation is disabled for this page.');
-                    logRec.Processing_Status__c = 'Success';
-                    logRec.Error_Message__c = 'Success - Lead Creation Disabled by Configuration';
-                    logsToUpdate.add(logRec);
-                    continue; // Skip callout and lead creation
-                }
+                // The early check for isLeadCreationEnabled was removed here so Graph API callout still executes
 
                 String endpoint = 'https://graph.facebook.com/' + apiVersion + '/' + leadgenId
                                 + '?fields=id,created_time,field_data,ad_id,ad_name,adset_id,adset_name,campaign_id,campaign_name,form_id,platform,is_organic'
@@ -292,6 +294,14 @@ public class MetaLeadCalloutJob implements Queueable, Database.AllowsCallouts {
                 cv.VersionData = Blob.valueOf(prettyJson);
                 cv.FirstPublishLocationId = logRec.Id;
                 cvsToInsert.add(cv);
+
+                if (isLeadCreationEnabled == false) {
+                    System.debug('Lead creation is disabled for this page.');
+                    logRec.Processing_Status__c = 'Success';
+                    logRec.Error_Message__c = 'Success - Lead Creation Disabled by Configuration';
+                    logsToUpdate.add(logRec);
+                    continue; // Skip actual lead creation but keep the raw data
+                }
 
                 leadsToInsert.add(newLead);
                 leadIndexToLogMap.put(leadsToInsert.size() - 1, logRec);

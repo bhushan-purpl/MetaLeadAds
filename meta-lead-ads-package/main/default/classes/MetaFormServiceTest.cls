@@ -29,7 +29,7 @@ private class MetaFormServiceTest {
     static void testSyncForms() {
         Test.setMock(HttpCalloutMock.class, new FormMock('forms'));
         Test.startTest();
-        List<Meta_Form__c> forms = MetaFormService.syncForms('123');
+        List<MetaFormService.FormWrapper> forms = MetaFormService.syncForms('123');
         Test.stopTest();
         System.assert(forms.size() > 0);
     }
@@ -37,7 +37,7 @@ private class MetaFormServiceTest {
     @isTest
     static void testGetForms() {
         Test.startTest();
-        List<Meta_Form__c> forms = MetaFormService.getForms('123');
+        List<MetaFormService.FormWrapper> forms = MetaFormService.getForms('123');
         Test.stopTest();
         System.assertEquals(1, forms.size());
     }

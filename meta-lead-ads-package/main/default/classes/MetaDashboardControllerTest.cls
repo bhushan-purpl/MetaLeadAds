@@ -18,6 +18,6 @@ private class MetaDashboardControllerTest {
         System.assertEquals(1, stats.get('mappedForms'));
         System.assertEquals('Received', stats.get('lastLeadStatus'));
         System.assertNotEquals(null, stats.get('lastSyncDate'));
-        System.assertEquals(1, ((List<Meta_Lead_Log__c>) stats.get('recentLogs')).size());
+        System.assertEquals(1, ((List<MetaAuthController.LogWrapper>) stats.get('recentLogs')).size());
     }
 }

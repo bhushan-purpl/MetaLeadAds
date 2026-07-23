@@ -29,12 +29,25 @@ public without sharing class MetaDashboardController {
         stats.put('lastSyncDate', lastSync.isEmpty() ? null : lastSync[0].Last_Sync__c);
 
         // Recent logs
-        stats.put('recentLogs', [
+        List<Meta_Lead_Log__c> rawLogs = [
             SELECT Id, Meta_Lead_ID__c, Page_ID__c, Form_ID__c, Processing_Status__c, Error_Message__c, CreatedDate
             FROM Meta_Lead_Log__c
             ORDER BY CreatedDate DESC
             LIMIT 10
-        ]);
+        ];
+        List<MetaAuthController.LogWrapper> wrappedLogs = new List<MetaAuthController.LogWrapper>();
+        for (Meta_Lead_Log__c log : rawLogs) {
+            MetaAuthController.LogWrapper w = new MetaAuthController.LogWrapper();
+            w.Id = log.Id;
+            w.Meta_Lead_ID = log.Meta_Lead_ID__c;
+            w.Page_ID = log.Page_ID__c;
+            w.Form_ID = log.Form_ID__c;
+            w.Processing_Status = log.Processing_Status__c;
+            w.Error_Message = log.Error_Message__c;
+            w.CreatedDate = log.CreatedDate;
+            wrappedLogs.add(w);
+        }
+        stats.put('recentLogs', wrappedLogs);
 
         return stats;
     }

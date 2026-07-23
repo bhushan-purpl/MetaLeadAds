@@ -31,9 +31,9 @@
                     </div>
                     <template for:each={forms} for:item="form">
                         <div key={form.Id} class="form-row">
-                            <span class="form-name">{form.Form_Name__c}</span>
-                            <span class="form-questions">{form.Question_Count__c}</span>
-                            <span><span class={form.statusClass}>{form.Status__c}</span></span>
+                            <span class="form-name">{form.Form_Name}</span>
+                            <span class="form-questions">{form.Question_Count}</span>
+                            <span><span class={form.statusClass}>{form.Status}</span></span>
                             <span><span class={form.mappedClass}>{form.mappedLabel}</span></span>
                             <span class="form-actions">
                                 <lightning-button-icon
@@ -42,8 +42,8 @@
                                     alternative-text="Map Fields"
                                     title="Map Fields"
                                     onclick={handleMapForm}
-                                    data-form-id={form.Form_ID__c}
-                                    data-form-name={form.Form_Name__c}>
+                                    data-form-id={form.Form_ID}
+                                    data-form-name={form.Form_Name}>
                                 </lightning-button-icon>
                                 <lightning-button-icon
                                     icon-name="utility:user"
@@ -51,8 +51,8 @@
                                     alternative-text="Assignment"
                                     title="Set Assignment"
                                     onclick={handleAssignment}
-                                    data-form-id={form.Form_ID__c}
-                                    data-form-name={form.Form_Name__c}>
+                                    data-form-id={form.Form_ID}
+                                    data-form-name={form.Form_Name}>
                                 </lightning-button-icon>
                             </span>
                         </div>
