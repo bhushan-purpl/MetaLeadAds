@@ -8,10 +8,16 @@
 
             <!-- Status Section -->
             <div class="slds-box slds-m-bottom_medium slds-theme_default">
-                <p class="slds-text-heading_small slds-m-bottom_small">
+                <p class="slds-text-heading_small slds-m-bottom_small" style="display: flex; align-items: center;">
                     Current License Status
                     <template if:true={isTrial}>
                         <lightning-badge label="Trial Mode" class="slds-theme_warning slds-m-left_small"></lightning-badge>
+                    </template>
+                    <template if:true={isActive}>
+                        <lightning-badge label="Active" class="slds-theme_success slds-m-left_small"></lightning-badge>
+                    </template>
+                    <template if:true={isExpired}>
+                        <lightning-badge label="Expired" class="slds-theme_error slds-m-left_small"></lightning-badge>
                     </template>
                 </p>
                 <p>Status: <strong>{licenseStatus}</strong></p>
