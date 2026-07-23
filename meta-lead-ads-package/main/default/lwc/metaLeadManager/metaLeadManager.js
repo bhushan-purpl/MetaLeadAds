@@ -31,11 +31,11 @@ export default class MetaLeadManager extends LightningElement {
 
     // ─── Column definitions ───────────────────────────────────────────
     logColumns = [
-        { label: 'Leadgen ID',   fieldName: 'Meta_Lead_ID__c',  type: 'text' },
-        { label: 'Page ID',      fieldName: 'Page_ID__c',       type: 'text' },
-        { label: 'Status',       fieldName: 'Processing_Status__c', type: 'text',
+        { label: 'Leadgen ID',   fieldName: 'Meta_Lead_ID',  type: 'text' },
+        { label: 'Page ID',      fieldName: 'Page_ID',       type: 'text' },
+        { label: 'Status',       fieldName: 'Processing_Status', type: 'text',
           cellAttributes: { class: { fieldName: 'statusClass' } } },
-        { label: 'Error Message',fieldName: 'Error_Message__c', type: 'text' },
+        { label: 'Error Message',fieldName: 'Error_Message', type: 'text' },
         { label: 'Created',      fieldName: 'CreatedDate',      type: 'date', typeAttributes: { year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit' } }
     ];
 
@@ -159,8 +159,8 @@ export default class MetaLeadManager extends LightningElement {
         let sub = this.activeSubscriptions.find(s => s.Id === recordId);
         if (sub) {
             // Optimistic update
-            if (toggleType === 'logs') sub.Enable_Logs__c = isChecked;
-            if (toggleType === 'leads') sub.Enable_Lead_Creation__c = isChecked;
+            if (toggleType === 'logs') sub.Enable_Logs = isChecked;
+            if (toggleType === 'leads') sub.Enable_Lead_Creation = isChecked;
             
             // Force reactivity by cloning the array
             this.activeSubscriptions = [...this.activeSubscriptions];
@@ -168,15 +168,15 @@ export default class MetaLeadManager extends LightningElement {
             try {
                 await updateSubscriptionSettings({
                     recordId: recordId,
-                    enableLogs: sub.Enable_Logs__c,
-                    enableLeads: sub.Enable_Lead_Creation__c
+                    enableLogs: sub.Enable_Logs,
+                    enableLeads: sub.Enable_Lead_Creation
                 });
                 this.showToast('Success', 'Settings saved.', 'success');
             } catch (error) {
                 this.showToast('Error', 'Failed to save settings.', 'error');
                 // Revert on failure
-                if (toggleType === 'logs') sub.Enable_Logs__c = !isChecked;
-                if (toggleType === 'leads') sub.Enable_Lead_Creation__c = !isChecked;
+                if (toggleType === 'logs') sub.Enable_Logs = !isChecked;
+                if (toggleType === 'leads') sub.Enable_Lead_Creation = !isChecked;
                 this.activeSubscriptions = [...this.activeSubscriptions];
             }
         }
@@ -198,8 +198,8 @@ export default class MetaLeadManager extends LightningElement {
             const logs = await getIntegrationLogs();
             this.integrationLogs = logs.map(log => ({
                 ...log,
-                statusClass: log.Processing_Status__c === 'Success' ? 'slds-text-color_success' : 
-                             log.Processing_Status__c === 'Failed'  ? 'slds-text-color_error' : ''
+                statusClass: log.Processing_Status === 'Success' ? 'slds-text-color_success' : 
+                             log.Processing_Status === 'Failed'  ? 'slds-text-color_error' : ''
             }));
         } catch (e) {
             // Non-critical

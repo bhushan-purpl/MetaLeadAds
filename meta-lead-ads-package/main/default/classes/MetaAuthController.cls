@@ -173,14 +173,32 @@ public without sharing class MetaAuthController {
     // ─────────────────────────────────────────────────────────────────
     // Step 6: Get active subscriptions for the monitoring table
     // ─────────────────────────────────────────────────────────────────
+    public class SubscriptionWrapper {
+        @AuraEnabled public String Id;
+        @AuraEnabled public String Page_ID;
+        @AuraEnabled public String Page_Name;
+        @AuraEnabled public Boolean Enable_Logs;
+        @AuraEnabled public Boolean Enable_Lead_Creation;
+    }
+
     @AuraEnabled(cacheable=false)
-    public static List<Meta_Page_Subscription__c> getActiveSubscriptions() {
-        return [
-            SELECT Id, Page_ID__c, Page_Name__c, Status__c, Last_Sync_Date__c, Enable_Logs__c, Enable_Lead_Creation__c
+    public static List<SubscriptionWrapper> getActiveSubscriptions() {
+        List<SubscriptionWrapper> wrappers = new List<SubscriptionWrapper>();
+        for (Meta_Page_Subscription__c sub : [
+            SELECT Id, Page_ID__c, Page_Name__c, Enable_Logs__c, Enable_Lead_Creation__c
             FROM Meta_Page_Subscription__c
             WHERE Status__c = 'Active'
             ORDER BY Last_Sync_Date__c DESC
-        ];
+        ]) {
+            SubscriptionWrapper w = new SubscriptionWrapper();
+            w.Id = sub.Id;
+            w.Page_ID = sub.Page_ID__c;
+            w.Page_Name = sub.Page_Name__c;
+            w.Enable_Logs = sub.Enable_Logs__c;
+            w.Enable_Lead_Creation = sub.Enable_Lead_Creation__c;
+            wrappers.add(w);
+        }
+        return wrappers;
     }
     
     // ─────────────────────────────────────────────────────────────────
@@ -203,14 +221,34 @@ public without sharing class MetaAuthController {
     // ─────────────────────────────────────────────────────────────────
     // Step 7: Get recent Integration Logs for the dashboard
     // ─────────────────────────────────────────────────────────────────
+    public class LogWrapper {
+        @AuraEnabled public String Id;
+        @AuraEnabled public String Meta_Lead_ID;
+        @AuraEnabled public String Page_ID;
+        @AuraEnabled public String Processing_Status;
+        @AuraEnabled public String Error_Message;
+        @AuraEnabled public Datetime CreatedDate;
+    }
+
     @AuraEnabled(cacheable=false)
-    public static List<Meta_Lead_Log__c> getIntegrationLogs() {
-        return [
+    public static List<LogWrapper> getIntegrationLogs() {
+        List<LogWrapper> wrappers = new List<LogWrapper>();
+        for (Meta_Lead_Log__c log : [
             SELECT Id, Meta_Lead_ID__c, Page_ID__c, Processing_Status__c, Error_Message__c, CreatedDate
             FROM Meta_Lead_Log__c
             ORDER BY CreatedDate DESC
             LIMIT 50
-        ];
+        ]) {
+            LogWrapper w = new LogWrapper();
+            w.Id = log.Id;
+            w.Meta_Lead_ID = log.Meta_Lead_ID__c;
+            w.Page_ID = log.Page_ID__c;
+            w.Processing_Status = log.Processing_Status__c;
+            w.Error_Message = log.Error_Message__c;
+            w.CreatedDate = log.CreatedDate;
+            wrappers.add(w);
+        }
+        return wrappers;
     }
 
     // ─────────────────────────────────────────────────────────────────

@@ -92,13 +92,13 @@
                             <tbody>
                                 <template for:each={activeSubscriptions} for:item="sub">
                                     <tr key={sub.Id}>
-                                        <td data-label="Page Name"><div class="slds-truncate">{sub.Page_Name__c}</div></td>
-                                        <td data-label="Page ID"><div class="slds-truncate">{sub.Page_ID__c}</div></td>
+                                        <td data-label="Page Name"><div class="slds-truncate">{sub.Page_Name}</div></td>
+                                        <td data-label="Page ID"><div class="slds-truncate">{sub.Page_ID}</div></td>
                                         <td data-label="Enable Logs">
                                             <lightning-input type="toggle" 
                                                              data-id={sub.Id}
                                                              data-type="logs"
-                                                             checked={sub.Enable_Logs__c}
+                                                             checked={sub.Enable_Logs}
                                                              onchange={handleToggleChange}
                                                              message-toggle-active="" 
                                                              message-toggle-inactive="">
@@ -108,7 +108,7 @@
                                             <lightning-input type="toggle" 
                                                              data-id={sub.Id}
                                                              data-type="leads"
-                                                             checked={sub.Enable_Lead_Creation__c}
+                                                             checked={sub.Enable_Lead_Creation}
                                                              onchange={handleToggleChange}
                                                              message-toggle-active="" 
                                                              message-toggle-inactive="">
