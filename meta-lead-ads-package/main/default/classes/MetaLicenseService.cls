@@ -6,12 +6,23 @@ public with sharing class MetaLicenseService {
         return 'https://purplstack.com/license.php';
     }
 
+    // Convert SObject to Map to avoid LWC FLS/Serialization issues
+    private static Map<String, Object> getSettingsMap(Meta_License_Settings__c settings) {
+        if (settings == null) return null;
+        return new Map<String, Object>{
+            'Status__c' => settings.Status__c,
+            'Expiration_Date__c' => settings.Expiration_Date__c,
+            'Max_Pages_Allowed__c' => settings.Max_Pages_Allowed__c,
+            'License_Key__c' => settings.License_Key__c
+        };
+    }
+
     // Register Trial on first open
     @AuraEnabled
-    public static Meta_License_Settings__c registerTrial() {
+    public static Map<String, Object> registerTrial() {
         Meta_License_Settings__c settings = Meta_License_Settings__c.getOrgDefaults();
         if (settings != null && settings.Id != null) {
-            return settings; // Already registered
+            return getSettingsMap(settings); // Already registered
         }
 
         String orgId = UserInfo.getOrganizationId();
@@ -43,7 +54,7 @@ public with sharing class MetaLicenseService {
                         Max_Pages_Allowed__c = (Integer) respData.get('maxPages')
                     );
                     insert settings;
-                    return settings;
+                    return getSettingsMap(settings);
                 }
             }
         } catch (Exception e) {
@@ -90,7 +101,7 @@ public with sharing class MetaLicenseService {
                     upsert settings;
 
                     result.put('success', true);
-                    result.put('settings', settings);
+                    result.put('settings', getSettingsMap(settings));
                 }
             } else {
                 result.put('success', false);
