@@ -59,3 +59,106 @@
 .connect-btn {
     margin-top: 1rem;
 }
+
+/* ─── Dashboard Styles ─── */
+.dashboard-container {
+    background: #ffffff;
+}
+.kpi-card {
+    padding: 1.5rem;
+    border-radius: 8px;
+    color: white;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    height: 100%;
+}
+.kpi-blue {
+    background: linear-gradient(135deg, #1877F2, #42a5f5);
+}
+.kpi-green {
+    background: linear-gradient(135deg, #047857, #10b981);
+}
+.kpi-red {
+    background: linear-gradient(135deg, #b91c1c, #ef4444);
+}
+.kpi-title {
+    font-size: 1rem;
+    text-transform: uppercase;
+    opacity: 0.9;
+    letter-spacing: 0.5px;
+}
+.kpi-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin: 0.5rem 0;
+}
+.kpi-subtext {
+    font-size: 0.875rem;
+    opacity: 0.85;
+}
+.filter-bar {
+    border-radius: 6px;
+    border: 1px solid #e5e7eb;
+}
+.table-container {
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+}
+.custom-table th {
+    background-color: #f9fafb !important;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
+    color: #4b5563;
+}
+.sf-status-cell {
+    display: flex;
+    align-items: center;
+}
+.pagination-bar {
+    border: 1px solid #e5e7eb;
+    border-top: none;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+    background: #f9fafb;
+    padding-bottom: 0.5rem;
+}
+.rows-dropdown {
+    width: 80px;
+}
+.empty-icon {
+    font-size: 3rem;
+}
+
+/* ─── Modal Styles ─── */
+.detail-list dt {
+    width: 35%;
+    float: left;
+    clear: left;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+.detail-list dd {
+    width: 65%;
+    float: left;
+    margin-bottom: 0.5rem;
+}
+.code-header {
+    background: #1f2937;
+    color: #f3f4f6;
+    padding: 0.5rem 1rem;
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+    font-family: monospace;
+}
+.code-block {
+    background: #111827;
+    color: #a78bfa;
+    padding: 1rem;
+    border-bottom-left-radius: 6px;
+    border-bottom-right-radius: 6px;
+    overflow-x: auto;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.85rem;
+    max-height: 400px;
+}

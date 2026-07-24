@@ -29,9 +29,25 @@ public without sharing class MetaFormService {
         @AuraEnabled public Decimal Question_Count;
         @AuraEnabled public String Status;
         @AuraEnabled public Boolean Is_Mapped;
+        @AuraEnabled public Integer Total_Fields;
+        @AuraEnabled public Integer Mapped_Fields;
     }
 
     private static List<FormWrapper> wrapForms(List<Meta_Form__c> forms) {
+        Set<String> formIds = new Set<String>();
+        for (Meta_Form__c f : forms) {
+            if (String.isNotBlank(f.Form_ID__c)) {
+                formIds.add(f.Form_ID__c);
+            }
+        }
+        
+        Map<String, Integer> mappedCounts = new Map<String, Integer>();
+        if (!formIds.isEmpty()) {
+            for (AggregateResult ar : [SELECT Form_ID__c formId, COUNT(Id) cnt FROM Meta_Field_Mapping__c WHERE Form_ID__c IN :formIds AND Active__c = true AND Salesforce_Field__c != null AND (NOT Facebook_Field__c LIKE 'static::%') GROUP BY Form_ID__c]) {
+                mappedCounts.put((String)ar.get('formId'), (Integer)ar.get('cnt'));
+            }
+        }
+
         List<FormWrapper> wrappers = new List<FormWrapper>();
         for (Meta_Form__c f : forms) {
             FormWrapper w = new FormWrapper();
@@ -42,6 +58,18 @@ public without sharing class MetaFormService {
             w.Question_Count = f.Question_Count__c;
             w.Status = f.Status__c;
             w.Is_Mapped = f.Is_Mapped__c;
+            
+            w.Mapped_Fields = mappedCounts.containsKey(f.Form_ID__c) ? mappedCounts.get(f.Form_ID__c) : 0;
+            
+            Integer fbQuestionsCount = 0;
+            if (String.isNotBlank(f.Questions_JSON__c)) {
+                try {
+                    List<Object> qList = (List<Object>) JSON.deserializeUntyped(f.Questions_JSON__c);
+                    fbQuestionsCount = qList.size();
+                } catch(Exception e) {}
+            }
+            w.Total_Fields = fbQuestionsCount + 24; // 24 tracking parameters always added
+
             wrappers.add(w);
         }
         return wrappers;
@@ -81,13 +109,13 @@ public without sharing class MetaFormService {
         }
         if (!formsToUpsert.isEmpty()) upsert formsToUpsert Form_ID__c;
         MetaPageService.refreshPageFormCounts();
-        List<Meta_Form__c> records = [SELECT Id, Form_ID__c, Form_Name__c, Page_ID__c, Question_Count__c, Status__c, Is_Mapped__c FROM Meta_Form__c WHERE Page_ID__c = :pageId ORDER BY Form_Name__c];
+        List<Meta_Form__c> records = [SELECT Id, Form_ID__c, Form_Name__c, Page_ID__c, Question_Count__c, Status__c, Is_Mapped__c, Questions_JSON__c FROM Meta_Form__c WHERE Page_ID__c = :pageId ORDER BY Form_Name__c];
         return wrapForms(records);
     }
 
     @AuraEnabled(cacheable=false)
     public static List<FormWrapper> getForms(String pageId) {
-        List<Meta_Form__c> records = [SELECT Id, Form_ID__c, Form_Name__c, Page_ID__c, Question_Count__c, Status__c, Is_Mapped__c FROM Meta_Form__c WHERE Page_ID__c = :pageId ORDER BY Form_Name__c];
+        List<Meta_Form__c> records = [SELECT Id, Form_ID__c, Form_Name__c, Page_ID__c, Question_Count__c, Status__c, Is_Mapped__c, Questions_JSON__c FROM Meta_Form__c WHERE Page_ID__c = :pageId ORDER BY Form_Name__c];
         return wrapForms(records);
     }
 

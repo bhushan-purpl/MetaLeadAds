@@ -24,7 +24,7 @@
                 <div class="form-table">
                     <div class="form-table-header">
                         <span>Form Name</span>
-                        <span>Questions</span>
+                        <span>Mapped Fields</span>
                         <span>Status</span>
                         <span>Mapping</span>
                         <span>Actions</span>
@@ -32,7 +32,7 @@
                     <template for:each={forms} for:item="form">
                         <div key={form.Id} class="form-row">
                             <span class="form-name">{form.Form_Name}</span>
-                            <span class="form-questions">{form.Question_Count}</span>
+                            <span class="form-questions">{form.Mapped_Fields} / {form.Total_Fields}</span>
                             <span><span class={form.statusClass}>{form.Status}</span></span>
                             <span><span class={form.mappedClass}>{form.mappedLabel}</span></span>
                             <span class="form-actions">

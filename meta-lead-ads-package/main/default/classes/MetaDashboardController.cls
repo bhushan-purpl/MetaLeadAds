@@ -30,7 +30,7 @@ public without sharing class MetaDashboardController {
 
         // Recent logs
         List<Meta_Lead_Log__c> rawLogs = [
-            SELECT Id, Meta_Lead_ID__c, Page_ID__c, Form_ID__c, Processing_Status__c, Error_Message__c, CreatedDate
+            SELECT Id, Meta_Lead_ID__c, Page_ID__c, Form_ID__c, Processing_Status__c, Error_Message__c, CreatedDate, Retry_Count__c, Last_Retry_Date__c
             FROM Meta_Lead_Log__c
             ORDER BY CreatedDate DESC
             LIMIT 10
@@ -45,10 +45,44 @@ public without sharing class MetaDashboardController {
             w.Processing_Status = log.Processing_Status__c;
             w.Error_Message = log.Error_Message__c;
             w.CreatedDate = log.CreatedDate;
+            w.Retry_Count = log.Retry_Count__c;
+            w.Last_Retry_Date = log.Last_Retry_Date__c;
             wrappedLogs.add(w);
         }
         stats.put('recentLogs', wrappedLogs);
 
         return stats;
+    }
+
+    @AuraEnabled
+    public static void retryLead(Id logId) {
+        if (logId == null) {
+            throw new AuraHandledException('Log ID is missing.');
+        }
+
+        List<Meta_Lead_Log__c> logs = [
+            SELECT Id, Processing_Status__c, Retry_Count__c
+            FROM Meta_Lead_Log__c 
+            WHERE Id = :logId
+        ];
+        
+        if (logs.isEmpty()) {
+            throw new AuraHandledException('Lead Log not found.');
+        }
+
+        Meta_Lead_Log__c log = logs[0];
+        
+        if (log.Processing_Status__c != 'Failed') {
+            throw new AuraHandledException('Only Failed leads can be retried.');
+        }
+
+        log.Processing_Status__c = 'Processing';
+        log.Retry_Count__c = (log.Retry_Count__c == null ? 0 : log.Retry_Count__c) + 1;
+        log.Last_Retry_Date__c = System.now();
+        log.Retried_By__c = UserInfo.getUserId();
+        update log;
+
+        // Enqueue existing callout job
+        System.enqueueJob(new MetaLeadCalloutJob(new List<Id>{ log.Id }));
     }
 }

@@ -39,62 +39,70 @@
                 </div>
                 <p class="hint">Use this as the Verify Token in Meta for Developers webhook settings</p>
             </div>
+
+            <div class="field-group" style="margin-top:20px">
+                <label class="field-label">OAuth Redirect URL</label>
+                <div class="copy-row">
+                    <input type="text" class="url-input" value={redirectUrl} readonly />
+                    <button class="copy-btn" onclick={copyRedirectUrl}>
+                        <span if:true={copiedRedirect}>✅ Copied!</span>
+                        <span if:false={copiedRedirect}>📋 Copy</span>
+                    </button>
+                </div>
+                <p class="hint">Use this in Facebook Login for Business settings as the <strong>Valid OAuth Redirect URI</strong></p>
+            </div>
+
+            <div class="field-group" style="margin-top:20px">
+                <label class="field-label">Salesforce Domain URL</label>
+                <div class="copy-row">
+                    <input type="text" class="url-input" value={domainUrl} readonly />
+                    <button class="copy-btn" onclick={copyDomainUrl}>
+                        <span if:true={copiedDomain}>✅ Copied!</span>
+                        <span if:false={copiedDomain}>📋 Copy</span>
+                    </button>
+                </div>
+                <p class="hint">Add this to the <strong>App Domains</strong> section in Meta App Basic Settings</p>
+            </div>
         </div>
 
-        <!-- ── Subscription Management Card ── -->
-        <div class="card">
+        <!-- ── Setup & Support Card ── -->
+        <div class="card support-card" style="border-left: 4px solid #6c5ce7; background: linear-gradient(to right, #f3f0ff, #ffffff);">
             <div class="card-header">
-                <span class="card-icon">📡</span>
-                <h2>Subscription Management</h2>
+                <span class="card-icon">💜</span>
+                <h2 style="color: #6c5ce7;">Need Help with Setup?</h2>
             </div>
-            <p class="card-desc">Enter your Facebook Page ID to check or manage your webhook subscription.</p>
-
-            <div class="field-group">
-                <label class="field-label">Facebook Page ID</label>
-                <input
-                    type="text"
-                    class="text-input"
-                    value={pageId}
-                    placeholder="e.g. 10011805697549985"
-                    onchange={handlePageIdChange}
-                />
-                <p class="hint">💡 Find your Page ID in any <strong>Meta Lead Log</strong> record → Page ID field</p>
+            <p class="card-desc">For advanced setup, beautiful Meta integration strategies, and expert support, please connect with the Purplstack Team.</p>
+            
+            <div class="action-row" style="margin-top: 20px;">
+                <a href="https://purplstack.com/" target="_blank" class="btn btn-primary" style="background-color: #6c5ce7; border-color: #6c5ce7; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: bold;">
+                    🌐 Visit Purplstack.com
+                </a>
             </div>
+        </div>
 
-            <!-- Action Buttons -->
-            <div class="action-row">
-                <button class="btn btn-secondary" onclick={checkStatus} disabled={isLoading}>
-                    <template if:true={isLoading}>⏳ Checking...</template>
-                    <template if:false={isLoading}>🔍 Check Status</template>
-                </button>
-
-                <template if:true={statusChecked}>
-                    <template if:false={isSubscribed}>
-                        <button class="btn btn-primary" onclick={subscribe} disabled={isLoading}>
-                            <template if:true={isSubscribing}>⏳ Subscribing...</template>
-                            <template if:false={isSubscribing}>🔗 Subscribe to Webhook</template>
-                        </button>
-                    </template>
-                    <template if:true={isSubscribed}>
-                        <button class="btn btn-danger" onclick={unsubscribe} disabled={isLoading}>
-                            <template if:true={isUnsubscribing}>⏳ Unsubscribing...</template>
-                            <template if:false={isUnsubscribing}>🔌 Unsubscribe</template>
-                        </button>
-                    </template>
-                </template>
+        <!-- ── Site Setup Guide Card ── -->
+        <div class="card info-card" style="border-left: 4px solid #f39c12;">
+            <div class="card-header">
+                <span class="card-icon">⚙️</span>
+                <h2>Site Setup Prerequisites</h2>
             </div>
-
-            <!-- Status Banner -->
-            <template if:true={statusChecked}>
-                <div class={statusBannerClass}>
-                    <template if:true={isSubscribed}>
-                        <strong>✅ Subscribed</strong> — Facebook lead ads are connected. New leads will flow into Salesforce automatically.
-                    </template>
-                    <template if:false={isSubscribed}>
-                        <strong>❌ Not Subscribed</strong> — Click <em>Subscribe to Webhook</em> above to enable automatic lead capture.
-                    </template>
-                </div>
-            </template>
+            <p class="card-desc">Before configuring Meta, you must set up a Salesforce Site to expose the Webhook securely to the public internet.</p>
+            <ol class="how-it-works">
+                <li>Go to <strong>Setup → Sites</strong> and create a new Site (or use an active one).</li>
+                <li>Open the Site and click on <strong>Public Access Settings</strong>.</li>
+                <li>Under <strong>Object Settings</strong>, grant <strong>Read & Create</strong> permissions to:
+                    <ul style="margin-top: 5px; margin-bottom: 5px; color: #555; list-style-type: disc; margin-left: 20px;">
+                        <li><strong>Leads</strong></li>
+                        <li><strong>Meta Lead Logs</strong></li>
+                    </ul>
+                </li>
+                <li>Under <strong>Enabled Apex Class Access</strong>, add the following classes:
+                    <ul style="margin-top: 5px; margin-bottom: 5px; color: #555; list-style-type: disc; margin-left: 20px;">
+                        <li><code>MetaLeadWebhook</code></li>
+                        <li><code>MetaOAuthCallback</code></li>
+                    </ul>
+                </li>
+            </ol>
         </div>
 
         <!-- ── How It Works Card ── -->
@@ -104,7 +112,7 @@
                 <h2>How It Works</h2>
             </div>
             <ol class="how-it-works">
-                <li><strong>Subscribe</strong> — Click Subscribe above to connect your Facebook Page to this Salesforce org.</li>
+                <li><strong>Copy URLs</strong> — Use the URLs above to configure your Meta App and Webhooks.</li>
                 <li><strong>Lead Submitted</strong> — When someone fills a Facebook Lead Ad form, Meta sends a webhook notification.</li>
                 <li><strong>Auto-Captured</strong> — Salesforce receives the notification, fetches the full lead data, and creates a Lead record automatically.</li>
                 <li><strong>Mapped</strong> — All fields are mapped as per your <em>Meta Field Mapping</em> custom metadata configuration.</li>

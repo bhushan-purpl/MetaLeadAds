@@ -121,39 +121,266 @@
                     </div>
                 </template>
 
-                <!-- Integration Logs Section -->
-                <div class="slds-m-top_large">
-                    <div class="slds-grid slds-gutters slds-m-bottom_small">
-                        <div class="slds-col">
-                            <h3 class="slds-text-heading_small">
-                                <lightning-icon icon-name="utility:record_lookup" size="x-small" class="slds-m-right_x-small"></lightning-icon>
-                                Recent Incoming Leads Log
-                            </h3>
+                <!-- ══════════════════════════════════════════════════════ -->
+                <!-- Recent Incoming Leads Dashboard                          -->
+                <!-- ══════════════════════════════════════════════════════ -->
+                <div class="slds-m-top_xx-large slds-border_top slds-p-top_large dashboard-container">
+                    
+                    <!-- Dashboard Header -->
+                    <div class="slds-grid slds-wrap slds-grid_vertical-align-center slds-m-bottom_medium">
+                        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                            <h2 class="slds-text-heading_medium slds-text-color_default slds-m-bottom_xxx-small">Recent Incoming Leads Dashboard</h2>
+                            <p class="slds-text-body_small slds-text-color_weak">Monitor all incoming Meta Lead Ads in real time.</p>
                         </div>
-                        <div class="slds-col slds-no-flex">
-                            <lightning-button
-                                label="Refresh Logs"
-                                icon-name="utility:refresh"
-                                variant="neutral"
-                                size="small"
-                                onclick={loadLogs}>
-                            </lightning-button>
+                        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-text-align_right">
+                            <div class="slds-form-element slds-display_inline-block slds-m-right_medium">
+                                <label class="slds-checkbox_toggle slds-grid">
+                                    <span class="slds-form-element__label slds-m-bottom_none">Auto Refresh</span>
+                                    <input type="checkbox" name="checkbox-toggle-refresh" value="auto-refresh" aria-describedby="auto-refresh" checked={autoRefreshEnabled} onchange={handleAutoRefreshToggle} />
+                                    <span id="auto-refresh" class="slds-checkbox_faux_container" aria-live="assertive">
+                                        <span class="slds-checkbox_faux"></span>
+                                        <span class="slds-checkbox_on">30s</span>
+                                        <span class="slds-checkbox_off">Off</span>
+                                    </span>
+                                </label>
+                            </div>
+                            <lightning-button label="Refresh Now" icon-name="utility:refresh" onclick={loadDashboardData}></lightning-button>
                         </div>
                     </div>
+                    
+                    <!-- KPI Cards -->
+                    <lightning-layout multiple-rows class="slds-m-bottom_large kpi-layout">
+                        <!-- Received Card -->
+                        <lightning-layout-item size="12" medium-device-size="4" padding="horizontal-small">
+                            <div class="kpi-card kpi-blue">
+                                <div class="kpi-title">Received</div>
+                                <div class="kpi-value">{dashboard.totalReceived}</div>
+                                <div class="kpi-subtext">+{dashboard.todayReceived} Today</div>
+                            </div>
+                        </lightning-layout-item>
+                        
+                        <!-- Success Card -->
+                        <lightning-layout-item size="12" medium-device-size="4" padding="horizontal-small">
+                            <div class="kpi-card kpi-green">
+                                <div class="kpi-title">Success</div>
+                                <div class="kpi-value">{dashboard.totalSuccess}</div>
+                                <div class="kpi-subtext">{successRate}% Success Rate</div>
+                            </div>
+                        </lightning-layout-item>
+                        
+                        <!-- Failed Card -->
+                        <lightning-layout-item size="12" medium-device-size="4" padding="horizontal-small">
+                            <div class="kpi-card kpi-red">
+                                <div class="kpi-title">Failed</div>
+                                <div class="kpi-value">{dashboard.totalFailed}</div>
+                                <div class="kpi-subtext">{failedRate}% Failure Rate</div>
+                            </div>
+                        </lightning-layout-item>
+                    </lightning-layout>
+
+                    <!-- Filter Bar -->
+                    <div class="slds-grid slds-wrap slds-gutters filter-bar slds-m-bottom_medium slds-p-around_small slds-theme_shade">
+                        <div class="slds-col slds-size_1-of-1 slds-medium-size_3-of-12">
+                            <lightning-combobox name="dateFilter" label="Date Range" value={dateFilter} options={dateOptions} onchange={handleFilterChange}></lightning-combobox>
+                        </div>
+                        <div class="slds-col slds-size_1-of-1 slds-medium-size_3-of-12">
+                            <lightning-combobox name="statusFilter" label="Status" value={statusFilter} options={statusOptions} onchange={handleFilterChange}></lightning-combobox>
+                        </div>
+                        <div class="slds-col slds-size_1-of-1 slds-medium-size_6-of-12">
+                            <lightning-input type="search" name="searchQuery" label="Search" value={searchQuery} onchange={handleFilterChange} placeholder="Search by Name, Email, Phone, Form..."></lightning-input>
+                        </div>
+                    </div>
+
+                    <!-- Custom Dashboard Table -->
                     <template if:true={hasLogs}>
-                        <lightning-datatable
-                            data={integrationLogs}
-                            columns={logColumns}
-                            key-field="Id"
-                            hide-checkbox-column>
-                        </lightning-datatable>
+                        <div class="slds-scrollable_x table-container slds-m-bottom_small">
+                            <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_striped custom-table">
+                                <thead>
+                                    <tr class="slds-line-height_reset">
+                                        <th scope="col"><div class="slds-truncate">Status</div></th>
+                                        <th scope="col"><div class="slds-truncate">Lead Name</div></th>
+                                        <th scope="col"><div class="slds-truncate">Email</div></th>
+                                        <th scope="col"><div class="slds-truncate">Phone</div></th>
+                                        <th scope="col"><div class="slds-truncate">Form Name</div></th>
+                                        <th scope="col"><div class="slds-truncate">Received On</div></th>
+                                        <th scope="col"><div class="slds-truncate">Salesforce Status</div></th>
+                                        <th scope="col" style="width: 80px;"><div class="slds-truncate">Action</div></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <template for:each={displayedLogs} for:item="log">
+                                        <tr key={log.Id}>
+                                            <td data-label="Status">
+                                                <span class={log.StatusBadgeClass}>{log.Processing_Status}</span>
+                                            </td>
+                                            <td data-label="Lead Name"><div class="slds-truncate">{log.LeadName}</div></td>
+                                            <td data-label="Email"><div class="slds-truncate">{log.Email}</div></td>
+                                            <td data-label="Phone"><div class="slds-truncate">{log.Phone}</div></td>
+                                            <td data-label="Form Name"><div class="slds-truncate">{log.FormName}</div></td>
+                                            <td data-label="Received On"><div class="slds-truncate slds-text-color_weak">{log.ReceivedOn}</div></td>
+                                            <td data-label="Salesforce Status">
+                                                <div class="slds-truncate sf-status-cell">
+                                                    <template if:true={log.Salesforce_Lead_ID}>
+                                                        <lightning-icon icon-name="standard:lead" size="x-small" class="slds-m-right_xx-small"></lightning-icon>
+                                                        {log.Salesforce_Lead_Name}
+                                                    </template>
+                                                    <template if:false={log.Salesforce_Lead_ID}>
+                                                        <span class="slds-text-color_error" title={log.Error_Message}>{log.Error_Message}</span>
+                                                    </template>
+                                                </div>
+                                            </td>
+                                            <td data-label="Action">
+                                                <div style="display:flex; gap:4px;">
+                                                    <lightning-button-icon icon-name="utility:preview" variant="border-filled" alternative-text="View Log" data-id={log.Id} onclick={openLogModal}></lightning-button-icon>
+                                                    <template if:true={log.isFailed}>
+                                                        <lightning-button-icon icon-name="utility:refresh" variant="border-filled" alternative-text="Retry Lead" data-id={log.Id} onclick={handleRetryClick}></lightning-button-icon>
+                                                    </template>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Pagination -->
+                        <div class="slds-grid slds-grid_vertical-align-center pagination-bar slds-p-horizontal_small slds-p-top_small">
+                            <div class="slds-col slds-grow-none">
+                                <lightning-combobox name="rows" label="Rows per page" value={rowsPerPage} options={rowsOptions} onchange={handleRowsChange} variant="label-hidden" class="rows-dropdown"></lightning-combobox>
+                            </div>
+                            <div class="slds-col slds-text-align_right">
+                                <lightning-button-icon icon-name="utility:chevronleft" variant="border-filled" disabled={isFirstPage} onclick={handlePrevPage} class="slds-m-right_x-small"></lightning-button-icon>
+                                <lightning-button-icon icon-name="utility:chevronright" variant="border-filled" disabled={isLastPage} onclick={handleNextPage}></lightning-button-icon>
+                            </div>
+                        </div>
                     </template>
+                    
                     <template if:false={hasLogs}>
-                        <div class="empty-state">
-                            <p>No logs yet. Logs will appear here when leads arrive from Facebook.</p>
+                        <div class="empty-state slds-text-align_center slds-p-around_xx-large slds-border_top slds-border_bottom slds-border_left slds-border_right slds-m-top_medium">
+                            <div class="empty-icon slds-text-heading_large slds-m-bottom_medium">📭</div>
+                            <h3 class="slds-text-heading_small slds-m-bottom_xx-small">No Meta leads have been received yet.</h3>
+                            <p class="slds-text-color_weak">Submit a Facebook Test Lead to view incoming activity.</p>
                         </div>
                     </template>
                 </div>
+                
+                <!-- ══════════════════════════════════════════════════════ -->
+                <!-- Log Detail Modal                                         -->
+                <!-- ══════════════════════════════════════════════════════ -->
+                <template if:true={isModalOpen}>
+                    <section role="dialog" tabindex="-1" aria-modal="true" aria-labelledby="modal-heading-01" class="slds-modal slds-fade-in-open slds-modal_large">
+                        <div class="slds-modal__container">
+                            <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" title="Close" onclick={closeLogModal}>
+                                <lightning-icon icon-name="utility:close" size="small" variant="inverse"></lightning-icon>
+                                <span class="slds-assistive-text">Close</span>
+                            </button>
+                            <div class="slds-modal__header">
+                                <h1 id="modal-heading-01" class="slds-modal__title slds-hyphenate">Integration Log Details</h1>
+                                <p class="slds-m-top_x-small">Leadgen ID: <strong>{selectedLog.Meta_Lead_ID}</strong></p>
+                            </div>
+                            <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+                                
+                                <div class="slds-grid slds-wrap slds-gutters">
+                                    <!-- Processing Info -->
+                                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-m-bottom_medium">
+                                        <article class="slds-card slds-card_boundary">
+                                            <div class="slds-card__header slds-grid">
+                                                <header class="slds-media slds-media_center slds-has-flexi-truncate">
+                                                    <div class="slds-media__figure">
+                                                        <lightning-icon icon-name="utility:info" size="small"></lightning-icon>
+                                                    </div>
+                                                    <div class="slds-media__body">
+                                                        <h2 class="slds-card__header-title">Processing Information</h2>
+                                                    </div>
+                                                </header>
+                                            </div>
+                                            <div class="slds-card__body slds-card__body_inner">
+                                                <dl class="slds-list_horizontal slds-wrap detail-list">
+                                                    <dt class="slds-item_label slds-text-color_weak slds-truncate" title="Status">Status:</dt>
+                                                    <dd class="slds-item_detail slds-truncate"><span class={selectedLog.StatusBadgeClass}>{selectedLog.Processing_Status}</span></dd>
+                                                    <dt class="slds-item_label slds-text-color_weak slds-truncate" title="Received">Received Time:</dt>
+                                                    <dd class="slds-item_detail slds-truncate">{selectedLog.ReceivedOn}</dd>
+                                                    <dt class="slds-item_label slds-text-color_weak slds-truncate" title="Meta Page">Meta Page ID:</dt>
+                                                    <dd class="slds-item_detail slds-truncate">{selectedLog.Page_ID}</dd>
+                                                    <dt class="slds-item_label slds-text-color_weak slds-truncate" title="Meta Form">Meta Form ID:</dt>
+                                                    <dd class="slds-item_detail slds-truncate">{selectedLog.Form_ID}</dd>
+                                                </dl>
+                                            </div>
+                                        </article>
+                                    </div>
+                                    
+                                    <!-- Salesforce Result -->
+                                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-m-bottom_medium">
+                                        <article class="slds-card slds-card_boundary">
+                                            <div class="slds-card__header slds-grid">
+                                                <header class="slds-media slds-media_center slds-has-flexi-truncate">
+                                                    <div class="slds-media__figure">
+                                                        <lightning-icon icon-name="standard:lead" size="small"></lightning-icon>
+                                                    </div>
+                                                    <div class="slds-media__body">
+                                                        <h2 class="slds-card__header-title">Salesforce Result</h2>
+                                                    </div>
+                                                </header>
+                                            </div>
+                                            <div class="slds-card__body slds-card__body_inner">
+                                                <template if:true={selectedLog.Salesforce_Lead_ID}>
+                                                    <dl class="slds-list_horizontal slds-wrap detail-list">
+                                                        <dt class="slds-item_label slds-text-color_weak slds-truncate" title="Status">Result:</dt>
+                                                        <dd class="slds-item_detail slds-truncate"><span class="slds-text-color_success">Lead Created Successfully</span></dd>
+                                                        <dt class="slds-item_label slds-text-color_weak slds-truncate" title="Lead">Lead Record:</dt>
+                                                        <dd class="slds-item_detail slds-truncate"><a href={selectedLog.Salesforce_Lead_URL} target="_blank">{selectedLog.Salesforce_Lead_Name}</a></dd>
+                                                        <dt class="slds-item_label slds-text-color_weak slds-truncate" title="Owner">Owner:</dt>
+                                                        <dd class="slds-item_detail slds-truncate">{selectedLog.Salesforce_Lead_Owner}</dd>
+                                                    </dl>
+                                                </template>
+                                                <template if:false={selectedLog.Salesforce_Lead_ID}>
+                                                    <div class="slds-text-color_error slds-p-around_small slds-theme_alert-texture slds-box">
+                                                        <strong>Error Creating Lead:</strong><br/>
+                                                        {selectedLog.Error_Message}
+                                                    </div>
+                                                </template>
+                                            </div>
+                                        </article>
+                                    </div>
+                                </div>
+                                
+                                <!-- JSON Logs -->
+                                <article class="slds-card slds-card_boundary">
+                                    <div class="slds-card__header slds-grid">
+                                        <header class="slds-media slds-media_center slds-has-flexi-truncate">
+                                            <div class="slds-media__figure">
+                                                <lightning-icon icon-name="utility:json" size="small"></lightning-icon>
+                                            </div>
+                                            <div class="slds-media__body">
+                                                <h2 class="slds-card__header-title">JSON Payloads</h2>
+                                            </div>
+                                        </header>
+                                    </div>
+                                    <div class="slds-card__body slds-card__body_inner">
+                                        <div class="slds-grid slds-wrap slds-gutters">
+                                            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                                                <div class="code-header slds-grid slds-grid_align-spread">
+                                                    <span>Mapped Lead Data</span>
+                                                    <lightning-button-icon icon-name="utility:copy" variant="bare" data-type="raw" onclick={handleCopyJson} alternative-text="Copy"></lightning-button-icon>
+                                                </div>
+                                                <pre class="code-block">{selectedLog.PrettyRaw}</pre>
+                                            </div>
+                                            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                                                <div class="code-header slds-grid slds-grid_align-spread">
+                                                    <span>Webhook Payload</span>
+                                                    <lightning-button-icon icon-name="utility:copy" variant="bare" data-type="payload" onclick={handleCopyJson} alternative-text="Copy"></lightning-button-icon>
+                                                </div>
+                                                <pre class="code-block">{selectedLog.PrettyPayload}</pre>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </article>
+
+                            </div>
+                        </div>
+                    </section>
+                    <div class="slds-backdrop slds-backdrop_open" role="presentation"></div>
+                </template>
             </template>
 
             <!-- Toast / Error Messages -->

@@ -9,7 +9,9 @@ export default class MetaWebhookSetup extends LightningElement {
 
     // Config
     @track webhookUrl    = 'Loading...';
-    @track verifyToken   = 'meta_lead_verify_token';
+    @track redirectUrl   = 'Loading...';
+    @track domainUrl     = 'Loading...';
+    @track verifyToken   = 'Loading...';
     @track pageId        = '';
     @track hasToken      = false;
     @track tokenPreview  = '';
@@ -21,6 +23,8 @@ export default class MetaWebhookSetup extends LightningElement {
     @track isSubscribed   = false;
     @track statusChecked  = false;
     @track copiedUrl      = false;
+    @track copiedRedirect = false;
+    @track copiedDomain   = false;
     @track copiedToken    = false;
 
     // ── Lifecycle ──
@@ -32,7 +36,9 @@ export default class MetaWebhookSetup extends LightningElement {
         try {
             const config = await getConfig();
             this.webhookUrl   = config.webhookUrl   || 'Could not auto-detect. Check your Salesforce Site settings.';
-            this.verifyToken  = config.verifyToken  || 'meta_lead_verify_token';
+            this.redirectUrl  = config.redirectUrl  || '';
+            this.domainUrl    = config.domainUrl    || '';
+            this.verifyToken  = config.verifyToken  || 'Purplstack2026';
             this.pageId       = config.pageId       || '';
             this.hasToken     = config.hasToken === 'true';
             this.tokenPreview = config.tokenPreview || 'Not Configured';
@@ -114,6 +120,18 @@ export default class MetaWebhookSetup extends LightningElement {
         this.copyToClipboard(this.webhookUrl);
         this.copiedUrl = true;
         setTimeout(() => { this.copiedUrl = false; }, 2000);
+    }
+
+    copyRedirectUrl() {
+        this.copyToClipboard(this.redirectUrl);
+        this.copiedRedirect = true;
+        setTimeout(() => { this.copiedRedirect = false; }, 2000);
+    }
+
+    copyDomainUrl() {
+        this.copyToClipboard(this.domainUrl);
+        this.copiedDomain = true;
+        setTimeout(() => { this.copiedDomain = false; }, 2000);
     }
 
     copyVerifyToken() {

@@ -25,6 +25,10 @@ public with sharing class MetaWebhookController {
                 ? '••••••••' + settings.Page_Access_Token__c.right(6)
                 : 'Not Configured');
 
+            String verifyToken = (settings != null && String.isNotBlank(settings.Verify_Token__c))
+                                 ? settings.Verify_Token__c : 'Purplstack2026';
+            config.put('verifyToken', verifyToken);
+
             // Auto-detect Page ID from most recent log
             String pageId = '';
             try {
@@ -37,24 +41,59 @@ public with sharing class MetaWebhookController {
             } catch (Exception ex) { /* ignore */ }
             config.put('pageId', pageId);
 
-            // Construct webhook URL
-            String orgUrl    = URL.getOrgDomainUrl().toExternalForm();
-            String webhookUrl = orgUrl + '/services/apexrest/MetaLeadWebhook';
-            try {
-                List<Site> sites = [SELECT UrlPathPrefix FROM Site WHERE Status = 'Active' LIMIT 1];
-                if (!sites.isEmpty()) {
-                    String sitePath = String.isNotBlank(sites[0].UrlPathPrefix)
-                                      ? '/' + sites[0].UrlPathPrefix : '';
-                    webhookUrl = orgUrl.replace('.salesforce.com', '.my.site.com')
-                               + sitePath + '/services/apexrest/MetaLeadWebhook';
-                }
-            } catch (Exception ex) { /* use fallback */ }
+            String generatedRedirectUri = getGeneratedRedirectUri();
+            // Completely ignore the custom metadata field so the system is fully zero-config and robust
+            config.put('redirectUrl', generatedRedirectUri);
+
+            String webhookUrl = generatedRedirectUri.replace('/metaAuthCallback', '/metaLead');
             config.put('webhookUrl', webhookUrl);
+
+            Url u = new Url(generatedRedirectUri);
+            config.put('domainUrl', u.getHost());
 
         } catch (Exception e) {
             config.put('error', e.getMessage());
         }
         return config;
+    }
+
+    // ── Generate Dynamic Redirect URI ──
+    public static String getGeneratedRedirectUri() {
+        String orgUrl = URL.getOrgDomainUrl().toExternalForm();
+        String className = MetaWebhookController.class.getName();
+        String namespace = '';
+        if (className.contains('.')) {
+            namespace = className.substringBefore('.');
+        } else {
+            Organization org = [SELECT NamespacePrefix FROM Organization LIMIT 1];
+            if (String.isNotBlank(org.NamespacePrefix)) {
+                namespace = org.NamespacePrefix;
+            }
+        }
+        String restPrefix = String.isNotBlank(namespace) ? '/services/apexrest/' + namespace : '/services/apexrest';
+
+        String baseUrl = orgUrl;
+        
+        // If we are already running in a Site context (like the guest user callback), Site.getBaseUrl() works perfectly
+        String currentSiteUrl = Site.getBaseUrl();
+        if (String.isNotBlank(currentSiteUrl)) {
+            baseUrl = currentSiteUrl;
+        } else {
+            // Otherwise, we are in the internal org, so we do string replacements
+            baseUrl = orgUrl.replace('.sandbox.my.salesforce.com', '.sandbox.my.salesforce-sites.com')
+                            .replace('.scratch.my.salesforce.com', '.scratch.my.salesforce-sites.com')
+                            .replace('.my.salesforce.com', '.my.salesforce-sites.com')
+                            .replace('.salesforce.com', '.my.site.com');
+            try {
+                // Ignore CRUD/FLS to get the path prefix
+                List<Site> sites = [SELECT UrlPathPrefix FROM Site WHERE Status = 'Active' LIMIT 1];
+                if (!sites.isEmpty() && String.isNotBlank(sites[0].UrlPathPrefix)) {
+                    baseUrl += '/' + sites[0].UrlPathPrefix;
+                }
+            } catch (Exception ex) { /* fallback */ }
+        }
+
+        return baseUrl + restPrefix + '/metaAuthCallback';
     }
 
     // ── Check subscription status ──

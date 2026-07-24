@@ -66,6 +66,21 @@
     </classAccesses>
     <hasActivationRequired>false</hasActivationRequired>
     <label>Purplstack Meta Lead Ads Admin</label>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Meta_Lead_Log__c.Retry_Count__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Meta_Lead_Log__c.Last_Retry_Date__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Meta_Lead_Log__c.Retried_By__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>

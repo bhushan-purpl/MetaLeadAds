@@ -88,7 +88,7 @@
                             </div>
                             <div class="fs-info">
                                 <h4>{form.Form_Name}</h4>
-                                <p>{form.Question_Count} Questions &nbsp;·&nbsp; <span class={form.mappedClass}>{form.mappedLabel}</span></p>
+                                <p>{form.Mapped_Fields} / {form.Total_Fields} Mapped Fields &nbsp;·&nbsp; <span class={form.mappedClass}>{form.mappedLabel}</span></p>
                             </div>
                             <template if:true={form.isSelected}>
                                 <lightning-icon icon-name="utility:check" size="x-small" class="check-icon"></lightning-icon>
@@ -125,7 +125,19 @@
                             <h2 class="step-heading" style="margin:0">Field Mapping</h2>
                             <p class="step-desc" style="margin:0">{selectedFormName} &nbsp;·&nbsp; {selectedPageName}</p>
                         </div>
-                        <lightning-button label="Auto Map" icon-name="utility:magic_wand" variant="neutral" onclick={handleAutoMap}></lightning-button>
+                        <div style="display:flex; gap: 8px; align-items:flex-end;">
+                            <div style="width: 250px;">
+                                <c-meta-searchable-combobox
+                                    name="copyMapping"
+                                    placeholder="Select Form..."
+                                    options={mappedFormOptions}
+                                    disabled={noMappedForms}
+                                    onchange={handleCopySourceChange}>
+                                </c-meta-searchable-combobox>
+                            </div>
+                            <lightning-button label="Copy" icon-name="utility:copy" variant="neutral" onclick={handleCopyMapping} disabled={noCopySourceSelected}></lightning-button>
+                            <lightning-button label="Auto Map" icon-name="utility:magic_wand" variant="neutral" onclick={handleAutoMap}></lightning-button>
+                        </div>
                     </div>
 
                     <template if:true={isLoadingFields}>
@@ -140,7 +152,7 @@
                             <div class="section-header section-standard">
                                 <lightning-icon icon-name="utility:socialshare" size="xx-small"></lightning-icon>
                                 <span>Standard Fields</span>
-                                <span class="section-badge">{standardCount}</span>
+                                <span class="section-badge">{standardMappedCount} / {standardCount}</span>
                             </div>
                             <div class="mapping-table">
                                 <div class="mapping-table-head standard-head">
@@ -159,7 +171,7 @@
                                             <lightning-icon icon-name="utility:arrowright" size="xx-small"></lightning-icon>
                                         </div>
                                         <div class="sf-field-cell">
-                                            <lightning-combobox name={row.id} data-id={row.id} value={row.sfField} placeholder="-- None --" options={sfFieldOptions} onchange={handleMappingChange} variant="label-hidden"></lightning-combobox>
+                                            <c-meta-searchable-combobox name={row.id} data-id={row.id} value={row.sfField} placeholder="-- None --" options={row.options} onchange={handleMappingChange}></c-meta-searchable-combobox>
                                         </div>
                                     </div>
                                 </template>
@@ -171,7 +183,7 @@
                             <div class="section-header section-custom">
                                 <lightning-icon icon-name="utility:questions_and_answers" size="xx-small"></lightning-icon>
                                 <span>Custom Questions</span>
-                                <span class="section-badge">{customCount}</span>
+                                <span class="section-badge">{customMappedCount} / {customCount}</span>
                             </div>
                             <div class="mapping-table">
                                 <div class="mapping-table-head custom-head">
@@ -190,7 +202,7 @@
                                             <lightning-icon icon-name="utility:arrowright" size="xx-small"></lightning-icon>
                                         </div>
                                         <div class="sf-field-cell">
-                                            <lightning-combobox name={row.id} data-id={row.id} value={row.sfField} placeholder="-- None --" options={sfFieldOptions} onchange={handleMappingChange} variant="label-hidden"></lightning-combobox>
+                                            <c-meta-searchable-combobox name={row.id} data-id={row.id} value={row.sfField} placeholder="-- None --" options={row.options} onchange={handleMappingChange}></c-meta-searchable-combobox>
                                         </div>
                                     </div>
                                 </template>
@@ -202,7 +214,7 @@
                             <div class="section-header section-hidden">
                                 <lightning-icon icon-name="utility:hide" size="xx-small"></lightning-icon>
                                 <span>Hidden Fields</span>
-                                <span class="section-badge">{hiddenCount}</span>
+                                <span class="section-badge">{hiddenMappedCount} / {hiddenCount}</span>
                             </div>
                             <div class="mapping-table">
                                 <div class="mapping-table-head hidden-head">
@@ -221,7 +233,7 @@
                                             <lightning-icon icon-name="utility:arrowright" size="xx-small"></lightning-icon>
                                         </div>
                                         <div class="sf-field-cell">
-                                            <lightning-combobox name={row.id} data-id={row.id} value={row.sfField} placeholder="-- None --" options={sfFieldOptions} onchange={handleMappingChange} variant="label-hidden"></lightning-combobox>
+                                            <c-meta-searchable-combobox name={row.id} data-id={row.id} value={row.sfField} placeholder="-- None --" options={row.options} onchange={handleMappingChange}></c-meta-searchable-combobox>
                                         </div>
                                     </div>
                                 </template>
@@ -233,7 +245,7 @@
                             <div class="section-header section-tracking">
                                 <lightning-icon icon-name="utility:link" size="xx-small"></lightning-icon>
                                 <span>Tracking Parameters</span>
-                                <span class="section-badge">{trackingCount}</span>
+                                <span class="section-badge">{trackingMappedCount} / {trackingCount}</span>
                                 <span class="section-hint">&nbsp;UTMs, Campaign, Ad, Click IDs</span>
                             </div>
                             <div class="mapping-table">
@@ -253,7 +265,7 @@
                                             <lightning-icon icon-name="utility:arrowright" size="xx-small"></lightning-icon>
                                         </div>
                                         <div class="sf-field-cell">
-                                            <lightning-combobox name={row.id} data-id={row.id} value={row.sfField} placeholder="-- None --" options={sfFieldOptions} onchange={handleMappingChange} variant="label-hidden"></lightning-combobox>
+                                            <c-meta-searchable-combobox name={row.id} data-id={row.id} value={row.sfField} placeholder="-- None --" options={row.options} onchange={handleMappingChange}></c-meta-searchable-combobox>
                                         </div>
                                     </div>
                                 </template>
@@ -264,7 +276,7 @@
                         <div class="section-header section-static">
                             <lightning-icon icon-name="utility:text" size="xx-small"></lightning-icon>
                             <span>Hardcoded / Static Values</span>
-                            <span class="section-badge">{staticCount}</span>
+                            <span class="section-badge">{staticMappedCount} / {staticCount}</span>
                             <span class="section-hint">&nbsp;Constant values sent to Salesforce</span>
                         </div>
                         <div class="mapping-table">
@@ -297,7 +309,7 @@
                                         <lightning-icon icon-name="utility:arrowright" size="xx-small"></lightning-icon>
                                     </div>
                                     <div class="sf-field-cell">
-                                        <lightning-combobox name={row.id} data-id={row.id} value={row.sfField} placeholder="-- None --" options={sfFieldOptions} onchange={handleStaticSfFieldChange} variant="label-hidden"></lightning-combobox>
+                                        <c-meta-searchable-combobox name={row.id} data-id={row.id} value={row.sfField} placeholder="-- None --" options={row.options} onchange={handleStaticSfFieldChange}></c-meta-searchable-combobox>
                                     </div>
                                 </div>
                             </template>
@@ -341,7 +353,7 @@
                         <p class="preview-section-title">Salesforce Lead Record</p>
                         <template for:each={mappedPreview} for:item="prev">
                             <div key={prev.sfField} class="preview-row">
-                                <span class="preview-key">{prev.sfField}:</span>
+                                <span class="preview-key">{prev.sfLabel}:</span>
                                 <span class="preview-val sf-val">{prev.sampleValue}</span>
                             </div>
                         </template>

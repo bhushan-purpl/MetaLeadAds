@@ -16,10 +16,16 @@ private class MetaLeadWebhookTest {
 
     @isTest
     static void testVerify_ValidToken() {
+        String expectedToken = 'Purplstack2026';
+        Meta_Integration_Settings__mdt settings = Meta_Integration_Settings__mdt.getInstance('Default');
+        if (settings != null && String.isNotBlank(settings.Verify_Token__c)) {
+            expectedToken = settings.Verify_Token__c;
+        }
+
         RestRequest req = new RestRequest();
         req.requestURI = '/services/apexrest/metaLead';
         req.httpMethod = 'GET';
-        req.params.put('hub.verify_token', 'Purplstack2026');
+        req.params.put('hub.verify_token', expectedToken);
         req.params.put('hub.challenge', 'test_challenge_string');
 
         RestResponse res = new RestResponse();
