@@ -30,7 +30,7 @@ public without sharing class MetaDashboardController {
 
         // Recent logs
         List<Meta_Lead_Log__c> rawLogs = [
-            SELECT Id, Meta_Lead_ID__c, Page_ID__c, Form_ID__c, Processing_Status__c, Error_Message__c, CreatedDate, Retry_Count__c, Last_Retry_Date__c
+            SELECT Id, Meta_Lead_ID__c, Page_ID__c, Form_ID__c, Processing_Status__c, Error_Message__c, CreatedDate
             FROM Meta_Lead_Log__c
             ORDER BY CreatedDate DESC
             LIMIT 10
@@ -45,8 +45,6 @@ public without sharing class MetaDashboardController {
             w.Processing_Status = log.Processing_Status__c;
             w.Error_Message = log.Error_Message__c;
             w.CreatedDate = log.CreatedDate;
-            w.Retry_Count = log.Retry_Count__c;
-            w.Last_Retry_Date = log.Last_Retry_Date__c;
             wrappedLogs.add(w);
         }
         stats.put('recentLogs', wrappedLogs);

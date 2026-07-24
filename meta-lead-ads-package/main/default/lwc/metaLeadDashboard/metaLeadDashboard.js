@@ -105,7 +105,9 @@ export default class MetaLeadDashboard extends LightningElement {
                                log.Processing_Status === 'Failed'  ? 'badge-error'   : 'badge-pending',
                 formattedDate: log.CreatedDate ? this.formatDate(log.CreatedDate) : '--'
             }));
-        } catch (e) { /* silent */ }
+        } catch (e) { 
+            this.dispatchEvent(new ShowToastEvent({ title: 'Error loading stats', message: e.body ? e.body.message : e.message, variant: 'error' }));
+        }
     }
 
     formatDate(isoString) {

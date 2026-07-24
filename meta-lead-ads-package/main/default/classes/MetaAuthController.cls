@@ -237,12 +237,14 @@ public without sharing class MetaAuthController {
     @AuraEnabled(cacheable=false)
     public static List<LogWrapper> getIntegrationLogs() {
         List<LogWrapper> wrappers = new List<LogWrapper>();
-        for (Meta_Lead_Log__c log : [
-            SELECT Id, Meta_Lead_ID__c, Page_ID__c, Form_ID__c, Processing_Status__c, Error_Message__c, CreatedDate, Retry_Count__c, Last_Retry_Date__c
-            FROM Meta_Lead_Log__c
-            ORDER BY CreatedDate DESC
-            LIMIT 50
-        ]) {
+        
+        String query = 'SELECT Id, Meta_Lead_ID__c, Page_ID__c, Form_ID__c, Processing_Status__c, Error_Message__c, CreatedDate, ' + 
+                       SObjectType.Meta_Lead_Log__c.fields.Retry_Count__c.getName() + ', ' +
+                       SObjectType.Meta_Lead_Log__c.fields.Last_Retry_Date__c.getName() +
+                       ' FROM Meta_Lead_Log__c ORDER BY CreatedDate DESC LIMIT 50';
+                       
+        for (SObject sObj : Database.query(query)) {
+            Meta_Lead_Log__c log = (Meta_Lead_Log__c) sObj;
             LogWrapper w = new LogWrapper();
             w.Id = log.Id;
             w.Meta_Lead_ID = log.Meta_Lead_ID__c;
