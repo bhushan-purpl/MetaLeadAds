@@ -329,23 +329,27 @@ export default class MetaMappingWizard extends LightningElement {
 
     // ─── Duplicate SF Field Prevention ──────────────────────────────────────────
     updateDropdownOptions() {
-        // Collect all currently selected SF fields across all rows
-        const selectedSfFields = new Set();
-        this.allMappings.forEach(row => {
-            if (row.sfField) {
-                selectedSfFields.add(row.sfField);
-            }
-        });
-
-        // Rebuild the options array for each row
         this.allMappings = this.allMappings.map(row => {
-            const rowOptions = this.sfFieldOptions.filter(opt => 
-                opt.value === '' || // Always allow "-- None --"
-                opt.value === row.sfField || // Always allow the row's own currently selected value
-                !selectedSfFields.has(opt.value) // Exclude values selected by OTHER rows
-            );
-            return { ...row, options: rowOptions };
+            return { ...row, options: this.sfFieldOptions };
         });
+    }
+
+    // ─── Helper to match Salesforce Lead field API names flexibly ──────────
+    resolveSfField(targetField) {
+        if (!targetField) return '';
+        const targetLower = targetField.toLowerCase();
+        const targetNoNs = targetLower.replace(/^purpl__/, '');
+        
+        let match = this.sfFieldOptions.find(opt => {
+            if (!opt.value) return false;
+            const valLower = opt.value.toLowerCase();
+            const valNoNs = valLower.replace(/^purpl__/, '');
+            return valLower === targetLower || valNoNs === targetNoNs;
+        });
+        
+        if (match) return match.value;
+
+        return targetField;
     }
 
     // ─── Copy Mapping ────────────────────────────────────────────────────────
@@ -384,10 +388,7 @@ export default class MetaMappingWizard extends LightningElement {
             });
             
             let copiedCount = 0;
-            let skippedCount = 0;
             let invalidCount = 0;
-            
-            const usedFields = new Set();
             
             let updatedMappings = this.allMappings.map(row => {
                 if (row.isStatic) return { ...row, sfField: '' };
@@ -397,16 +398,12 @@ export default class MetaMappingWizard extends LightningElement {
                 if (rawTargetSfField) {
                     const resolvedSfField = this.resolveSfField(rawTargetSfField);
                     
-                    if (!resolvedSfField) {
+                    if (resolvedSfField) {
+                        copiedCount++;
+                        return { ...row, sfField: resolvedSfField };
+                    } else {
                         invalidCount++;
                         return { ...row, sfField: '' };
-                    } else if (usedFields.has(resolvedSfField)) {
-                        skippedCount++;
-                        return { ...row, sfField: '' };
-                    } else {
-                        copiedCount++;
-                        usedFields.add(resolvedSfField);
-                        return { ...row, sfField: resolvedSfField };
                     }
                 }
                 
@@ -421,24 +418,17 @@ export default class MetaMappingWizard extends LightningElement {
                     return;
                 }
                 
-                if (usedFields.has(resolvedSfField)) {
-                    skippedCount++;
-                    return;
-                }
-                
                 const staticVal = m.Facebook_Field.substring(8);
                 const existingIndex = updatedMappings.findIndex(r => r.facebookField === m.Facebook_Field);
                 
                 if (existingIndex >= 0) {
                     copiedCount++;
-                    usedFields.add(resolvedSfField);
                     updatedMappings[existingIndex] = {
                         ...updatedMappings[existingIndex],
                         sfField: resolvedSfField
                     };
                 } else {
                     copiedCount++;
-                    usedFields.add(resolvedSfField);
                     updatedMappings.push({
                         id:            'static_copy_' + Date.now() + Math.random().toString(36).substring(2, 6),
                         facebookField: m.Facebook_Field,
@@ -464,7 +454,6 @@ export default class MetaMappingWizard extends LightningElement {
             
             let msg = `${copiedCount} mappings copied successfully.`;
             if (invalidCount > 0) msg += ` ${invalidCount} invalid fields ignored.`;
-            if (skippedCount > 0) msg += ` ${skippedCount} duplicate fields skipped.`;
             
             this.dispatchEvent(new ShowToastEvent({
                 title:   'Mapping Copied',
