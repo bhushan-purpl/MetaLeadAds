@@ -13,6 +13,7 @@
                     <div class="banner-content">
                         <strong>Your Purplstack Meta Lead Manager license will expire in {daysText}.</strong>
                         <p>Please renew and activate a new license before the expiry date to avoid service interruption.</p>
+                        <p class="slds-m-top_x-small"><strong>Renewal Contact:</strong> Pradeep Bijur &nbsp;|&nbsp; 📞 <a href="tel:9880932480">9880932480</a> &nbsp;|&nbsp; ✉️ <a href="mailto:pradeep.bijur@purplstack.com">pradeep.bijur@purplstack.com</a></p>
                     </div>
                 </div>
             </template>
@@ -23,7 +24,8 @@
                     <div class="banner-icon">⚠️</div>
                     <div class="banner-content">
                         <strong>Your license has expired.</strong>
-                        <p>Please enter a valid activation key below to continue using Purplstack Meta Lead Manager.</p>
+                        <p>Please contact <strong>Pradeep Bijur</strong> for renewal, or enter a valid activation key below to continue using Purplstack Meta Lead Manager.</p>
+                        <p class="slds-m-top_x-small">📞 <strong>Phone:</strong> <a href="tel:9880932480">9880932480</a> &nbsp;|&nbsp; ✉️ <strong>Email:</strong> <a href="mailto:pradeep.bijur@purplstack.com">pradeep.bijur@purplstack.com</a></p>
                     </div>
                 </div>
             </template>
@@ -38,30 +40,58 @@
                 </div>
                 
                 <div class="license-card-body">
-                    <div class="info-row">
-                        <span class="info-label">Status:</span>
-                        <span class="info-value"><strong>{licenseStatus}</strong></span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Expires:</span>
-                        <span class="info-value"><strong>{licenseExpiry}</strong></span>
-                    </div>
-                    <template if:false={isExpired}>
-                        <div class="info-row">
-                            <span class="info-label">Remaining Days:</span>
-                            <span class="info-value"><strong>{daysText}</strong></span>
+                    <div class="license-card-grid">
+                        <!-- Left Side: License Details -->
+                        <div class="license-info-column">
+                            <div class="info-row">
+                                <span class="info-label">Status:</span>
+                                <span class="info-value"><strong>{licenseStatus}</strong></span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Expires:</span>
+                                <span class="info-value"><strong>{licenseExpiry}</strong></span>
+                            </div>
+                            <template if:false={isExpired}>
+                                <div class="info-row">
+                                    <span class="info-label">Remaining Days:</span>
+                                    <span class="info-value"><strong>{daysText}</strong></span>
+                                </div>
+                            </template>
+                            <div class="info-row">
+                                <span class="info-label">Page Mapping Limit:</span>
+                                <span class="info-value"><strong>{maxPages}</strong></span>
+                            </div>
+                            <template if:true={licenseKey}>
+                                <div class="info-row">
+                                    <span class="info-label">Current Key:</span>
+                                    <span class="info-value"><code>{licenseKey}</code></span>
+                                </div>
+                            </template>
                         </div>
-                    </template>
-                    <div class="info-row">
-                        <span class="info-label">Page Mapping Limit:</span>
-                        <span class="info-value"><strong>{maxPages}</strong></span>
+
+                        <!-- Right Side: Renewal Contact Card (When Expired) -->
+                        <template if:true={isExpired}>
+                            <div class="renewal-contact-card">
+                                <div class="contact-header">
+                                    <span class="contact-icon">📞</span> Contact for License Renewal
+                                </div>
+                                <div class="contact-body">
+                                    <div class="contact-row">
+                                        <span class="contact-label">Contact Person:</span>
+                                        <span class="contact-value"><strong>Pradeep Bijur</strong></span>
+                                    </div>
+                                    <div class="contact-row">
+                                        <span class="contact-label">Phone:</span>
+                                        <span class="contact-value"><a href="tel:9880932480"><strong>9880932480</strong></a></span>
+                                    </div>
+                                    <div class="contact-row">
+                                        <span class="contact-label">Email:</span>
+                                        <span class="contact-value"><a href="mailto:pradeep.bijur@purplstack.com"><strong>pradeep.bijur@purplstack.com</strong></a></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
                     </div>
-                    <template if:true={licenseKey}>
-                        <div class="info-row">
-                            <span class="info-label">Current Key:</span>
-                            <span class="info-value"><code>{licenseKey}</code></span>
-                        </div>
-                    </template>
                 </div>
             </div>
 
