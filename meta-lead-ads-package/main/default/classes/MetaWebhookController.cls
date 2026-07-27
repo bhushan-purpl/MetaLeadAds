@@ -2,11 +2,45 @@
  * MetaWebhookController
  *
  * AuraEnabled Apex controller for the metaWebhookSetup LWC.
- * Includes all HTTP callout logic internally — no external service class needed.
+ * Dynamic token resolution from Meta_Page__c, Meta_Auth_Token__c, and Metadata.
  */
 public with sharing class MetaWebhookController {
 
     private static final String GRAPH_BASE = 'https://graph.facebook.com';
+
+    private static String getApiVersion() {
+        Meta_Integration_Settings__mdt s = Meta_Integration_Settings__mdt.getInstance('Default');
+        return (s != null && String.isNotBlank(s.Graph_API_Version__c)) ? s.Graph_API_Version__c : 'v25.0';
+    }
+
+    private static String getPageToken(String pageId) {
+        if (String.isNotBlank(pageId)) {
+            List<Meta_Page__c> pages = [SELECT Access_Token__c FROM Meta_Page__c WHERE Page_ID__c = :pageId AND Active__c = true LIMIT 1];
+            if (!pages.isEmpty() && String.isNotBlank(pages[0].Access_Token__c)) {
+                return pages[0].Access_Token__c.trim();
+            }
+            List<Meta_Page_Subscription__c> subs = [SELECT Page_Access_Token__c FROM Meta_Page_Subscription__c WHERE Page_ID__c = :pageId AND Status__c = 'Active' LIMIT 1];
+            if (!subs.isEmpty() && String.isNotBlank(subs[0].Page_Access_Token__c)) {
+                return subs[0].Page_Access_Token__c.trim();
+            }
+        }
+        // Fall back to User Auth Token
+        List<Meta_Auth_Token__c> tokens = [SELECT User_Access_Token__c FROM Meta_Auth_Token__c LIMIT 1];
+        if (!tokens.isEmpty() && String.isNotBlank(tokens[0].User_Access_Token__c)) {
+            return tokens[0].User_Access_Token__c.trim();
+        }
+        // Fall back to Metadata
+        Meta_Integration_Settings__mdt config = Meta_Integration_Settings__mdt.getInstance('Default');
+        if (config != null && String.isNotBlank(config.Page_Access_Token__c)) {
+            return config.Page_Access_Token__c.trim();
+        }
+        // Fall back to any active page token
+        List<Meta_Page__c> anyPage = [SELECT Access_Token__c FROM Meta_Page__c WHERE Active__c = true LIMIT 1];
+        if (!anyPage.isEmpty() && String.isNotBlank(anyPage[0].Access_Token__c)) {
+            return anyPage[0].Access_Token__c.trim();
+        }
+        return null;
+    }
 
     // ── Load initial config for the UI ──
     @AuraEnabled(cacheable=true)
@@ -14,35 +48,39 @@ public with sharing class MetaWebhookController {
         Map<String, String> config = new Map<String, String>();
         try {
             Meta_Integration_Settings__mdt settings = Meta_Integration_Settings__mdt.getInstance('Default');
+            String token = getPageToken(null);
+            Boolean hasToken = String.isNotBlank(token);
 
-            Boolean hasToken = settings != null && String.isNotBlank(settings.Page_Access_Token__c);
             config.put('hasToken',   String.valueOf(hasToken));
-            config.put('apiVersion', (settings != null && String.isNotBlank(settings.Graph_API_Version__c))
-                                      ? settings.Graph_API_Version__c : 'v25.0');
+            config.put('apiVersion', getApiVersion());
 
             // Masked token preview (last 6 chars only)
             config.put('tokenPreview', hasToken
-                ? '••••••••' + settings.Page_Access_Token__c.right(6)
+                ? '••••••••' + token.right(Math.min(6, token.length()))
                 : 'Not Configured');
 
             String verifyToken = (settings != null && String.isNotBlank(settings.Verify_Token__c))
                                  ? settings.Verify_Token__c : 'Purplstack2026';
             config.put('verifyToken', verifyToken);
 
-            // Auto-detect Page ID from most recent log
+            // Auto-detect Page ID from Meta_Page__c or most recent log
             String pageId = '';
             try {
-                List<Meta_Lead_Log__c> logs = [
-                    SELECT Page_ID__c FROM Meta_Lead_Log__c
-                    WHERE Page_ID__c != null
-                    ORDER BY CreatedDate DESC LIMIT 1
-                ];
-                if (!logs.isEmpty()) pageId = logs[0].Page_ID__c;
+                List<Meta_Page__c> pages = [SELECT Page_ID__c FROM Meta_Page__c WHERE Active__c = true ORDER BY LastModifiedDate DESC LIMIT 1];
+                if (!pages.isEmpty()) {
+                    pageId = pages[0].Page_ID__c;
+                } else {
+                    List<Meta_Lead_Log__c> logs = [
+                        SELECT Page_ID__c FROM Meta_Lead_Log__c
+                        WHERE Page_ID__c != null
+                        ORDER BY CreatedDate DESC LIMIT 1
+                    ];
+                    if (!logs.isEmpty()) pageId = logs[0].Page_ID__c;
+                }
             } catch (Exception ex) { /* ignore */ }
             config.put('pageId', pageId);
 
             String generatedRedirectUri = getGeneratedRedirectUri();
-            // Completely ignore the custom metadata field so the system is fully zero-config and robust
             config.put('redirectUrl', generatedRedirectUri);
 
             String webhookUrl = generatedRedirectUri.replace('/metaAuthCallback', '/metaLead');
@@ -74,18 +112,15 @@ public with sharing class MetaWebhookController {
 
         String baseUrl = orgUrl;
         
-        // If we are already running in a Site context (like the guest user callback), Site.getBaseUrl() works perfectly
         String currentSiteUrl = Site.getBaseUrl();
         if (String.isNotBlank(currentSiteUrl)) {
             baseUrl = currentSiteUrl;
         } else {
-            // Otherwise, we are in the internal org, so we do string replacements
             baseUrl = orgUrl.replace('.sandbox.my.salesforce.com', '.sandbox.my.salesforce-sites.com')
                             .replace('.scratch.my.salesforce.com', '.scratch.my.salesforce-sites.com')
                             .replace('.my.salesforce.com', '.my.salesforce-sites.com')
                             .replace('.salesforce.com', '.my.site.com');
             try {
-                // Ignore CRUD/FLS to get the path prefix
                 List<Site> sites = [SELECT UrlPathPrefix FROM Site WHERE Status = 'Active' LIMIT 1];
                 if (!sites.isEmpty() && String.isNotBlank(sites[0].UrlPathPrefix)) {
                     baseUrl += '/' + sites[0].UrlPathPrefix;
@@ -100,10 +135,13 @@ public with sharing class MetaWebhookController {
     @AuraEnabled
     public static Map<String, Object> checkSubscriptionStatus(String pageId) {
         try {
-            Meta_Integration_Settings__mdt s = getValidatedSettings();
-            String endpoint = GRAPH_BASE + '/' + getApiVersion(s) + '/' + pageId
+            String token = getPageToken(pageId);
+            if (String.isBlank(token)) {
+                throw new AuraHandledException('No Access Token found for Page. Please connect your Facebook Account on Meta Setup.');
+            }
+            String endpoint = GRAPH_BASE + '/' + getApiVersion() + '/' + pageId
                             + '/subscribed_apps?access_token='
-                            + EncodingUtil.urlEncode(s.Page_Access_Token__c, 'UTF-8');
+                            + EncodingUtil.urlEncode(token, 'UTF-8');
             return callGraph(endpoint, 'GET', null);
         } catch (AuraHandledException e) {
             throw e;
@@ -116,10 +154,13 @@ public with sharing class MetaWebhookController {
     @AuraEnabled
     public static Map<String, Object> subscribeWebhook(String pageId) {
         try {
-            Meta_Integration_Settings__mdt s = getValidatedSettings();
-            String endpoint = GRAPH_BASE + '/' + getApiVersion(s) + '/' + pageId + '/subscribed_apps';
+            String token = getPageToken(pageId);
+            if (String.isBlank(token)) {
+                throw new AuraHandledException('No Access Token found for Page. Please connect your Facebook Account on Meta Setup.');
+            }
+            String endpoint = GRAPH_BASE + '/' + getApiVersion() + '/' + pageId + '/subscribed_apps';
             String reqBody  = 'subscribed_fields=leadgen&access_token='
-                            + EncodingUtil.urlEncode(s.Page_Access_Token__c, 'UTF-8');
+                            + EncodingUtil.urlEncode(token, 'UTF-8');
             return callGraph(endpoint, 'POST', reqBody);
         } catch (AuraHandledException e) {
             throw e;
@@ -132,10 +173,13 @@ public with sharing class MetaWebhookController {
     @AuraEnabled
     public static Map<String, Object> unsubscribeWebhook(String pageId) {
         try {
-            Meta_Integration_Settings__mdt s = getValidatedSettings();
-            String endpoint = GRAPH_BASE + '/' + getApiVersion(s) + '/' + pageId
+            String token = getPageToken(pageId);
+            if (String.isBlank(token)) {
+                throw new AuraHandledException('No Access Token found for Page. Please connect your Facebook Account on Meta Setup.');
+            }
+            String endpoint = GRAPH_BASE + '/' + getApiVersion() + '/' + pageId
                             + '/subscribed_apps?access_token='
-                            + EncodingUtil.urlEncode(s.Page_Access_Token__c, 'UTF-8');
+                            + EncodingUtil.urlEncode(token, 'UTF-8');
             return callGraph(endpoint, 'DELETE', null);
         } catch (AuraHandledException e) {
             throw e;
@@ -167,20 +211,5 @@ public with sharing class MetaWebhookController {
             throw new AuraHandledException(errMsg);
         }
         return result;
-    }
-
-    // ── Private helpers ──
-    private static Meta_Integration_Settings__mdt getValidatedSettings() {
-        Meta_Integration_Settings__mdt settings = Meta_Integration_Settings__mdt.getInstance('Default');
-        if (settings == null || String.isBlank(settings.Page_Access_Token__c)) {
-            throw new AuraHandledException(
-                'Page Access Token is not configured. Go to Setup → Custom Metadata Types → Meta Integration Settings → Manage Records → Default → Edit.'
-            );
-        }
-        return settings;
-    }
-
-    private static String getApiVersion(Meta_Integration_Settings__mdt s) {
-        return String.isNotBlank(s.Graph_API_Version__c) ? s.Graph_API_Version__c : 'v25.0';
     }
 }
