@@ -65,13 +65,8 @@ global without sharing class MetaLeadWebhook {
         RestResponse res = RestContext.response;
         String body = req.requestBody.toString();
 
-        // ── 0. License Verification ──
-        if (!MetaLicenseService.isLicenseActive()) {
-            System.debug('License is not active or expired. Rejecting webhook processing.');
-            res.statusCode = 200; // Return 200 so Meta stops retrying
-            res.responseBody = Blob.valueOf('License Expired or Inactive');
-            return;
-        }
+        // Note: License check is performed inside MetaLeadCalloutJob so that a Meta_Lead_Log__c 
+        // record is created with 'Failed - License Expired', allowing log tracking & retries after renewal.
 
         // ── 1. Source Validation (Rate Limiting / Bot Prevention) ──
         String userAgent = req.headers.get('User-Agent');
