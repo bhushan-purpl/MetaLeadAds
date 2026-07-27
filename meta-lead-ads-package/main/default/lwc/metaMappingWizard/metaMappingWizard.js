@@ -212,33 +212,20 @@ export default class MetaMappingWizard extends LightningElement {
         }
     }
 
-    // ─── Auto Map — server does synonym matching, LWC just applies results ──
-    async handleAutoMap() {
-        try {
-            const suggestions = await getAutoSuggestions({
-                formId: this.selectedFormId,
-                pageId: this.selectedPageId
-            });
-            // Build a lookup map from the suggestions returned by Apex
-            const suggestMap = {};
-            (suggestions || []).forEach(s => {
-                if (s.sfField) suggestMap[s.facebookField] = s.sfField;
-            });
-            // Apply suggestions to existing rows (preserving any the user already mapped)
-            this.allMappings = this.allMappings.map(row => ({
-                ...row,
-                sfField: suggestMap[row.facebookField] || row.sfField || ''
-            }));
-            this.updateDropdownOptions();
-            this.isDirty = true;
-            this.dispatchEvent(new ShowToastEvent({
-                title:   'Auto Mapped!',
-                message: 'Fields have been automatically suggested using smart synonym matching. Review and save.',
-                variant: 'success'
-            }));
-        } catch (e) {
-            this.errorMessage = 'Auto-map failed: ' + (e.body ? e.body.message : e.message);
-        }
+    // ─── Helper to match Salesforce Lead field API names flexibly ──────────
+    resolveSfField(targetField) {
+        if (!targetField) return '';
+        const targetLower = targetField.toLowerCase();
+        const targetNoNs = targetLower.replace(/^purpl__/, '');
+        
+        const match = this.sfFieldOptions.find(opt => {
+            if (!opt.value) return false;
+            const valLower = opt.value.toLowerCase();
+            const valNoNs = valLower.replace(/^purpl__/, '');
+            return valLower === targetLower || valNoNs === targetNoNs;
+        });
+        
+        return match ? match.value : '';
     }
 
     // ─── Handle dropdown change (lightning-combobox fires event.detail.value) ──
@@ -366,9 +353,17 @@ export default class MetaMappingWizard extends LightningElement {
         
         try {
             const mappings = await getMappings({ formId: this.selectedCopySourceId });
-            const copyMap = {};
+            
+            const copyMapLower = {};
+            const staticMappings = [];
             (mappings || []).forEach(m => {
-                copyMap[m.Facebook_Field] = m.Salesforce_Field;
+                if (m.Facebook_Field && m.Salesforce_Field) {
+                    if (m.Facebook_Field.startsWith('STATIC::')) {
+                        staticMappings.push(m);
+                    } else {
+                        copyMapLower[m.Facebook_Field.toLowerCase()] = m.Salesforce_Field;
+                    }
+                }
             });
             
             let copiedCount = 0;
@@ -377,34 +372,72 @@ export default class MetaMappingWizard extends LightningElement {
             
             const usedFields = new Set();
             
-            this.allMappings = this.allMappings.map(row => {
-                const targetSfField = copyMap[row.facebookField];
+            let updatedMappings = this.allMappings.map(row => {
+                if (row.isStatic) return { ...row, sfField: '' };
                 
-                if (targetSfField) {
-                    const fieldExists = this.sfFieldOptions.some(opt => opt.value === targetSfField);
+                const rawTargetSfField = copyMapLower[(row.facebookField || '').toLowerCase()];
+                
+                if (rawTargetSfField) {
+                    const resolvedSfField = this.resolveSfField(rawTargetSfField);
                     
-                    if (!fieldExists) {
+                    if (!resolvedSfField) {
                         invalidCount++;
                         return { ...row, sfField: '' };
-                    } else if (usedFields.has(targetSfField)) {
+                    } else if (usedFields.has(resolvedSfField)) {
                         skippedCount++;
                         return { ...row, sfField: '' };
                     } else {
                         copiedCount++;
-                        usedFields.add(targetSfField);
-                        return { ...row, sfField: targetSfField };
+                        usedFields.add(resolvedSfField);
+                        return { ...row, sfField: resolvedSfField };
                     }
                 }
                 
-                if (row.sfField && usedFields.has(row.sfField)) {
-                     return { ...row, sfField: '' };
-                } else if (row.sfField) {
-                     usedFields.add(row.sfField);
+                return { ...row, sfField: '' };
+            });
+
+            // Handle static mappings from source form
+            staticMappings.forEach(m => {
+                const resolvedSfField = this.resolveSfField(m.Salesforce_Field);
+                if (!resolvedSfField) {
+                    invalidCount++;
+                    return;
                 }
                 
-                return row;
+                if (usedFields.has(resolvedSfField)) {
+                    skippedCount++;
+                    return;
+                }
+                
+                const staticVal = m.Facebook_Field.substring(8);
+                const existingIndex = updatedMappings.findIndex(r => r.facebookField === m.Facebook_Field);
+                
+                if (existingIndex >= 0) {
+                    copiedCount++;
+                    usedFields.add(resolvedSfField);
+                    updatedMappings[existingIndex] = {
+                        ...updatedMappings[existingIndex],
+                        sfField: resolvedSfField
+                    };
+                } else {
+                    copiedCount++;
+                    usedFields.add(resolvedSfField);
+                    updatedMappings.push({
+                        id:            'static_copy_' + Date.now() + Math.random().toString(36).substring(2, 6),
+                        facebookField: m.Facebook_Field,
+                        label:         'Static Text',
+                        category:      'static',
+                        sfField:       resolvedSfField,
+                        isUtm:         false,
+                        sampleValue:   staticVal,
+                        isStatic:      true,
+                        isPicklist:    false,
+                        options:       []
+                    });
+                }
             });
             
+            this.allMappings = updatedMappings;
             this.updateDropdownOptions();
             this.isDirty = true;
             

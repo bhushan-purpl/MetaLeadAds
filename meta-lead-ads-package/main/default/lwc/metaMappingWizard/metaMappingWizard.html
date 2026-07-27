@@ -136,7 +136,6 @@
                                 </c-meta-searchable-combobox>
                             </div>
                             <lightning-button label="Copy" icon-name="utility:copy" variant="neutral" onclick={handleCopyMapping} disabled={noCopySourceSelected}></lightning-button>
-                            <lightning-button label="Auto Map" icon-name="utility:magic_wand" variant="neutral" onclick={handleAutoMap}></lightning-button>
                         </div>
                     </div>
 
@@ -358,7 +357,7 @@
                             </div>
                         </template>
                         <template if:false={hasMappedFields}>
-                            <p class="no-mapping-hint">No fields mapped yet. Use Auto Map or select fields above.</p>
+                            <p class="no-mapping-hint">No fields mapped yet. Select fields above or copy from another form.</p>
                         </template>
                     </div>
                 </div>
