@@ -218,13 +218,30 @@ export default class MetaMappingWizard extends LightningElement {
         const targetLower = targetField.toLowerCase();
         const targetNoNs = targetLower.replace(/^purpl__/, '');
         
-        const match = this.sfFieldOptions.find(opt => {
+        let match = this.sfFieldOptions.find(opt => {
             if (!opt.value) return false;
             const valLower = opt.value.toLowerCase();
             const valNoNs = valLower.replace(/^purpl__/, '');
             return valLower === targetLower || valNoNs === targetNoNs;
         });
         
+        if (match) return match.value;
+
+        // Fallback matching for tracking parameters if explicit target field is not present in org
+        if (targetLower.includes('source')) {
+            match = this.sfFieldOptions.find(opt => 
+                opt.value && (opt.value.toLowerCase().includes('lead_source') || opt.value.toLowerCase().includes('leadsource'))
+            );
+        } else if (targetLower.includes('campaign') || targetLower.includes('project')) {
+            match = this.sfFieldOptions.find(opt => 
+                opt.value && (opt.value.toLowerCase().includes('project') || opt.value.toLowerCase().includes('description'))
+            );
+        } else if (targetLower.includes('utm') || targetLower.includes('medium') || targetLower.includes('term') || targetLower.includes('content')) {
+            match = this.sfFieldOptions.find(opt => 
+                opt.value && opt.value.toLowerCase().includes('description')
+            );
+        }
+
         return match ? match.value : '';
     }
 

@@ -22,18 +22,20 @@ public without sharing class MetaMappingService {
         'PostalCode'       => new List<String>{'zip','zip_code','postal','postal_code','pincode','pin'},
         'Country'          => new List<String>{'country','nation','country_name'},
         'Street'           => new List<String>{'street','address','street_address','street1'},
-        'LeadSource'       => new List<String>{'lead_source','leadsource','source','utm_source'},
-        'Description'      => new List<String>{'message','note','notes','comments','description','remark','query'},
-        'Website'          => new List<String>{'website','url','web','site'},
-        'Title'            => new List<String>{'title','job_title','designation','position','role'},
-        'Industry'         => new List<String>{'industry','sector','business_type','vertical'},
-        'NumberOfEmployees'=> new List<String>{'employees','team_size','company_size','headcount'},
-        'AnnualRevenue'    => new List<String>{'revenue','annual_revenue','turnover','budget','annual_budget'},
-        'purpl__utm_source__c'   => new List<String>{'utm_source'},
-        'purpl__utm_medium__c'   => new List<String>{'utm_medium'},
-        'purpl__utm_campaign__c' => new List<String>{'utm_campaign','campaign_name'},
-        'purpl__utm_term__c'     => new List<String>{'utm_term','keyword'},
-        'purpl__utm_content__c'  => new List<String>{'utm_content','ad_name'}
+        'LeadSource'                   => new List<String>{'lead_source','leadsource','source','utm_source'},
+        'purpl__Lead_Source__c'        => new List<String>{'lead_source','leadsource','source','utm_source'},
+        'purpl__Project_Interested__c' => new List<String>{'campaign','utm_campaign','project','campaign_name'},
+        'Description'                  => new List<String>{'message','note','notes','comments','description','remark','query'},
+        'Website'                      => new List<String>{'website','url','web','site'},
+        'Title'                        => new List<String>{'title','job_title','designation','position','role'},
+        'Industry'                     => new List<String>{'industry','sector','business_type','vertical'},
+        'NumberOfEmployees'            => new List<String>{'employees','team_size','company_size','headcount'},
+        'AnnualRevenue'                => new List<String>{'revenue','annual_revenue','turnover','budget','annual_budget'},
+        'purpl__utm_source__c'         => new List<String>{'utm_source'},
+        'purpl__utm_medium__c'         => new List<String>{'utm_medium'},
+        'purpl__utm_campaign__c'       => new List<String>{'utm_campaign','campaign_name'},
+        'purpl__utm_term__c'           => new List<String>{'utm_term','keyword'},
+        'purpl__utm_content__c'        => new List<String>{'utm_content','ad_name'}
     };
 
     // Tracking parameters that Meta injects at lead delivery time (not form questions)
@@ -118,7 +120,11 @@ public without sharing class MetaMappingService {
         for (Map<String, String> tp : TRACKING_PARAMS) {
             String key = tp.get('key');
             if (!trackingKeysAdded.contains(key.toLowerCase())) {
-                Map<String, Object> row = buildRow(key, tp.get('label'), 'tracking', existingMap.get(key));
+                String savedSf = existingMap.get(key);
+                if (String.isBlank(savedSf)) {
+                    savedSf = findBestSfField(key, tp.get('label'));
+                }
+                Map<String, Object> row = buildRow(key, tp.get('label'), 'tracking', savedSf);
                 row.put('sampleValue', tp.get('sample'));
                 result.add(row);
             }
