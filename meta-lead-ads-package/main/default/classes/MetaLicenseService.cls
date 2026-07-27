@@ -10,8 +10,18 @@ public with sharing class MetaLicenseService {
     private static Map<String, Object> getSettingsMap(Meta_License_Settings__c settings) {
         if (settings == null) return null;
         
-        String effectiveStatus = settings.Status__c;
-        if (settings.Expiration_Date__c != null && settings.Expiration_Date__c < Date.today()) {
+        Date today = Date.today();
+        Date expiryDate = settings.Expiration_Date__c;
+        String rawStatus = settings.Status__c != null ? settings.Status__c : 'Unknown';
+        String effectiveStatus = rawStatus;
+        
+        Integer remainingDays = 0;
+        if (expiryDate != null) {
+            remainingDays = today.daysBetween(expiryDate);
+            if (remainingDays < 0) remainingDays = 0;
+        }
+
+        if (expiryDate != null && expiryDate < today) {
             effectiveStatus = 'Expired';
             if (settings.Id != null && settings.Status__c != 'Expired') {
                 settings.Status__c = 'Expired';
@@ -19,13 +29,24 @@ public with sharing class MetaLicenseService {
                     upsert settings;
                 } catch (Exception e) { /* ignore */ }
             }
+        } else if (expiryDate != null && remainingDays <= 5 && remainingDays >= 0 && (rawStatus == 'Active' || rawStatus == 'Trial')) {
+            effectiveStatus = 'Expiring Soon';
         }
+
+        Boolean isActive = (effectiveStatus == 'Active' || effectiveStatus == 'Trial' || effectiveStatus == 'Expiring Soon');
 
         return new Map<String, Object>{
             'Status__c' => effectiveStatus,
-            'Expiration_Date__c' => settings.Expiration_Date__c,
-            'Max_Pages_Allowed__c' => settings.Max_Pages_Allowed__c,
-            'License_Key__c' => settings.License_Key__c
+            'RawStatus__c' => rawStatus,
+            'Expiration_Date__c' => expiryDate,
+            'Remaining_Days__c' => remainingDays,
+            'Max_Pages_Allowed__c' => settings.Max_Pages_Allowed__c != null ? settings.Max_Pages_Allowed__c : 0,
+            'License_Key__c' => settings.License_Key__c,
+            'Is_Active__c' => isActive,
+            'Is_Expired__c' => effectiveStatus == 'Expired',
+            'Is_Expiring_Soon__c' => effectiveStatus == 'Expiring Soon',
+            'Is_Trial__c' => rawStatus == 'Trial' && effectiveStatus != 'Expired',
+            'Is_Suspended__c' => effectiveStatus == 'Suspended'
         };
     }
 

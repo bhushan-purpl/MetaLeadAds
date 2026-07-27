@@ -18,6 +18,12 @@ private class MetaFormServiceTest {
 
     @testSetup
     static void setupData() {
+        insert new Meta_License_Settings__c(
+            SetupOwnerId = UserInfo.getOrganizationId(),
+            Status__c = 'Active',
+            Expiration_Date__c = Date.today().addDays(30)
+        );
+
         Meta_Page__c page = new Meta_Page__c(Page_ID__c = '123', Access_Token__c = 'mocktoken', Active__c = true);
         insert page;
 

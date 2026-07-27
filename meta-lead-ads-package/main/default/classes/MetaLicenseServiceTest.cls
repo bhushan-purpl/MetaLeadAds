@@ -96,4 +96,21 @@ private class MetaLicenseServiceTest {
 
         System.assertEquals(false, MetaLicenseService.isLicenseActive());
     }
+
+    @isTest
+    static void testExpiringSoon() {
+        Meta_License_Settings__c settings = new Meta_License_Settings__c(
+            SetupOwnerId = UserInfo.getOrganizationId(),
+            Status__c = 'Active',
+            Max_Pages_Allowed__c = 5,
+            Expiration_Date__c = Date.today().addDays(3)
+        );
+        insert settings;
+
+        Map<String, Object> mapResult = MetaLicenseService.registerTrial();
+        System.assertEquals('Expiring Soon', mapResult.get('Status__c'));
+        System.assertEquals(3, mapResult.get('Remaining_Days__c'));
+        System.assertEquals(true, mapResult.get('Is_Expiring_Soon__c'));
+        System.assertEquals(true, MetaLicenseService.isLicenseActive());
+    }
 }

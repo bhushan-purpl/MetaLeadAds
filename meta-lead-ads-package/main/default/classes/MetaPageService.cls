@@ -50,6 +50,9 @@ public without sharing class MetaPageService {
     // Called from LWC to sync all pages the user manages
     @AuraEnabled
     public static List<PageWrapper> syncPages() {
+        if (!MetaLicenseService.isLicenseActive()) {
+            throw new AuraHandledException('License Expired: Your license key is expired or inactive. Please activate a valid license key.');
+        }
         String token = getUserToken();
         if (String.isBlank(token)) throw new AuraHandledException('Not connected to Facebook.');
 

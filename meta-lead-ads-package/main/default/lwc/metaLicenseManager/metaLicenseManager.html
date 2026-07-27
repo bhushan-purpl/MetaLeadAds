@@ -1,42 +1,80 @@
 <template>
-    <lightning-card title="License Manager" icon-name="custom:custom43">
+    <lightning-card title="Purplstack License Manager" icon-name="custom:custom43">
         <div class="slds-m-around_medium">
             
             <template if:true={isLoading}>
                 <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
             </template>
 
-            <!-- Status Section -->
-            <div class="slds-box slds-m-bottom_medium slds-theme_default">
-                <p class="slds-text-heading_small slds-m-bottom_small" style="display: flex; align-items: center;">
-                    Current License Status
-                    <template if:true={isTrial}>
-                        <lightning-badge label="Trial Mode" class="slds-theme_warning slds-m-left_small"></lightning-badge>
+            <!-- ⚠️ Expiring Soon Warning Banner (Orange) -->
+            <template if:true={isExpiringSoon}>
+                <div class="banner banner-warning slds-m-bottom_medium">
+                    <div class="banner-icon">⚠️</div>
+                    <div class="banner-content">
+                        <strong>Your Purplstack Meta Lead Manager license will expire in {daysText}.</strong>
+                        <p>Please renew and activate a new license before the expiry date to avoid service interruption.</p>
+                    </div>
+                </div>
+            </template>
+
+            <!-- ⚠️ Expired Warning Banner (Red) -->
+            <template if:true={isExpired}>
+                <div class="banner banner-error slds-m-bottom_medium">
+                    <div class="banner-icon">⚠️</div>
+                    <div class="banner-content">
+                        <strong>Your license has expired.</strong>
+                        <p>Please enter a valid activation key below to continue using Purplstack Meta Lead Manager.</p>
+                    </div>
+                </div>
+            </template>
+
+            <!-- Status Section Card -->
+            <div class="license-card slds-m-bottom_medium">
+                <div class="license-card-header">
+                    <span class="card-title">Current License Status</span>
+                    <span class={statusBadgeClass}>
+                        {statusIcon} {licenseStatus}
+                    </span>
+                </div>
+                
+                <div class="license-card-body">
+                    <div class="info-row">
+                        <span class="info-label">Status:</span>
+                        <span class="info-value"><strong>{licenseStatus}</strong></span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Expires:</span>
+                        <span class="info-value"><strong>{licenseExpiry}</strong></span>
+                    </div>
+                    <template if:false={isExpired}>
+                        <div class="info-row">
+                            <span class="info-label">Remaining Days:</span>
+                            <span class="info-value"><strong>{daysText}</strong></span>
+                        </div>
                     </template>
-                    <template if:true={isActive}>
-                        <lightning-badge label="Active" class="slds-theme_success slds-m-left_small"></lightning-badge>
+                    <div class="info-row">
+                        <span class="info-label">Page Mapping Limit:</span>
+                        <span class="info-value"><strong>{maxPages}</strong></span>
+                    </div>
+                    <template if:true={licenseKey}>
+                        <div class="info-row">
+                            <span class="info-label">Current Key:</span>
+                            <span class="info-value"><code>{licenseKey}</code></span>
+                        </div>
                     </template>
-                    <template if:true={isExpired}>
-                        <lightning-badge label="Expired" class="slds-theme_error slds-m-left_small"></lightning-badge>
-                    </template>
-                </p>
-                <p>Status: <strong>{licenseStatus}</strong></p>
-                <p>Expires: <strong>{licenseExpiry}</strong></p>
-                <p>Page Mapping Limit: <strong>{maxPages}</strong></p>
-                <template if:true={licenseKey}>
-                    <p class="slds-m-top_x-small">Current Key: <code>{licenseKey}</code></p>
-                </template>
+                </div>
             </div>
 
-            <!-- Activation Section -->
-            <div class="slds-box slds-theme_default">
-                <p class="slds-text-heading_small slds-m-bottom_small">Activate New License</p>
+            <!-- Activation Section (Always Enabled) -->
+            <div class="activation-card">
+                <p class="card-title slds-m-bottom_small">Activate New License</p>
                 
                 <lightning-input 
                     type="text" 
                     label="Activation Key" 
                     value={inputKey} 
                     onchange={handleKeyChange}
+                    placeholder="Enter your KEY-XXXXXXXXXXXX key"
                     class="slds-m-bottom_small">
                 </lightning-input>
                 

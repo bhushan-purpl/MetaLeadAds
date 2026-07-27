@@ -6,10 +6,18 @@ import validateLicense from '@salesforce/apex/MetaLicenseService.validateLicense
 export default class MetaLicenseManager extends LightningElement {
     @track isLoading = true;
     @track licenseStatus = 'Unknown';
+    @track rawStatus = 'Unknown';
     @track licenseExpiry = 'N/A';
+    @track remainingDays = 0;
     @track maxPages = 0;
     @track licenseKey = '';
     @track inputKey = '';
+
+    @track isExpiringSoon = false;
+    @track isExpired = false;
+    @track isTrial = false;
+    @track isActiveStatus = false;
+    @track isSuspended = false;
 
     connectedCallback() {
         this.initLicense();
@@ -57,23 +65,41 @@ export default class MetaLicenseManager extends LightningElement {
         }
     }
 
-    get isTrial() {
-        return this.licenseStatus === 'Trial';
-    }
-
-    get isActive() {
-        return this.licenseStatus === 'Active';
-    }
-
-    get isExpired() {
-        return this.licenseStatus === 'Expired';
-    }
-
     updateUI(settings) {
         this.licenseStatus = settings.Status__c || 'Unknown';
+        this.rawStatus     = settings.RawStatus__c || settings.Status__c || 'Unknown';
         this.licenseExpiry = settings.Expiration_Date__c || 'N/A';
-        this.maxPages = settings.Max_Pages_Allowed__c || 0;
-        this.licenseKey = settings.License_Key__c || '';
+        this.remainingDays = settings.Remaining_Days__c !== undefined ? settings.Remaining_Days__c : 0;
+        this.maxPages      = settings.Max_Pages_Allowed__c || 0;
+        this.licenseKey    = settings.License_Key__c || '';
+
+        this.isExpired      = settings.Is_Expired__c || (this.licenseStatus === 'Expired');
+        this.isExpiringSoon = settings.Is_Expiring_Soon__c || (this.licenseStatus === 'Expiring Soon');
+        this.isTrial        = settings.Is_Trial__c || (this.rawStatus === 'Trial' && !this.isExpired);
+        this.isActiveStatus = this.licenseStatus === 'Active';
+        this.isSuspended    = settings.Is_Suspended__c || (this.licenseStatus === 'Suspended');
+    }
+
+    get statusBadgeClass() {
+        if (this.isExpired) return 'status-badge status-expired';
+        if (this.isExpiringSoon) return 'status-badge status-expiring';
+        if (this.isTrial) return 'status-badge status-trial';
+        if (this.isActiveStatus) return 'status-badge status-active';
+        if (this.isSuspended) return 'status-badge status-suspended';
+        return 'status-badge';
+    }
+
+    get statusIcon() {
+        if (this.isExpired) return '🔴';
+        if (this.isExpiringSoon) return '🟠';
+        if (this.isTrial) return '🟡';
+        if (this.isActiveStatus) return '🟢';
+        if (this.isSuspended) return '⚫';
+        return '⚪';
+    }
+
+    get daysText() {
+        return `${this.remainingDays} ${this.remainingDays === 1 ? 'Day' : 'Days'}`;
     }
 
     showToast(title, message, variant) {

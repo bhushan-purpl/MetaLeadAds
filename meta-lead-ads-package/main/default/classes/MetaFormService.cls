@@ -77,6 +77,9 @@ public without sharing class MetaFormService {
 
     @AuraEnabled
     public static List<FormWrapper> syncForms(String pageId) {
+        if (!MetaLicenseService.isLicenseActive()) {
+            throw new AuraHandledException('License Expired: Your license key is expired or inactive. Please activate a valid license key.');
+        }
         String token = getPageToken(pageId);
         String endpoint = 'https://graph.facebook.com/' + getApiVersion() + '/' + pageId + '/leadgen_forms?access_token=' + token + '&fields=id,name,question_count,status';
         HttpRequest req = new HttpRequest();
@@ -121,6 +124,9 @@ public without sharing class MetaFormService {
 
     @AuraEnabled
     public static List<Map<String, String>> syncFormQuestions(String formId, String pageId) {
+        if (!MetaLicenseService.isLicenseActive()) {
+            throw new AuraHandledException('License Expired: Your license key is expired or inactive. Please activate a valid license key.');
+        }
         String token = getPageToken(pageId);
         String endpoint = 'https://graph.facebook.com/' + getApiVersion() + '/' + formId + '?fields=questions&access_token=' + token;
         HttpRequest req = new HttpRequest();

@@ -11,6 +11,11 @@ private class MetaPageServiceTest {
 
     @isTest
     static void testSyncPages() {
+        insert new Meta_License_Settings__c(
+            SetupOwnerId = UserInfo.getOrganizationId(),
+            Status__c = 'Active',
+            Expiration_Date__c = Date.today().addDays(30)
+        );
         insert new Meta_Auth_Token__c(Name = 'Facebook Token', User_Access_Token__c = 'mock_user_token');
         Test.setMock(HttpCalloutMock.class, new PageMock());
         
