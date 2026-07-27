@@ -9,8 +9,20 @@ public with sharing class MetaLicenseService {
     // Convert SObject to Map to avoid LWC FLS/Serialization issues
     private static Map<String, Object> getSettingsMap(Meta_License_Settings__c settings) {
         if (settings == null) return null;
+        
+        String effectiveStatus = settings.Status__c;
+        if (settings.Expiration_Date__c != null && settings.Expiration_Date__c < Date.today()) {
+            effectiveStatus = 'Expired';
+            if (settings.Id != null && settings.Status__c != 'Expired') {
+                settings.Status__c = 'Expired';
+                try {
+                    upsert settings;
+                } catch (Exception e) { /* ignore */ }
+            }
+        }
+
         return new Map<String, Object>{
-            'Status__c' => settings.Status__c,
+            'Status__c' => effectiveStatus,
             'Expiration_Date__c' => settings.Expiration_Date__c,
             'Max_Pages_Allowed__c' => settings.Max_Pages_Allowed__c,
             'License_Key__c' => settings.License_Key__c
@@ -95,8 +107,13 @@ public with sharing class MetaLicenseService {
                         settings = new Meta_License_Settings__c();
                     }
                     settings.License_Key__c = licenseKey;
-                    settings.Status__c = (String) respData.get('status');
-                    settings.Expiration_Date__c = Date.valueOf((String) respData.get('expiry'));
+                    Date expiryDate = Date.valueOf((String) respData.get('expiry'));
+                    String status = (String) respData.get('status');
+                    if (expiryDate != null && expiryDate < Date.today()) {
+                        status = 'Expired';
+                    }
+                    settings.Status__c = status;
+                    settings.Expiration_Date__c = expiryDate;
                     settings.Max_Pages_Allowed__c = (Integer) respData.get('maxPages');
                     upsert settings;
 
@@ -121,6 +138,10 @@ public with sharing class MetaLicenseService {
             return false;
         }
         if (settings.Expiration_Date__c != null && settings.Expiration_Date__c < Date.today()) {
+            if (settings.Status__c != 'Expired') {
+                settings.Status__c = 'Expired';
+                try { upsert settings; } catch (Exception e) {}
+            }
             return false;
         }
         return (settings.Status__c == 'Active' || settings.Status__c == 'Trial');
