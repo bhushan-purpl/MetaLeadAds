@@ -470,8 +470,8 @@ public with sharing class MetaLeadIntelligenceController {
             LeadRow r = new LeadRow();
             r.id = l.Id;
             r.name = l.Name;
-            r.mobile = String.isNotBlank(l.MobilePhone) ? l.MobilePhone : l.Phone;
-            r.email = l.Email;
+            r.mobile = maskPhone(String.isNotBlank(l.MobilePhone) ? l.MobilePhone : l.Phone);
+            r.email = maskEmail(l.Email);
             r.project = projName;
             r.campaign = campName;
             r.facebookPage = pageName;
@@ -720,5 +720,28 @@ public with sharing class MetaLeadIntelligenceController {
     private static String safeCsv(String str) {
         if (String.isBlank(str)) return '';
         return str.replace('"', '""');
+    }
+
+    private static String maskPhone(String phone) {
+        if (String.isBlank(phone)) return '';
+        String cleaned = phone.trim();
+        if (cleaned.length() <= 5) return '*****';
+        Integer len = cleaned.length();
+        String firstTwo = cleaned.substring(0, 2);
+        String lastThree = cleaned.substring(len - 3);
+        return firstTwo + '*****' + lastThree;
+    }
+
+    private static String maskEmail(String email) {
+        if (String.isBlank(email) || !email.contains('@')) return '****';
+        String[] parts = email.split('@');
+        String localPart = parts[0];
+        String domain = parts.size() > 1 ? parts[1] : '';
+        if (localPart.length() <= 2) {
+            return localPart.substring(0, 1) + '***@' + domain;
+        }
+        String firstChar = localPart.substring(0, 1);
+        String lastChar = localPart.substring(localPart.length() - 1);
+        return firstChar + '****' + lastChar + '@' + domain;
     }
 }
