@@ -456,6 +456,10 @@
         <visibility>DefaultOn</visibility>
     </tabVisibilities>
     <tabVisibilities>
+        <tab>Purplstack_Lead_Intelligence</tab>
+        <visibility>DefaultOn</visibility>
+    </tabVisibilities>
+    <tabVisibilities>
         <tab>Purplstack_Meta_Dashboard</tab>
         <visibility>DefaultOn</visibility>
     </tabVisibilities>
