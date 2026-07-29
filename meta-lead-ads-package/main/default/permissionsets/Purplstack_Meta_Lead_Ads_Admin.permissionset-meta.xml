@@ -68,6 +68,11 @@
     <label>Purplstack Meta Lead Ads Admin</label>
     <fieldPermissions>
         <editable>true</editable>
+        <field>Lead.Integration_Source__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>Meta_Lead_Log__c.Retry_Count__c</field>
         <readable>true</readable>
     </fieldPermissions>

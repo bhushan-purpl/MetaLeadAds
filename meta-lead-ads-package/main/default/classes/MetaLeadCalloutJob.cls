@@ -228,11 +228,10 @@ public class MetaLeadCalloutJob implements Queueable, Database.AllowsCallouts {
 
                 // Automatically populate Integration Source and Lead Source by default without requiring manual mapping
                 Map<String, Schema.SObjectField> leadFieldsMap = Schema.SObjectType.Lead.fields.getMap();
-                if (leadFieldsMap.containsKey('purpl__integration_source__c')) {
-                    try { newLead.put('purpl__Integration_Source__c', 'Meta Lead Ads'); } catch (Exception ex) {}
-                }
-                if (leadFieldsMap.containsKey('integration_source__c')) {
-                    try { newLead.put('Integration_Source__c', 'Meta Lead Ads'); } catch (Exception ex) {}
+                for (String fKey : leadFieldsMap.keySet()) {
+                    if (fKey == 'integration_source__c' || fKey.endsWith('integration_source__c')) {
+                        try { newLead.put(leadFieldsMap.get(fKey).getDescribe().getName(), 'Meta Lead Ads'); } catch (Exception ex) {}
+                    }
                 }
                 if (String.isBlank(newLead.LeadSource)) {
                     newLead.LeadSource = 'Meta Lead Ads';
