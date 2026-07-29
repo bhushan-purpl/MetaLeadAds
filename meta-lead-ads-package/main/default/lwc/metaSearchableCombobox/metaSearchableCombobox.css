@@ -1,11 +1,64 @@
-/* Ensure the dropdown matches standard lightning-combobox look */
-.slds-dropdown {
+.filter-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: #475569;
+    margin-bottom: 4px;
+}
+
+.pill-search-input {
+    border-radius: 20px !important;
+    border: 1.5px solid #002868 !important;
+    padding-right: 36px !important;
+    font-size: 13px !important;
+    height: 36px !important;
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    transition: all 0.2s ease-in-out;
+}
+
+.pill-search-input:focus {
+    box-shadow: 0 0 0 3px rgba(0, 40, 104, 0.15) !important;
+    border-color: #002868 !important;
+}
+
+.search-icon-badge {
+    right: 10px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+}
+
+.search-icon-svg {
+    --slds-c-icon-color-foreground-default: #475569;
+}
+
+.clear-btn {
+    right: 8px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+}
+
+.custom-dropdown {
     max-height: 250px;
     overflow-y: auto;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15);
+    border: 1px solid #cbd5e1;
+    margin-top: 4px;
 }
-.slds-listbox__option {
+
+.option-row {
+    padding: 8px 12px;
     cursor: pointer;
+    transition: background 0.15s ease;
 }
-.slds-listbox__option:hover {
-    background-color: #f3f3f3;
+
+.option-row:hover {
+    background-color: #f1f5f9;
+}
+
+.check-icon {
+    --slds-c-icon-color-foreground-default: #2563eb;
 }

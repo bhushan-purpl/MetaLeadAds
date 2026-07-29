@@ -1,13 +1,15 @@
 <template>
     <div class="slds-form-element">
+        <template if:true={label}>
+            <label class="slds-form-element__label filter-label">{label}</label>
+        </template>
         <div class="slds-form-element__control">
             <div class="slds-combobox_container">
                 <div class={comboboxClass} aria-expanded={isOpen} aria-haspopup="listbox" role="combobox">
                     
                     <div class="slds-combobox__form-element slds-input-has-icon slds-input-has-icon_right" role="none">
-                        <!-- We use an input so the user can type to search -->
                         <input type="text"
-                               class="slds-input slds-combobox__input"
+                               class="slds-input slds-combobox__input pill-search-input"
                                aria-controls="listbox-id-1"
                                autocomplete="off"
                                role="textbox"
@@ -19,27 +21,26 @@
                                disabled={disabled} />
                                
                         <template if:true={showSearchIcon}>
-                            <span class="slds-icon_container slds-icon-utility-search slds-input__icon slds-input__icon_right">
-                                <lightning-icon icon-name="utility:search" size="x-small" class="slds-icon slds-icon slds-icon_x-small slds-icon-text-default"></lightning-icon>
+                            <span class="slds-icon_container slds-icon-utility-search slds-input__icon slds-input__icon_right search-icon-badge">
+                                <lightning-icon icon-name="utility:search" size="x-small" class="search-icon-svg"></lightning-icon>
                             </span>
                         </template>
                         <template if:true={showClearIcon}>
-                            <button class="slds-button slds-button_icon slds-input__icon slds-input__icon_right" title="Remove selected option" onclick={handleClear}>
-                                <lightning-icon icon-name="utility:clear" size="x-small" class="slds-button__icon"></lightning-icon>
+                            <button class="slds-button slds-button_icon slds-input__icon slds-input__icon_right clear-btn" title="Remove selected option" onclick={handleClear}>
+                                <lightning-icon icon-name="utility:clear" size="x-small"></lightning-icon>
                                 <span class="slds-assistive-text">Remove selected option</span>
                             </button>
                         </template>
                     </div>
 
-                    <div id="listbox-id-1" class="slds-dropdown slds-dropdown_fluid" role="listbox">
+                    <div id="listbox-id-1" class="slds-dropdown slds-dropdown_fluid custom-dropdown" role="listbox">
                         <ul class="slds-listbox slds-listbox_vertical" role="presentation">
                             <template for:each={filteredOptions} for:item="opt">
                                 <li key={opt.value} role="presentation" class="slds-listbox__item" onmousedown={handleSelect} data-value={opt.value}>
-                                    <div class="slds-media slds-listbox__option slds-listbox__option_plain slds-media_small" role="option">
+                                    <div class="slds-media slds-listbox__option slds-listbox__option_plain slds-media_small option-row" role="option">
                                         <span class="slds-media__figure slds-listbox__option-icon">
-                                            <!-- Checkmark if selected -->
                                             <template if:true={opt.selected}>
-                                                <lightning-icon icon-name="utility:check" size="x-small" class="slds-icon-utility-check slds-icon_container"></lightning-icon>
+                                                <lightning-icon icon-name="utility:check" size="x-small" class="check-icon"></lightning-icon>
                                             </template>
                                         </span>
                                         <span class="slds-media__body">

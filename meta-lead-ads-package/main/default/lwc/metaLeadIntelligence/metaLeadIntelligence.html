@@ -95,13 +95,14 @@
 
                 <!-- Lead Form -->
                 <div class="filter-item">
-                    <lightning-combobox
+                    <c-meta-searchable-combobox
                         name="formId"
                         label="Lead Form"
                         value={selectedForm}
+                        placeholder="Select Form..."
                         options={formOptions}
-                        onchange={handleFilterChange}>
-                    </lightning-combobox>
+                        onchange={handleFormChange}>
+                    </c-meta-searchable-combobox>
                 </div>
 
                 <!-- Search Input -->

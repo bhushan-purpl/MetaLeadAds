@@ -2,7 +2,8 @@ import { LightningElement, api, track } from 'lwc';
 
 export default class MetaSearchableCombobox extends LightningElement {
     @api name;
-    @api placeholder = '-- None --';
+    @api label;
+    @api placeholder = 'Select Form...';
     @api disabled = false;
     
     // Internal state
@@ -51,9 +52,6 @@ export default class MetaSearchableCombobox extends LightningElement {
             });
         }
         
-        // Add "-- None --" option
-        filtered = [{ label: '-- None --', value: '' }, ...filtered];
-        
         return filtered;
     }
     
@@ -76,11 +74,10 @@ export default class MetaSearchableCombobox extends LightningElement {
     
     handleFocus() {
         this.isOpen = true;
-        this.searchTerm = ''; // Reset search term when opening
+        this.searchTerm = '';
     }
     
     handleBlur() {
-        // Delay closing to allow the click event on a list item to register
         setTimeout(() => {
             this.isOpen = false;
             this.searchTerm = '';
@@ -99,14 +96,12 @@ export default class MetaSearchableCombobox extends LightningElement {
         this.updateDisplayLabel();
         this.isOpen = false;
         
-        // Fire standard change event
         this.dispatchEvent(new CustomEvent('change', {
-            detail: { value: selectedValue }
+            detail: { value: selectedValue, name: this.name }
         }));
     }
     
     handleClear(event) {
-        // Prevent default click action from focusing the input if we just want to clear
         event.stopPropagation();
         this._value = '';
         this.searchTerm = '';
@@ -114,7 +109,7 @@ export default class MetaSearchableCombobox extends LightningElement {
         this.isOpen = false;
         
         this.dispatchEvent(new CustomEvent('change', {
-            detail: { value: '' }
+            detail: { value: '', name: this.name }
         }));
     }
     

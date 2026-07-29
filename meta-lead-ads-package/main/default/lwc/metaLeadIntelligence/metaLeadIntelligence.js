@@ -164,8 +164,8 @@ export default class MetaLeadIntelligence extends LightningElement {
 
     // ── Filter Change Handlers ──
     handleFilterChange(event) {
-        const name = event.target.name;
-        const value = event.target.value;
+        const name = (event.detail && event.detail.name) ? event.detail.name : event.target.name;
+        const value = (event.detail && event.detail.value !== undefined) ? event.detail.value : event.target.value;
         this[name] = value;
 
         if (name === 'dateRange' && value === 'Custom') {
