@@ -226,6 +226,24 @@ public class MetaLeadCalloutJob implements Queueable, Database.AllowsCallouts {
                 if (String.isBlank(newLead.PostalCode)) newLead.PostalCode = leadFields.get('zip_code');
                 if (String.isBlank(newLead.Country))    newLead.Country    = leadFields.get('country');
 
+                // Automatically populate Integration Source and Lead Source by default without requiring manual mapping
+                Map<String, Schema.SObjectField> leadFieldsMap = Schema.SObjectType.Lead.fields.getMap();
+                if (leadFieldsMap.containsKey('purpl__integration_source__c')) {
+                    try { newLead.put('purpl__Integration_Source__c', 'Meta Lead Ads'); } catch (Exception ex) {}
+                }
+                if (leadFieldsMap.containsKey('integration_source__c')) {
+                    try { newLead.put('Integration_Source__c', 'Meta Lead Ads'); } catch (Exception ex) {}
+                }
+                if (String.isBlank(newLead.LeadSource)) {
+                    newLead.LeadSource = 'Meta Lead Ads';
+                }
+                if (leadFieldsMap.containsKey('purpl__lead_source__c')) {
+                    Object lsVal = newLead.get('purpl__Lead_Source__c');
+                    if (lsVal == null || String.isBlank(String.valueOf(lsVal))) {
+                        try { newLead.put('purpl__Lead_Source__c', 'Meta Lead Ads'); } catch (Exception ex) {}
+                    }
+                }
+
                 if (!usedDynamicMapping) {
                     try {
                         String query = 'SELECT Meta_Field_Name__c, Salesforce_Field_API_Name__c';
