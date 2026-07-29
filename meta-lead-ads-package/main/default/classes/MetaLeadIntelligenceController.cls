@@ -311,7 +311,7 @@ public with sharing class MetaLeadIntelligenceController {
         }
 
         // Aggregate Metrics & Build Wrappers
-        Integer totalMetaLeads = rawLeads.size();
+        Integer totalMetaLeads = 0;
         Integer newLeadsCount = 0;
         Integer assignedCount = 0;
         Integer openCount = 0;
@@ -337,10 +337,10 @@ public with sharing class MetaLeadIntelligenceController {
 
         for (Lead l : rawLeads) {
             String st = l.Status != null ? l.Status : 'Open';
-            statusCounts.put(st, statusCounts.containsKey(st) ? statusCounts.get(st) + 1 : 1);
-            statusSet.add(st);
-
             String ownerName = l.Owner != null ? l.Owner.Name : 'Unassigned';
+
+            // Collect filter options from all records
+            statusSet.add(st);
             if (l.OwnerId != null) ownerOptionsMap.put(l.OwnerId, ownerName);
 
             // Project Interested field extraction
@@ -372,8 +372,11 @@ public with sharing class MetaLeadIntelligenceController {
             String pageId = logRec != null ? logRec.Page_ID__c : '';
             String pageName = pageIdToNameMap.containsKey(pageId) ? pageIdToNameMap.get(pageId) : (String.isNotBlank(pageId) ? 'Page ' + pageId : 'Facebook Business Page');
 
-            // Apply In-Memory Filters for multi-dimensional search & KPI click filter
+            // ── APPLY ALL FILTERS BEFORE METRICS AGGREGATION ──
             if (String.isNotBlank(filters.project) && projName != filters.project) continue;
+            if (String.isNotBlank(filters.status) && st != filters.status) continue;
+            if (String.isNotBlank(filters.pageId) && pageId != filters.pageId) continue;
+            if (String.isNotBlank(filters.formId) && formId != filters.formId) continue;
             if (String.isNotBlank(filters.campaign) && campName != filters.campaign) continue;
             if (String.isNotBlank(filters.searchKey)) {
                 String sk = filters.searchKey.toLowerCase();
@@ -400,6 +403,10 @@ public with sharing class MetaLeadIntelligenceController {
                     continue;
                 }
             }
+
+            // ── RECORD PASSED ALL FILTERS: ACCUMULATE METRICS ──
+            totalMetaLeads++;
+            statusCounts.put(st, statusCounts.containsKey(st) ? statusCounts.get(st) + 1 : 1);
 
             // Status counts
             if (st == 'New' || st == 'Uncontacted') newLeadsCount++;
