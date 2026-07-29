@@ -382,6 +382,24 @@ public with sharing class MetaLeadIntelligenceController {
                 Boolean phoneMatch = l.Phone != null && l.Phone.toLowerCase().contains(sk);
                 if (!nameMatch && !emailMatch && !phoneMatch) continue;
             }
+            if (String.isNotBlank(filters.kpiFilter)) {
+                String kf = filters.kpiFilter;
+                if (kf == 'Duplicate') {
+                    if (logRec == null || logRec.Processing_Status__c != 'Failed' || logRec.Error_Message__c == null || !logRec.Error_Message__c.toLowerCase().contains('duplicate')) continue;
+                } else if (kf == 'Failed') {
+                    if (logRec == null || logRec.Processing_Status__c != 'Failed') continue;
+                } else if (kf == 'Opportunity') {
+                    Boolean hasOpp = l.IsConverted || l.ConvertedOpportunityId != null;
+                    if (!hasOpp) continue;
+                } else if (kf == 'Converted') {
+                    if (!l.IsConverted) continue;
+                } else if (kf.startsWith('Status:')) {
+                    String targetStatus = kf.substringAfter('Status:');
+                    if (st != targetStatus) continue;
+                } else if (kf != 'Total' && st != kf) {
+                    continue;
+                }
+            }
 
             // Status counts
             if (st == 'New' || st == 'Uncontacted') newLeadsCount++;
@@ -479,23 +497,45 @@ public with sharing class MetaLeadIntelligenceController {
         wrapper.formPerformance = formMap.values();
         wrapper.ownerPerformance = ownerMap.values();
 
-        // 3. Build KPI Items
+        // 3. Build KPI Items Dynamically from Actual Lead Status Picklist Values
         Decimal totalBase = totalMetaLeads > 0 ? (Decimal) totalMetaLeads : 1;
 
         Map<String, KpiItem> kpis = new Map<String, KpiItem>();
-        kpis.put('Total', new KpiItem('Total', 'Total Meta Leads', totalMetaLeads, 100, 'utility:lead', '+14%', 'brand'));
-        kpis.put('New', new KpiItem('New', 'New Leads', newLeadsCount, (newLeadsCount / totalBase) * 100, 'utility:new', '+8%', 'info'));
-        kpis.put('Duplicate', new KpiItem('Duplicate', 'Duplicate Leads', duplicateCount, (duplicateCount / totalBase) * 100, 'utility:copy', 'Stable', 'warning'));
-        kpis.put('Failed', new KpiItem('Failed', 'Validation Failed', validationFailedCount, (validationFailedCount / totalBase) * 100, 'utility:error', '-2%', 'error'));
-        kpis.put('Assigned', new KpiItem('Assigned', 'Assigned', assignedCount, (assignedCount / totalBase) * 100, 'utility:user', '+10%', 'success'));
-        kpis.put('Open', new KpiItem('Open', 'Open Leads', openCount, (openCount / totalBase) * 100, 'utility:open_folder', '+5%', 'info'));
-        kpis.put('Working', new KpiItem('Working', 'Working', workingCount, (workingCount / totalBase) * 100, 'utility:clock', '+12%', 'warning'));
-        kpis.put('Qualified', new KpiItem('Qualified', 'Qualified', qualifiedCount, (qualifiedCount / totalBase) * 100, 'utility:like', '+18%', 'success'));
-        kpis.put('SiteVisit', new KpiItem('SiteVisit', 'Site Visit', siteVisitCount, (siteVisitCount / totalBase) * 100, 'utility:location', '+15%', 'success'));
-        kpis.put('Opportunity', new KpiItem('Opportunity', 'Opportunity Created', oppCreatedCount, (oppCreatedCount / totalBase) * 100, 'utility:opportunity', '+20%', 'brand'));
-        kpis.put('Converted', new KpiItem('Converted', 'Converted', convertedCount, (convertedCount / totalBase) * 100, 'utility:check', '+16%', 'success'));
-        kpis.put('ClosedWon', new KpiItem('ClosedWon', 'Closed Won', closedWonCount, (closedWonCount / totalBase) * 100, 'utility:ribbon', '+22%', 'success'));
-        kpis.put('ClosedLost', new KpiItem('ClosedLost', 'Closed Lost', closedLostCount, (closedLostCount / totalBase) * 100, 'utility:close', '-4%', 'error'));
+        kpis.put('Total', new KpiItem('Total', 'Total Meta Leads', totalMetaLeads, 100.0, 'utility:lead', 'Total', 'brand'));
+
+        if (duplicateCount > 0) {
+            kpis.put('Duplicate', new KpiItem('Duplicate', 'Duplicate Leads', duplicateCount, ((Decimal)duplicateCount / totalBase * 100).setScale(1), 'utility:copy', 'Log', 'warning'));
+        }
+        if (validationFailedCount > 0) {
+            kpis.put('Failed', new KpiItem('Failed', 'Validation Failed', validationFailedCount, ((Decimal)validationFailedCount / totalBase * 100).setScale(1), 'utility:error', 'Log', 'error'));
+        }
+
+        // Fetch actual Lead Status picklist entries from Schema
+        List<Schema.PicklistEntry> statusEntries = Schema.SObjectType.Lead.fields.Status.getPicklistValues();
+        String[] statusIcons = new String[]{'utility:new', 'utility:clock', 'utility:like', 'utility:check', 'utility:close', 'utility:open_folder', 'utility:location'};
+        String[] statusVariants = new String[]{'info', 'warning', 'success', 'brand', 'error', 'info', 'success'};
+        Integer sIdx = 0;
+
+        for (Schema.PicklistEntry entry : statusEntries) {
+            if (entry.isActive()) {
+                String sValue = entry.getValue();
+                String sLabel = entry.getLabel();
+                Integer cnt = statusCounts.containsKey(sValue) ? statusCounts.get(sValue) : 0;
+                Decimal pct = ((Decimal) cnt / totalBase * 100).setScale(1);
+
+                String icon = statusIcons[Math.mod(sIdx, statusIcons.size())];
+                String variant = statusVariants[Math.mod(sIdx, statusVariants.size())];
+
+                kpis.put('Status:' + sValue, new KpiItem('Status:' + sValue, sLabel, cnt, pct, icon, 'Status', variant));
+                sIdx++;
+            }
+        }
+
+        // Add Opportunity & Converted Metrics KPI Cards
+        kpis.put('Opportunity', new KpiItem('Opportunity', 'Opportunity Created', oppCreatedCount, ((Decimal)oppCreatedCount / totalBase * 100).setScale(1), 'utility:opportunity', 'Pipeline', 'brand'));
+        if (convertedCount > 0) {
+            kpis.put('Converted', new KpiItem('Converted', 'Converted Leads', convertedCount, ((Decimal)convertedCount / totalBase * 100).setScale(1), 'utility:check', 'Converted', 'success'));
+        }
 
         wrapper.kpiStats = kpis;
         wrapper.kpiList = kpis.values();
