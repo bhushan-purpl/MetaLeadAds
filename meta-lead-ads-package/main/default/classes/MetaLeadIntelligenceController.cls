@@ -300,7 +300,11 @@ public with sharing class MetaLeadIntelligenceController {
 
         for (Meta_Lead_Log__c log : logs) {
             if (String.isNotBlank(log.Salesforce_Lead_ID__c)) {
-                leadIdToLogMap.put(log.Salesforce_Lead_ID__c, log);
+                String sfId = log.Salesforce_Lead_ID__c.trim();
+                leadIdToLogMap.put(sfId, log);
+                if (sfId.length() >= 15) {
+                    leadIdToLogMap.put(sfId.substring(0, 15), log);
+                }
             }
             if (log.Processing_Status__c == 'Failed') {
                 validationFailedCount++;
@@ -365,7 +369,12 @@ public with sharing class MetaLeadIntelligenceController {
                 String fVal = (String) l.get(leadFieldsMap.containsKey('purpl__meta_form_1__c') ? 'purpl__Meta_Form_1__c' : 'Meta_Form_1__c');
                 if (String.isNotBlank(fVal)) formId = fVal;
             }
-            Meta_Lead_Log__c logRec = leadIdToLogMap.get(l.Id);
+            String sLeadId = String.valueOf(l.Id);
+            Meta_Lead_Log__c logRec = leadIdToLogMap.get(sLeadId);
+            if (logRec == null && sLeadId.length() >= 15) {
+                logRec = leadIdToLogMap.get(sLeadId.substring(0, 15));
+            }
+
             if (logRec != null && String.isNotBlank(logRec.Form_ID__c)) formId = logRec.Form_ID__c;
 
             String formName = formIdToNameMap.containsKey(formId) ? formIdToNameMap.get(formId) : (String.isNotBlank(formId) ? 'Form ' + formId : 'Meta Lead Form');
@@ -375,8 +384,8 @@ public with sharing class MetaLeadIntelligenceController {
             // ── APPLY ALL FILTERS BEFORE METRICS AGGREGATION ──
             if (String.isNotBlank(filters.project) && projName != filters.project) continue;
             if (String.isNotBlank(filters.status) && st != filters.status) continue;
-            if (String.isNotBlank(filters.pageId) && pageId != filters.pageId) continue;
-            if (String.isNotBlank(filters.formId) && formId != filters.formId) continue;
+            if (String.isNotBlank(filters.pageId) && pageId != filters.pageId && pageName != filters.pageId) continue;
+            if (String.isNotBlank(filters.formId) && formId != filters.formId && formName != filters.formId) continue;
             if (String.isNotBlank(filters.campaign) && campName != filters.campaign) continue;
             if (String.isNotBlank(filters.searchKey)) {
                 String sk = filters.searchKey.toLowerCase();

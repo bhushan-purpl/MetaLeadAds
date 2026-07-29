@@ -139,24 +139,24 @@ export default class MetaLeadIntelligence extends LightningElement {
         this.validationFailures = data.validationFailures || [];
         this.webhookHealth = data.webhookHealth || {};
 
-        // 7. Populate Picklist Options dynamically if not populated
+        // 7. Populate Picklist Options dynamically
         if (data.filterOptions) {
-            if (data.filterOptions.projects && this.projectOptions.length === 1) {
+            if (data.filterOptions.projects && data.filterOptions.projects.length > 0) {
                 this.projectOptions = [{ label: 'All Projects', value: '' }, ...data.filterOptions.projects];
             }
-            if (data.filterOptions.statuses && this.statusOptions.length === 1) {
+            if (data.filterOptions.statuses && data.filterOptions.statuses.length > 0) {
                 this.statusOptions = [{ label: 'All Statuses', value: '' }, ...data.filterOptions.statuses];
             }
-            if (data.filterOptions.owners && this.ownerOptions.length === 1) {
+            if (data.filterOptions.owners && data.filterOptions.owners.length > 0) {
                 this.ownerOptions = [{ label: 'All Owners', value: '' }, ...data.filterOptions.owners];
             }
-            if (data.filterOptions.campaigns && this.campaignOptions.length === 1) {
+            if (data.filterOptions.campaigns && data.filterOptions.campaigns.length > 0) {
                 this.campaignOptions = [{ label: 'All Campaigns', value: '' }, ...data.filterOptions.campaigns];
             }
-            if (data.filterOptions.pages && this.pageOptions.length === 1) {
+            if (data.filterOptions.pages && data.filterOptions.pages.length > 0) {
                 this.pageOptions = [{ label: 'All Pages', value: '' }, ...data.filterOptions.pages];
             }
-            if (data.filterOptions.forms && this.formOptions.length === 1) {
+            if (data.filterOptions.forms && data.filterOptions.forms.length > 0) {
                 this.formOptions = [{ label: 'All Forms', value: '' }, ...data.filterOptions.forms];
             }
         }
