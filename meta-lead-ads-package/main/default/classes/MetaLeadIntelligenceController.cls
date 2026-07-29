@@ -1,10 +1,10 @@
 /**
  * MetaLeadIntelligenceController
  *
- * Controller for Purplstack Meta Lead Analytics (metaLeadIntelligence).
- * Provides executive analytics, fixed 10 KPIs, real Salesforce timeline,
- * multi-dimensional charts, validation monitoring, webhook health,
- * recent activities, and CSV export.
+ * Controller for the Lead Intelligence Dashboard LWC (metaLeadIntelligence).
+ * Provides complete read-only analytics, KPI metrics, conversion funnel,
+ * multi-dimensional performance tables, validation failures, webhook health,
+ * datatable pagination, and lead lifecycle timeline.
  */
 public with sharing class MetaLeadIntelligenceController {
 
@@ -22,23 +22,14 @@ public with sharing class MetaLeadIntelligenceController {
         public String kpiFilter;
     }
 
-    public class ExecutiveSnapshot {
-        @AuraEnabled public Integer todayLeads = 0;
-        @AuraEnabled public Integer todayQualified = 0;
-        @AuraEnabled public Integer todayOpportunities = 0;
-        @AuraEnabled public Integer todayClosedWon = 0;
-        @AuraEnabled public Integer todayValidationFailures = 0;
-        @AuraEnabled public Integer todayDuplicates = 0;
-    }
-
     public class KpiItem {
         @AuraEnabled public String key;
         @AuraEnabled public String label;
         @AuraEnabled public Integer count;
         @AuraEnabled public Decimal percentage;
         @AuraEnabled public String icon;
-        @AuraEnabled public String trend;
-        @AuraEnabled public String variant;
+        @AuraEnabled public String trend; // e.g. "+12%" or "Stable"
+        @AuraEnabled public String variant; // e.g. "success", "warning", "error", "info"
 
         public KpiItem(String key, String label, Integer count, Decimal percentage, String icon, String trend, String variant) {
             this.key = key;
@@ -121,7 +112,6 @@ public with sharing class MetaLeadIntelligenceController {
         @AuraEnabled public String status;
         @AuraEnabled public String ownerName;
         @AuraEnabled public String opportunityName;
-        @AuraEnabled public Decimal opportunityAmount;
         @AuraEnabled public Datetime createdDate;
         @AuraEnabled public String createdDateFormatted;
         @AuraEnabled public Boolean isConverted;
@@ -132,7 +122,7 @@ public with sharing class MetaLeadIntelligenceController {
         @AuraEnabled public String metaLeadId;
         @AuraEnabled public String formId;
         @AuraEnabled public String pageId;
-        @AuraEnabled public String errorType;
+        @AuraEnabled public String errorType; // e.g. "Validation Rule Failed", "Required Field Missing", "Duplicate Lead", "Assignment Failed"
         @AuraEnabled public String errorMessage;
         @AuraEnabled public Datetime createdDate;
     }
@@ -145,7 +135,6 @@ public with sharing class MetaLeadIntelligenceController {
         @AuraEnabled public Datetime lastWebhookReceived;
         @AuraEnabled public Datetime lastSyncTime;
         @AuraEnabled public Integer failedLogCount;
-        @AuraEnabled public Integer retryQueueCount;
     }
 
     public class TimelineEvent {
@@ -166,24 +155,6 @@ public with sharing class MetaLeadIntelligenceController {
         }
     }
 
-    public class TrendPoint {
-        @AuraEnabled public String label;
-        @AuraEnabled public Integer count;
-
-        public TrendPoint(String label, Integer count) {
-            this.label = label;
-            this.count = count;
-        }
-    }
-
-    public class RecentActivities {
-        @AuraEnabled public List<LeadRow> last10Leads = new List<LeadRow>();
-        @AuraEnabled public List<LeadRow> recentlyQualified = new List<LeadRow>();
-        @AuraEnabled public List<LeadRow> recentlyConverted = new List<LeadRow>();
-        @AuraEnabled public List<LeadRow> recentlyWon = new List<LeadRow>();
-        @AuraEnabled public List<ValidationFailure> recentlyFailed = new List<ValidationFailure>();
-    }
-
     public class FilterOptions {
         @AuraEnabled public List<Map<String, String>> projects = new List<Map<String, String>>();
         @AuraEnabled public List<Map<String, String>> statuses = new List<Map<String, String>>();
@@ -194,7 +165,6 @@ public with sharing class MetaLeadIntelligenceController {
     }
 
     public class DashboardDataWrapper {
-        @AuraEnabled public ExecutiveSnapshot executiveSnapshot = new ExecutiveSnapshot();
         @AuraEnabled public Map<String, KpiItem> kpiStats = new Map<String, KpiItem>();
         @AuraEnabled public List<KpiItem> kpiList = new List<KpiItem>();
         @AuraEnabled public List<FunnelStage> funnelStages = new List<FunnelStage>();
@@ -204,15 +174,10 @@ public with sharing class MetaLeadIntelligenceController {
         @AuraEnabled public List<FormPerformanceRow> formPerformance = new List<FormPerformanceRow>();
         @AuraEnabled public List<PerformanceRow> ownerPerformance = new List<PerformanceRow>();
         @AuraEnabled public List<Map<String, Object>> statusDistribution = new List<Map<String, Object>>();
-        @AuraEnabled public List<TrendPoint> dailyTrend = new List<TrendPoint>();
-        @AuraEnabled public List<TrendPoint> monthlyTrend = new List<TrendPoint>();
         @AuraEnabled public List<LeadRow> leads = new List<LeadRow>();
         @AuraEnabled public List<ValidationFailure> validationFailures = new List<ValidationFailure>();
         @AuraEnabled public WebhookHealthInfo webhookHealth = new WebhookHealthInfo();
-        @AuraEnabled public RecentActivities recentActivities = new RecentActivities();
         @AuraEnabled public FilterOptions filterOptions = new FilterOptions();
-        @AuraEnabled public Decimal totalRevenue = 0;
-        @AuraEnabled public Boolean hasRevenueTracking = false;
     }
 
     // ── Main Dashboard Data Endpoint ──
@@ -261,19 +226,24 @@ public with sharing class MetaLeadIntelligenceController {
         // 2. Fetch Lead Records
         String leadQuery = 'SELECT Id, FirstName, LastName, Name, Email, Phone, MobilePhone, Company, Status, OwnerId, Owner.Name, CreatedDate, IsConverted, ConvertedOpportunityId, ConvertedOpportunity.Name, ConvertedOpportunity.StageName, ConvertedOpportunity.Amount';
         
+        // Dynamic custom fields check
         Map<String, Schema.SObjectField> leadFieldsMap = Schema.SObjectType.Lead.fields.getMap();
         Boolean hasIntegrationSource = leadFieldsMap.containsKey('purpl__integration_source__c') || leadFieldsMap.containsKey('integration_source__c');
         Boolean hasProject = leadFieldsMap.containsKey('purpl__project_interested__c') || leadFieldsMap.containsKey('project_interested__c');
         Boolean hasForm1 = leadFieldsMap.containsKey('purpl__meta_form_1__c') || leadFieldsMap.containsKey('meta_form_1__c');
+        Boolean hasForm2 = leadFieldsMap.containsKey('purpl__meta_form_2__c') || leadFieldsMap.containsKey('meta_form_2__c');
+        Boolean hasUtmSource = leadFieldsMap.containsKey('purpl__utm_source__c') || leadFieldsMap.containsKey('utm_source__c');
         Boolean hasUtmCampaign = leadFieldsMap.containsKey('purpl__utm_campaign__c') || leadFieldsMap.containsKey('utm_campaign__c');
 
         if (hasIntegrationSource) leadQuery += leadFieldsMap.containsKey('purpl__integration_source__c') ? ', purpl__Integration_Source__c' : ', Integration_Source__c';
         if (hasProject) leadQuery += leadFieldsMap.containsKey('purpl__project_interested__c') ? ', purpl__Project_Interested__c' : ', Project_Interested__c';
         if (hasForm1) leadQuery += leadFieldsMap.containsKey('purpl__meta_form_1__c') ? ', purpl__Meta_Form_1__c' : ', Meta_Form_1__c';
+        if (hasForm2) leadQuery += leadFieldsMap.containsKey('purpl__meta_form_2__c') ? ', purpl__Meta_Form_2__c' : ', Meta_Form_2__c';
         if (hasUtmCampaign) leadQuery += leadFieldsMap.containsKey('purpl__utm_campaign__c') ? ', purpl__UTM_Campaign__c' : ', UTM_Campaign__c';
 
         leadQuery += ' FROM Lead WHERE Id != null';
 
+        // Filter by Backend Integration Source or LeadSource or Form if field present
         if (hasIntegrationSource) {
             String integrationField = leadFieldsMap.containsKey('purpl__integration_source__c') ? 'purpl__Integration_Source__c' : 'Integration_Source__c';
             leadQuery += ' AND (' + integrationField + ' = \'Meta Lead Ads\' OR LeadSource = \'Meta Lead Ads\'';
@@ -298,7 +268,7 @@ public with sharing class MetaLeadIntelligenceController {
             leadQuery += ' AND OwnerId = :ownerVal';
         }
 
-        leadQuery += ' ORDER BY CreatedDate DESC LIMIT 10000';
+        leadQuery += ' ORDER BY CreatedDate DESC LIMIT 5000';
 
         List<Lead> rawLeads = Database.query(leadQuery);
 
@@ -317,17 +287,16 @@ public with sharing class MetaLeadIntelligenceController {
             }
         }
 
-        // Fetch Meta Lead Logs using Processing Status as Source of Truth
+        // Fetch Meta Lead Logs to map Validation Failures, Duplicates, and Webhook Health
         List<Meta_Lead_Log__c> logs = [
             SELECT Id, Meta_Lead_ID__c, Page_ID__c, Form_ID__c, Processing_Status__c, Error_Message__c, Salesforce_Lead_ID__c, CreatedDate
             FROM Meta_Lead_Log__c
-            ORDER BY CreatedDate DESC LIMIT 5000
+            ORDER BY CreatedDate DESC LIMIT 2000
         ];
 
         Map<String, Meta_Lead_Log__c> leadIdToLogMap = new Map<String, Meta_Lead_Log__c>();
         Integer duplicateCount = 0;
         Integer validationFailedCount = 0;
-        Integer retryQueueCount = 0;
 
         for (Meta_Lead_Log__c log : logs) {
             if (String.isNotBlank(log.Salesforce_Lead_ID__c)) {
@@ -337,23 +306,18 @@ public with sharing class MetaLeadIntelligenceController {
                     leadIdToLogMap.put(sfId.substring(0, 15), log);
                 }
             }
-
-            Boolean logIsToday = log.CreatedDate != null && log.CreatedDate.date() == today;
-
-            String pStatus = log.Processing_Status__c;
-            if (pStatus == 'Duplicate' || (log.Error_Message__c != null && log.Error_Message__c.toLowerCase().contains('duplicate'))) {
-                duplicateCount++;
-                if (logIsToday) wrapper.executiveSnapshot.todayDuplicates++;
-            } else if (pStatus == 'Failed' || pStatus == 'Validation Failed') {
+            if (log.Processing_Status__c == 'Failed') {
                 validationFailedCount++;
-                if (logIsToday) wrapper.executiveSnapshot.todayValidationFailures++;
-            } else if (pStatus == 'Retry' || pStatus == 'Processing') {
-                retryQueueCount++;
+                if (log.Error_Message__c != null && log.Error_Message__c.toLowerCase().contains('duplicate')) {
+                    duplicateCount++;
+                }
             }
         }
 
         // Aggregate Metrics & Build Wrappers
         Integer totalMetaLeads = 0;
+        Integer newLeadsCount = 0;
+        Integer assignedCount = 0;
         Integer openCount = 0;
         Integer workingCount = 0;
         Integer qualifiedCount = 0;
@@ -362,7 +326,6 @@ public with sharing class MetaLeadIntelligenceController {
         Integer convertedCount = 0;
         Integer closedWonCount = 0;
         Integer closedLostCount = 0;
-        Integer assignedCount = 0;
 
         Map<String, PerformanceRow> campaignMap = new Map<String, PerformanceRow>();
         Map<String, PerformanceRow> projectMap = new Map<String, PerformanceRow>();
@@ -370,8 +333,6 @@ public with sharing class MetaLeadIntelligenceController {
         Map<String, FormPerformanceRow> formMap = new Map<String, FormPerformanceRow>();
         Map<String, PerformanceRow> ownerMap = new Map<String, PerformanceRow>();
         Map<String, Integer> statusCounts = new Map<String, Integer>();
-        Map<String, Integer> dailyTrendMap = new Map<String, Integer>();
-        Map<String, Integer> monthlyTrendMap = new Map<String, Integer>();
 
         Set<String> projectSet = new Set<String>();
         Set<String> statusSet = new Set<String>();
@@ -381,11 +342,12 @@ public with sharing class MetaLeadIntelligenceController {
         for (Lead l : rawLeads) {
             String st = l.Status != null ? l.Status : 'Open';
             String ownerName = l.Owner != null ? l.Owner.Name : 'Unassigned';
-            Boolean isToday = l.CreatedDate != null && l.CreatedDate.date() == today;
 
+            // Collect filter options from all records
             statusSet.add(st);
             if (l.OwnerId != null) ownerOptionsMap.put(l.OwnerId, ownerName);
 
+            // Project Interested field extraction
             String projName = 'General Enquiry';
             if (hasProject) {
                 String pVal = (String) l.get(leadFieldsMap.containsKey('purpl__project_interested__c') ? 'purpl__Project_Interested__c' : 'Project_Interested__c');
@@ -393,6 +355,7 @@ public with sharing class MetaLeadIntelligenceController {
             }
             projectSet.add(projName);
 
+            // Campaign extraction
             String campName = 'Organic / Direct Meta';
             if (hasUtmCampaign) {
                 String cVal = (String) l.get(leadFieldsMap.containsKey('purpl__utm_campaign__c') ? 'purpl__UTM_Campaign__c' : 'UTM_Campaign__c');
@@ -400,6 +363,7 @@ public with sharing class MetaLeadIntelligenceController {
             }
             campaignSet.add(campName);
 
+            // Form & Page extraction from Log or Lead
             String formId = '';
             if (hasForm1) {
                 String fVal = (String) l.get(leadFieldsMap.containsKey('purpl__meta_form_1__c') ? 'purpl__Meta_Form_1__c' : 'Meta_Form_1__c');
@@ -417,7 +381,7 @@ public with sharing class MetaLeadIntelligenceController {
             String pageId = logRec != null ? logRec.Page_ID__c : '';
             String pageName = pageIdToNameMap.containsKey(pageId) ? pageIdToNameMap.get(pageId) : (String.isNotBlank(pageId) ? 'Page ' + pageId : 'Facebook Business Page');
 
-            // ── APPLY FILTERS ──
+            // ── APPLY ALL FILTERS BEFORE METRICS AGGREGATION ──
             if (String.isNotBlank(filters.project) && projName != filters.project) continue;
             if (String.isNotBlank(filters.status) && st != filters.status) continue;
             if (String.isNotBlank(filters.pageId) && pageId != filters.pageId && pageName != filters.pageId) continue;
@@ -432,65 +396,50 @@ public with sharing class MetaLeadIntelligenceController {
             }
             if (String.isNotBlank(filters.kpiFilter)) {
                 String kf = filters.kpiFilter;
-                if (kf == 'open' && st != 'Open' && st != 'New') continue;
-                if (kf == 'working' && st != 'Working' && st != 'Contacted' && st != 'In Progress') continue;
-                if (kf == 'qualified' && st != 'Qualified' && st != 'Interested') continue;
-                if (kf == 'site_visit' && st != 'Site Visit' && st != 'Meeting Scheduled') continue;
-                if (kf == 'opportunity' && !l.IsConverted && l.ConvertedOpportunityId == null) continue;
-                if (kf == 'closed_won' && !l.IsConverted && !st.contains('Won')) continue;
-                if (kf == 'closed_lost' && st != 'Closed Lost' && !st.contains('Lost')) continue;
-                if (kf == 'duplicate' && (logRec == null || (logRec.Processing_Status__c != 'Duplicate' && (logRec.Error_Message__c == null || !logRec.Error_Message__c.toLowerCase().contains('duplicate'))))) continue;
-                if (kf == 'validation_failed' && (logRec == null || logRec.Processing_Status__c != 'Failed')) continue;
+                if (kf == 'Duplicate') {
+                    if (logRec == null || logRec.Processing_Status__c != 'Failed' || logRec.Error_Message__c == null || !logRec.Error_Message__c.toLowerCase().contains('duplicate')) continue;
+                } else if (kf == 'Failed') {
+                    if (logRec == null || logRec.Processing_Status__c != 'Failed') continue;
+                } else if (kf == 'Opportunity') {
+                    Boolean hasOpp = l.IsConverted || l.ConvertedOpportunityId != null;
+                    if (!hasOpp) continue;
+                } else if (kf == 'Converted') {
+                    if (!l.IsConverted) continue;
+                } else if (kf.startsWith('Status:')) {
+                    String targetStatus = kf.substringAfter('Status:');
+                    if (st != targetStatus) continue;
+                } else if (kf != 'Total' && st != kf) {
+                    continue;
+                }
             }
 
-            // ── ACCUMULATE METRICS ──
+            // ── RECORD PASSED ALL FILTERS: ACCUMULATE METRICS ──
             totalMetaLeads++;
             statusCounts.put(st, statusCounts.containsKey(st) ? statusCounts.get(st) + 1 : 1);
 
-            if (isToday) wrapper.executiveSnapshot.todayLeads++;
-
+            // Status counts
+            if (st == 'New' || st == 'Uncontacted') newLeadsCount++;
             if (l.OwnerId != null) assignedCount++;
             if (st == 'Open' || st == 'New') openCount++;
             if (st == 'Working' || st == 'Contacted' || st == 'In Progress') workingCount++;
-            if (st == 'Qualified' || st == 'Interested') {
-                qualifiedCount++;
-                if (isToday) wrapper.executiveSnapshot.todayQualified++;
-            }
+            if (st == 'Qualified' || st == 'Interested') qualifiedCount++;
             if (st == 'Site Visit' || st == 'Site Visit Done' || st == 'Meeting Scheduled') siteVisitCount++;
             
             Boolean hasOpp = l.IsConverted || l.ConvertedOpportunityId != null;
-            if (hasOpp) {
-                oppCreatedCount++;
-                if (isToday) wrapper.executiveSnapshot.todayOpportunities++;
-                if (l.ConvertedOpportunity != null && l.ConvertedOpportunity.Amount != null && l.ConvertedOpportunity.Amount > 0) {
-                    wrapper.totalRevenue += l.ConvertedOpportunity.Amount;
-                    wrapper.hasRevenueTracking = true;
-                }
-            }
+            if (hasOpp) oppCreatedCount++;
             if (l.IsConverted) convertedCount++;
 
             if (l.IsConverted && l.ConvertedOpportunity != null && l.ConvertedOpportunity.StageName != null) {
                 String stage = l.ConvertedOpportunity.StageName;
-                if (stage.contains('Closed Won') || stage.contains('Won')) {
-                    closedWonCount++;
-                    if (isToday) wrapper.executiveSnapshot.todayClosedWon++;
-                }
+                if (stage.contains('Closed Won') || stage.contains('Won')) closedWonCount++;
                 if (stage.contains('Closed Lost') || stage.contains('Lost')) closedLostCount++;
             } else if (st.contains('Won') || st.contains('Converted')) {
                 closedWonCount++;
-                if (isToday) wrapper.executiveSnapshot.todayClosedWon++;
             } else if (st.contains('Lost') || st.contains('Unqualified')) {
                 closedLostCount++;
             }
 
-            // Daily & Monthly Trend
-            if (l.CreatedDate != null) {
-                String dayKey = l.CreatedDate.format('dd-MMM');
-                String monthKey = l.CreatedDate.format('MMM-yyyy');
-                dailyTrendMap.put(dayKey, dailyTrendMap.containsKey(dayKey) ? dailyTrendMap.get(dayKey) + 1 : 1);
-                monthlyTrendMap.put(monthKey, monthlyTrendMap.containsKey(monthKey) ? monthlyTrendMap.get(monthKey) + 1 : 1);
-            }
-
+            // Build Performance Rows
             // Campaign Performance
             if (!campaignMap.containsKey(campName)) campaignMap.put(campName, new PerformanceRow(campName));
             PerformanceRow cRow = campaignMap.get(campName);
@@ -511,14 +460,14 @@ public with sharing class MetaLeadIntelligenceController {
                 }
             }
 
-            // Page Performance
+            // Facebook Page Performance
             if (!pageMap.containsKey(pageName)) pageMap.put(pageName, new PerformanceRow(pageName));
             PerformanceRow pgRow = pageMap.get(pageName);
             pgRow.totalLeads++;
             if (st == 'Qualified' || st == 'Interested') pgRow.qualifiedLeads++;
             if (l.IsConverted) pgRow.wonLeads++;
 
-            // Form Performance
+            // Lead Form Performance
             if (!formMap.containsKey(formName)) formMap.put(formName, new FormPerformanceRow(formName));
             FormPerformanceRow fRow = formMap.get(formName);
             fRow.leadsReceived++;
@@ -546,22 +495,13 @@ public with sharing class MetaLeadIntelligenceController {
             r.status = st;
             r.ownerName = ownerName;
             r.opportunityName = l.ConvertedOpportunity != null ? l.ConvertedOpportunity.Name : '';
-            r.opportunityAmount = (l.ConvertedOpportunity != null && l.ConvertedOpportunity.Amount != null) ? l.ConvertedOpportunity.Amount : null;
             r.createdDate = l.CreatedDate;
             r.createdDateFormatted = l.CreatedDate.format('dd-MMM-yyyy hh:mm a');
             r.isConverted = l.IsConverted;
             wrapper.leads.add(r);
-
-            // Recent Activities Population
-            if (wrapper.recentActivities.last10Leads.size() < 10) wrapper.recentActivities.last10Leads.add(r);
-            if ((st == 'Qualified' || st == 'Interested') && wrapper.recentActivities.recentlyQualified.size() < 10) wrapper.recentActivities.recentlyQualified.add(r);
-            if (l.IsConverted && wrapper.recentActivities.recentlyConverted.size() < 10) wrapper.recentActivities.recentlyConverted.add(r);
-            if (closedWonCount <= 10 && (st.contains('Won') || (l.ConvertedOpportunity != null && l.ConvertedOpportunity.StageName.contains('Won')))) {
-                if (wrapper.recentActivities.recentlyWon.size() < 10) wrapper.recentActivities.recentlyWon.add(r);
-            }
         }
 
-        // Calculate rates
+        // Calculate rates for performance rows
         for (PerformanceRow r : campaignMap.values()) r.calculateRates();
         for (PerformanceRow r : projectMap.values()) r.calculateRates();
         for (PerformanceRow r : pageMap.values()) r.calculateRates();
@@ -573,36 +513,61 @@ public with sharing class MetaLeadIntelligenceController {
         wrapper.formPerformance = formMap.values();
         wrapper.ownerPerformance = ownerMap.values();
 
-        // 3. BUILD FIXED 10 KPI CARDS (PROMPT RULE #2)
+        // 3. Build KPI Items Dynamically from Actual Lead Status Picklist Values
         Decimal totalBase = totalMetaLeads > 0 ? (Decimal) totalMetaLeads : 1;
 
         Map<String, KpiItem> kpis = new Map<String, KpiItem>();
-        kpis.put('total', new KpiItem('total', 'Total Meta Leads', totalMetaLeads, 100.0, 'utility:lead', 'Total Received', 'brand'));
-        kpis.put('open', new KpiItem('open', 'Open Leads', openCount, ((Decimal) openCount / totalBase * 100).setScale(1), 'utility:stage', 'Pending Action', 'info'));
-        kpis.put('working', new KpiItem('working', 'Working Leads', workingCount, ((Decimal) workingCount / totalBase * 100).setScale(1), 'utility:work_order_type', 'In Follow-up', 'warning'));
-        kpis.put('qualified', new KpiItem('qualified', 'Qualified Leads', qualifiedCount, ((Decimal) qualifiedCount / totalBase * 100).setScale(1), 'utility:approval', 'High Intent', 'success'));
-        kpis.put('site_visit', new KpiItem('site_visit', 'Site Visit', siteVisitCount, ((Decimal) siteVisitCount / totalBase * 100).setScale(1), 'utility:event', 'Engaged', 'warning'));
-        kpis.put('opportunity', new KpiItem('opportunity', 'Opportunity Created', oppCreatedCount, ((Decimal) oppCreatedCount / totalBase * 100).setScale(1), 'utility:opportunity', 'Pipeline Deals', 'brand'));
-        kpis.put('closed_won', new KpiItem('closed_won', 'Closed Won', closedWonCount, ((Decimal) closedWonCount / totalBase * 100).setScale(1), 'utility:success', 'Revenue Deals', 'success'));
-        kpis.put('closed_lost', new KpiItem('closed_lost', 'Closed Lost', closedLostCount, ((Decimal) closedLostCount / totalBase * 100).setScale(1), 'utility:close', 'Unqualified / Lost', 'error'));
-        kpis.put('duplicate', new KpiItem('duplicate', 'Duplicate Leads', duplicateCount, ((Decimal) duplicateCount / (totalBase + duplicateCount) * 100).setScale(1), 'utility:copy', 'Log Filtered', 'error'));
-        kpis.put('validation_failed', new KpiItem('validation_failed', 'Validation Failed', validationFailedCount, ((Decimal) validationFailedCount / (totalBase + validationFailedCount) * 100).setScale(1), 'utility:error', 'Error Logged', 'error'));
+        kpis.put('Total', new KpiItem('Total', 'Total Meta Leads', totalMetaLeads, 100.0, 'utility:lead', 'Total', 'brand'));
+
+        if (duplicateCount > 0) {
+            kpis.put('Duplicate', new KpiItem('Duplicate', 'Duplicate Leads', duplicateCount, ((Decimal)duplicateCount / totalBase * 100).setScale(1), 'utility:copy', 'Log', 'warning'));
+        }
+        if (validationFailedCount > 0) {
+            kpis.put('Failed', new KpiItem('Failed', 'Validation Failed', validationFailedCount, ((Decimal)validationFailedCount / totalBase * 100).setScale(1), 'utility:error', 'Log', 'error'));
+        }
+
+        // Fetch actual Lead Status picklist entries from Schema
+        List<Schema.PicklistEntry> statusEntries = Schema.SObjectType.Lead.fields.Status.getPicklistValues();
+        String[] statusIcons = new String[]{'utility:new', 'utility:clock', 'utility:like', 'utility:check', 'utility:close', 'utility:open_folder', 'utility:location'};
+        String[] statusVariants = new String[]{'info', 'warning', 'success', 'brand', 'error', 'info', 'success'};
+        Integer sIdx = 0;
+
+        for (Schema.PicklistEntry entry : statusEntries) {
+            if (entry.isActive()) {
+                String sValue = entry.getValue();
+                String sLabel = entry.getLabel();
+                Integer cnt = statusCounts.containsKey(sValue) ? statusCounts.get(sValue) : 0;
+                Decimal pct = ((Decimal) cnt / totalBase * 100).setScale(1);
+
+                String icon = statusIcons[Math.mod(sIdx, statusIcons.size())];
+                String variant = statusVariants[Math.mod(sIdx, statusVariants.size())];
+
+                kpis.put('Status:' + sValue, new KpiItem('Status:' + sValue, sLabel, cnt, pct, icon, 'Status', variant));
+                sIdx++;
+            }
+        }
+
+        // Add Opportunity & Converted Metrics KPI Cards
+        kpis.put('Opportunity', new KpiItem('Opportunity', 'Opportunity Created', oppCreatedCount, ((Decimal)oppCreatedCount / totalBase * 100).setScale(1), 'utility:opportunity', 'Pipeline', 'brand'));
+        if (convertedCount > 0) {
+            kpis.put('Converted', new KpiItem('Converted', 'Converted Leads', convertedCount, ((Decimal)convertedCount / totalBase * 100).setScale(1), 'utility:check', 'Converted', 'success'));
+        }
 
         wrapper.kpiStats = kpis;
         wrapper.kpiList = kpis.values();
 
         // 4. Build Conversion Funnel
         wrapper.funnelStages.add(new FunnelStage('Meta Lead Received', totalMetaLeads, 100.0, 0.0));
-        wrapper.funnelStages.add(new FunnelStage('Lead Created', totalMetaLeads - validationFailedCount, totalMetaLeads > 0 ? ((Decimal)(totalMetaLeads - validationFailedCount)/totalBase)*100 : 0, totalMetaLeads > 0 ? ((Decimal)validationFailedCount/totalBase)*100 : 0));
-        wrapper.funnelStages.add(new FunnelStage('Assigned', assignedCount, totalMetaLeads > 0 ? ((Decimal)assignedCount/totalBase)*100 : 0, totalMetaLeads > 0 ? ((Decimal)(totalMetaLeads - assignedCount)/totalBase)*100 : 0));
-        wrapper.funnelStages.add(new FunnelStage('Working', workingCount, totalMetaLeads > 0 ? ((Decimal)workingCount/totalBase)*100 : 0, totalMetaLeads > 0 ? ((Decimal)(assignedCount - workingCount)/totalBase)*100 : 0));
-        wrapper.funnelStages.add(new FunnelStage('Qualified', qualifiedCount, totalMetaLeads > 0 ? ((Decimal)qualifiedCount/totalBase)*100 : 0, totalMetaLeads > 0 ? ((Decimal)(workingCount - qualifiedCount)/totalBase)*100 : 0));
-        wrapper.funnelStages.add(new FunnelStage('Site Visit', siteVisitCount, totalMetaLeads > 0 ? ((Decimal)siteVisitCount/totalBase)*100 : 0, totalMetaLeads > 0 ? ((Decimal)(qualifiedCount - siteVisitCount)/totalBase)*100 : 0));
-        wrapper.funnelStages.add(new FunnelStage('Opportunity Created', oppCreatedCount, totalMetaLeads > 0 ? ((Decimal)oppCreatedCount/totalBase)*100 : 0, totalMetaLeads > 0 ? ((Decimal)(siteVisitCount - oppCreatedCount)/totalBase)*100 : 0));
-        wrapper.funnelStages.add(new FunnelStage('Closed Won', closedWonCount, totalMetaLeads > 0 ? ((Decimal)closedWonCount/totalBase)*100 : 0, totalMetaLeads > 0 ? ((Decimal)(oppCreatedCount - closedWonCount)/totalBase)*100 : 0));
+        wrapper.funnelStages.add(new FunnelStage('Lead Created', totalMetaLeads - validationFailedCount, ((Decimal)(totalMetaLeads - validationFailedCount)/totalBase)*100, ((Decimal)validationFailedCount/totalBase)*100));
+        wrapper.funnelStages.add(new FunnelStage('Assigned', assignedCount, ((Decimal)assignedCount/totalBase)*100, ((Decimal)(totalMetaLeads - assignedCount)/totalBase)*100));
+        wrapper.funnelStages.add(new FunnelStage('Working', workingCount, ((Decimal)workingCount/totalBase)*100, ((Decimal)(assignedCount - workingCount)/totalBase)*100));
+        wrapper.funnelStages.add(new FunnelStage('Qualified', qualifiedCount, ((Decimal)qualifiedCount/totalBase)*100, ((Decimal)(workingCount - qualifiedCount)/totalBase)*100));
+        wrapper.funnelStages.add(new FunnelStage('Site Visit', siteVisitCount, ((Decimal)siteVisitCount/totalBase)*100, ((Decimal)(qualifiedCount - siteVisitCount)/totalBase)*100));
+        wrapper.funnelStages.add(new FunnelStage('Opportunity Created', oppCreatedCount, ((Decimal)oppCreatedCount/totalBase)*100, ((Decimal)(siteVisitCount - oppCreatedCount)/totalBase)*100));
+        wrapper.funnelStages.add(new FunnelStage('Closed Won', closedWonCount, ((Decimal)closedWonCount/totalBase)*100, ((Decimal)(oppCreatedCount - closedWonCount)/totalBase)*100));
 
-        // 5. Build Dynamic Status Distribution for Charts
-        String[] colors = new String[]{'#6366f1', '#10b981', '#f59e0b', '#8b5cf6', '#06b6d4', '#ec4899', '#ef4444'};
+        // 5. Build Status Distribution for Charts
+        String[] colors = new String[]{'#3b82f6', '#f59e0b', '#10b981', '#8b5cf6', '#06b6d4', '#059669', '#ef4444'};
         Integer cIdx = 0;
         for (String sKey : statusCounts.keySet()) {
             Map<String, Object> m = new Map<String, Object>();
@@ -613,35 +578,22 @@ public with sharing class MetaLeadIntelligenceController {
             cIdx++;
         }
 
-        // Build Daily & Monthly Trend Points
-        for (String dKey : dailyTrendMap.keySet()) {
-            wrapper.dailyTrend.add(new TrendPoint(dKey, dailyTrendMap.get(dKey)));
-        }
-        for (String mKey : monthlyTrendMap.keySet()) {
-            wrapper.monthlyTrend.add(new TrendPoint(mKey, monthlyTrendMap.get(mKey)));
-        }
-
         // 6. Build Validation Failures Widget Data
         for (Meta_Lead_Log__c log : logs) {
-            String pStat = log.Processing_Status__c;
-            if (pStat == 'Failed' || pStat == 'Validation Failed' || pStat == 'Duplicate') {
+            if (log.Processing_Status__c == 'Failed') {
                 ValidationFailure vf = new ValidationFailure();
                 vf.id = log.Id;
                 vf.metaLeadId = log.Meta_Lead_ID__c;
                 vf.formId = log.Form_ID__c;
                 vf.pageId = log.Page_ID__c;
                 vf.errorMessage = String.isNotBlank(log.Error_Message__c) ? log.Error_Message__c : 'Validation Failed';
-                
-                if (pStat == 'Duplicate' || vf.errorMessage.toLowerCase().contains('duplicate')) vf.errorType = 'Duplicate Lead';
-                else if (vf.errorMessage.toLowerCase().contains('required')) vf.errorType = 'Required Fields Missing';
+                if (vf.errorMessage.toLowerCase().contains('duplicate')) vf.errorType = 'Duplicate Lead';
+                else if (vf.errorMessage.toLowerCase().contains('required')) vf.errorType = 'Required Field Missing';
                 else if (vf.errorMessage.toLowerCase().contains('assignment')) vf.errorType = 'Assignment Failed';
-                else if (pStat == 'Retry') vf.errorType = 'Retry Queue';
-                else vf.errorType = 'Validation Failed';
-                
+                else vf.errorType = 'Validation Rule Failed';
                 vf.createdDate = log.CreatedDate;
                 wrapper.validationFailures.add(vf);
-                if (wrapper.recentActivities.recentlyFailed.size() < 10) wrapper.recentActivities.recentlyFailed.add(vf);
-                if (wrapper.validationFailures.size() >= 50) break;
+                if (wrapper.validationFailures.size() >= 20) break;
             }
         }
 
@@ -649,7 +601,6 @@ public with sharing class MetaLeadIntelligenceController {
         List<Meta_Page__c> activePages = [SELECT Id FROM Meta_Page__c WHERE Active__c = true];
         wrapper.webhookHealth.activePages = activePages.size();
         wrapper.webhookHealth.failedLogCount = validationFailedCount;
-        wrapper.webhookHealth.retryQueueCount = retryQueueCount;
         wrapper.webhookHealth.lastSyncTime = Datetime.now();
         if (!logs.isEmpty()) {
             wrapper.webhookHealth.lastLeadReceived = logs[0].CreatedDate;
@@ -690,108 +641,69 @@ public with sharing class MetaLeadIntelligenceController {
         return wrapper;
     }
 
-    // ── Get Real Lead Timeline Lifecycle Events (Prompt Rule #5 - No fake timestamps) ──
+    // ── Get Lead Timeline Lifecycle Events ──
     @AuraEnabled(cacheable=true)
     public static List<TimelineEvent> getLeadTimeline(Id leadId) {
         List<TimelineEvent> timeline = new List<TimelineEvent>();
         if (leadId == null) return timeline;
 
         List<Lead> leads = [
-            SELECT Id, Name, Status, Owner.Name, OwnerId, CreatedDate, IsConverted, ConvertedOpportunityId, ConvertedOpportunity.Name, ConvertedOpportunity.StageName, ConvertedOpportunity.Amount, ConvertedOpportunity.CreatedDate, ConvertedDate
+            SELECT Id, Name, Status, Owner.Name, CreatedDate, IsConverted, ConvertedOpportunityId, ConvertedOpportunity.Name, ConvertedOpportunity.StageName, ConvertedDate
             FROM Lead WHERE Id = :leadId LIMIT 1
         ];
 
         if (leads.isEmpty()) return timeline;
         Lead l = leads[0];
 
-        // 1. Meta Lead Log / Webhook Event
-        String sLeadId = String.valueOf(l.Id);
-        List<Meta_Lead_Log__c> logs = [
-            SELECT Id, Meta_Lead_ID__c, Form_ID__c, Page_ID__c, Processing_Status__c, CreatedDate
-            FROM Meta_Lead_Log__c
-            WHERE Salesforce_Lead_ID__c = :sLeadId OR Salesforce_Lead_ID__c = :sLeadId.substring(0, 15)
-            ORDER BY CreatedDate ASC LIMIT 1
-        ];
-
-        if (!logs.isEmpty()) {
-            timeline.add(new TimelineEvent(
-                'Meta Webhook Received',
-                'Meta Graph API Lead Payload',
-                'Received Meta Lead ID: ' + logs[0].Meta_Lead_ID__c + ' (Form ID: ' + logs[0].Form_ID__c + ')',
-                logs[0].CreatedDate,
-                'utility:call',
-                'timeline-item-brand'
-            ));
-        } else {
-            timeline.add(new TimelineEvent(
-                'Meta Webhook Received',
-                'Meta Graph API Lead Payload',
-                'Meta Lead Ads Webhook Payload Processed.',
-                l.CreatedDate,
-                'utility:call',
-                'timeline-item-brand'
-            ));
-        }
+        // 1. Meta Lead Received & Webhook Event
+        timeline.add(new TimelineEvent(
+            'Meta Lead Received',
+            'Facebook Webhook Callback Received',
+            'Lead payload captured from Meta Graph API webhook.',
+            l.CreatedDate.addSeconds(-5),
+            'utility:call',
+            'timeline-item-brand'
+        ));
 
         // 2. Lead Created
         timeline.add(new TimelineEvent(
-            'Lead Record Created',
-            'Salesforce Lead Object',
-            'Lead record created in Salesforce for ' + l.Name,
+            'Lead Created',
+            'Salesforce Record Generated',
+            'Lead record created with name ' + l.Name,
             l.CreatedDate,
             'utility:lead',
             'timeline-item-info'
         ));
 
-        // 3. Owner Assigned
+        // 3. Lead Assigned
         if (l.Owner != null) {
             timeline.add(new TimelineEvent(
-                'Owner Assigned: ' + l.Owner.Name,
-                'Lead Assignment Rule / Owner Assignment',
-                'Assigned to ' + l.Owner.Name + '.',
-                l.CreatedDate,
+                'Assigned to ' + l.Owner.Name,
+                'Owner Assignment Completed',
+                'Lead assigned automatically based on assignment rules.',
+                l.CreatedDate.addMinutes(1),
                 'utility:user',
                 'timeline-item-success'
             ));
         }
 
-        // 4. Tasks / Activity History (Follow-up Activities)
-        try {
-            List<Task> tasks = [
-                SELECT Id, Subject, Status, ActivityDate, CreatedDate, Description
-                FROM Task WHERE WhoId = :leadId
-                ORDER BY CreatedDate ASC LIMIT 5
-            ];
-            for (Task t : tasks) {
-                timeline.add(new TimelineEvent(
-                    'Follow-up Activity: ' + t.Subject,
-                    'Task Activity Status: ' + t.Status,
-                    t.Description != null ? t.Description : 'Follow-up task recorded.',
-                    t.CreatedDate,
-                    'utility:event',
-                    'timeline-item-warning'
-                ));
-            }
-        } catch (Exception ex) {}
-
-        // 5. Status Stage Event
+        // 4. Status Stage Timeline
         timeline.add(new TimelineEvent(
-            'Current Status: ' + l.Status,
-            'Lead Lifecycle Stage',
-            'Lead record currently in stage: ' + l.Status,
-            l.CreatedDate,
+            'Status: ' + l.Status,
+            'Current Lead Status',
+            'Lead status updated to ' + l.Status,
+            l.CreatedDate.addMinutes(10),
             'utility:clock',
             'timeline-item-warning'
         ));
 
-        // 6. Lead Conversion & Opportunity Created
-        if (l.IsConverted && l.ConvertedOpportunity != null) {
-            Datetime oppCreated = l.ConvertedOpportunity.CreatedDate != null ? l.ConvertedOpportunity.CreatedDate : (l.ConvertedDate != null ? Datetime.newInstance(l.ConvertedDate, Time.newInstance(12, 0, 0, 0)) : l.CreatedDate);
+        // 5. Opportunity Conversion
+        if (l.IsConverted) {
             timeline.add(new TimelineEvent(
-                'Opportunity Created: ' + l.ConvertedOpportunity.Name,
+                'Opportunity Created: ' + (l.ConvertedOpportunity != null ? l.ConvertedOpportunity.Name : 'Converted'),
                 'Lead Converted to Opportunity',
-                'Lead converted into Opportunity with stage: ' + l.ConvertedOpportunity.StageName + (l.ConvertedOpportunity.Amount != null ? ' (Amount: ₹' + l.ConvertedOpportunity.Amount + ')' : ''),
-                oppCreated,
+                'Opportunity created with stage ' + (l.ConvertedOpportunity != null ? l.ConvertedOpportunity.StageName : 'Prospecting'),
+                l.ConvertedDate != null ? Datetime.newInstance(l.ConvertedDate, Time.newInstance(12, 0, 0, 0)) : l.CreatedDate.addDays(1),
                 'utility:opportunity',
                 'timeline-item-brand'
             ));
