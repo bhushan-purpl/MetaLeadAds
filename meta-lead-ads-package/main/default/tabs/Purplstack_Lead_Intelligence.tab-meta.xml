@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomTab xmlns="http://soap.sforce.com/2006/04/metadata">
     <description>Lead Intelligence Dashboard for Purplstack Meta Lead Ads Manager</description>
+    <flexiPage>Purplstack_Lead_Intelligence</flexiPage>
     <label>Lead Intelligence</label>
-    <lwcComponent>metaLeadIntelligence</lwcComponent>
     <motif>Custom62: Chalkboard</motif>
 </CustomTab>
