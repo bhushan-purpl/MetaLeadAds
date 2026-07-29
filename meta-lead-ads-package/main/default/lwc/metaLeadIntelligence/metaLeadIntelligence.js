@@ -167,6 +167,18 @@ export default class MetaLeadIntelligence extends LightningElement {
         const name = event.target.name;
         const value = event.target.value;
         this[name] = value;
+
+        if (name === 'dateRange' && value === 'Custom') {
+            if (!this.startDate) {
+                const d = new Date();
+                d.setDate(d.getDate() - 30);
+                this.startDate = d.toISOString().slice(0, 10);
+            }
+            if (!this.endDate) {
+                this.endDate = new Date().toISOString().slice(0, 10);
+            }
+        }
+
         this.currentPage = 1;
         this.isLoading = true;
         this.triggerWireRefresh();

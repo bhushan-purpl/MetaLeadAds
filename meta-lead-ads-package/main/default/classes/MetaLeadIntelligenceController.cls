@@ -215,11 +215,17 @@ public with sharing class MetaLeadIntelligenceController {
                 Date startOfQuarter = Date.newInstance(today.year(), quarterStartMonth, 1);
                 startDt = Datetime.newInstance(startOfQuarter, Time.newInstance(0, 0, 0, 0));
                 endDt = Datetime.newInstance(startOfQuarter.addMonths(3).addDays(-1), Time.newInstance(23, 59, 59, 999));
-            } else if (filters.dateRange == 'Custom' && String.isNotBlank(filters.startDate) && String.isNotBlank(filters.endDate)) {
-                try {
-                    startDt = Datetime.newInstance(Date.valueOf(filters.startDate), Time.newInstance(0, 0, 0, 0));
-                    endDt = Datetime.newInstance(Date.valueOf(filters.endDate), Time.newInstance(23, 59, 59, 999));
-                } catch (Exception ex) {}
+            } else if (filters.dateRange == 'Custom') {
+                if (String.isNotBlank(filters.startDate)) {
+                    try {
+                        startDt = Datetime.newInstance(Date.valueOf(filters.startDate), Time.newInstance(0, 0, 0, 0));
+                    } catch (Exception ex) {}
+                }
+                if (String.isNotBlank(filters.endDate)) {
+                    try {
+                        endDt = Datetime.newInstance(Date.valueOf(filters.endDate), Time.newInstance(23, 59, 59, 999));
+                    } catch (Exception ex) {}
+                }
             }
         }
 
@@ -254,8 +260,11 @@ public with sharing class MetaLeadIntelligenceController {
             leadQuery += ')';
         }
 
-        if (startDt != null && endDt != null) {
-            leadQuery += ' AND CreatedDate >= :startDt AND CreatedDate <= :endDt';
+        if (startDt != null) {
+            leadQuery += ' AND CreatedDate >= :startDt';
+        }
+        if (endDt != null) {
+            leadQuery += ' AND CreatedDate <= :endDt';
         }
 
         if (String.isNotBlank(filters.status)) {
