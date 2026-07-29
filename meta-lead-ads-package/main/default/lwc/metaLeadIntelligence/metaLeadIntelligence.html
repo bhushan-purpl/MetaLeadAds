@@ -1,7 +1,7 @@
 <template>
     <div class="lead-intelligence-container">
         
-        <!-- Header Banner -->
+        <!-- App Header & Executive Branding -->
         <div class="dashboard-header slds-p-around_medium slds-m-bottom_medium">
             <div class="header-content">
                 <div class="title-group">
@@ -9,34 +9,98 @@
                         <lightning-icon icon-name="custom:custom62" size="medium"></lightning-icon>
                     </div>
                     <div>
-                        <h1 class="dashboard-title">Lead Intelligence Dashboard</h1>
-                        <p class="dashboard-subtitle">End-to-end analytics & conversion pipeline for Purplstack Meta Lead Ads</p>
+                        <div class="header-badge-row">
+                            <h1 class="dashboard-title">Purplstack Meta Lead Analytics</h1>
+                            <span class="app-version-badge">Enterprise Edition v2.0</span>
+                        </div>
+                        <p class="dashboard-subtitle">Real-time Analytics & Intelligence for Meta Lead Ads</p>
                     </div>
                 </div>
                 <div class="header-actions">
+                    <template if:true={hasActiveFilter}>
+                        <lightning-button 
+                            label="Reset Filters" 
+                            icon-name="utility:clear" 
+                            variant="destructive-text" 
+                            onclick={handleResetFilters} 
+                            class="slds-m-right_x-small">
+                        </lightning-button>
+                    </template>
                     <lightning-button-icon 
                         icon-name="utility:refresh" 
                         variant="border-filled" 
                         alternative-text="Refresh" 
-                        title="Refresh Dashboard"
+                        title="Refresh Dashboard Data"
                         onclick={handleRefresh} 
                         class="slds-m-right_x-small">
                     </lightning-button-icon>
                     <lightning-button 
                         label="Export CSV" 
                         icon-name="utility:download" 
-                        variant="neutral"
+                        variant="brand"
                         onclick={handleExportCsv}>
                     </lightning-button>
                 </div>
             </div>
         </div>
 
+        <!-- Skeleton Loading Loader -->
         <template if:true={isLoading}>
-            <lightning-spinner alternative-text="Loading Lead Intelligence..." size="large"></lightning-spinner>
+            <div class="skeleton-container slds-m-bottom_medium">
+                <div class="skeleton-card skeleton-banner"></div>
+                <div class="skeleton-grid slds-m-top_small">
+                    <div class="skeleton-card"></div>
+                    <div class="skeleton-card"></div>
+                    <div class="skeleton-card"></div>
+                    <div class="skeleton-card"></div>
+                </div>
+            </div>
         </template>
 
-        <!-- Filter Bar -->
+        <!-- Executive Summary - Today's Snapshot (Prompt Rule #6) -->
+        <div class="executive-summary-container slds-m-bottom_medium">
+            <div class="summary-header">
+                <h2 class="section-title">
+                    <lightning-icon icon-name="utility:daily_fire" size="x-small" class="slds-m-right_xx-small"></lightning-icon>
+                    Executive Summary &bull; Today's Snapshot
+                </h2>
+                <span class="live-pulse-badge"><span class="pulse-dot"></span> Real-time Sync</span>
+            </div>
+            <div class="snapshot-grid slds-m-top_small">
+                <div class="snapshot-card snap-primary">
+                    <div class="snap-label">Today's Meta Leads</div>
+                    <div class="snap-val">{snapshot.todayLeads}</div>
+                    <div class="snap-sub">Captured Today</div>
+                </div>
+                <div class="snapshot-card snap-success">
+                    <div class="snap-label">Today's Qualified</div>
+                    <div class="snap-val">{snapshot.todayQualified}</div>
+                    <div class="snap-sub">High Intent</div>
+                </div>
+                <div class="snapshot-card snap-brand">
+                    <div class="snap-label">Today's Opportunities</div>
+                    <div class="snap-val">{snapshot.todayOpportunities}</div>
+                    <div class="snap-sub">Pipeline Created</div>
+                </div>
+                <div class="snapshot-card snap-gold">
+                    <div class="snap-label">Today's Closed Won</div>
+                    <div class="snap-val">{snapshot.todayClosedWon}</div>
+                    <div class="snap-sub">Deals Won</div>
+                </div>
+                <div class="snapshot-card snap-error">
+                    <div class="snap-label">Today's Failures</div>
+                    <div class="snap-val">{snapshot.todayValidationFailures}</div>
+                    <div class="snap-sub">Validation Errors</div>
+                </div>
+                <div class="snapshot-card snap-warning">
+                    <div class="snap-label">Today's Duplicates</div>
+                    <div class="snap-val">{snapshot.todayDuplicates}</div>
+                    <div class="snap-sub">Filtered Logs</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter Bar Card -->
         <div class="filter-card slds-p-around_medium slds-m-bottom_medium">
             <div class="filter-grid">
                 <!-- Date Range -->
@@ -50,7 +114,7 @@
                     </lightning-combobox>
                 </div>
 
-                <!-- Custom Start & End Date if selected -->
+                <!-- Custom Start & End Date -->
                 <template if:true={isCustomDate}>
                     <div class="filter-item">
                         <lightning-input type="date" name="startDate" label="Start Date" value={startDate} onchange={handleFilterChange}></lightning-input>
@@ -103,13 +167,6 @@
                         onchange={handleFilterChange}>
                     </lightning-combobox>
                 </div>
-
-                <!-- Search Input -->
-                <div class="filter-item search-item">
-                    <lightning-input
-                        type="search"
-                        name="searchKey"
-                        label="Search Lead"
                         placeholder="Search Name, Phone, Email..."
                         value={searchKey}
                         onchange={handleSearchChange}>

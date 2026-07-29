@@ -33,9 +33,15 @@ export default class MetaLeadIntelligence extends LightningElement {
     @track formPerformance = [];
     @track ownerPerformance = [];
     @track statusDistribution = [];
+    @track dailyTrendList = [];
+    @track monthlyTrendList = [];
     @track allLeads = [];
     @track validationFailures = [];
     @track webhookHealth = {};
+    @track recentActivities = { last10Leads: [], recentlyQualified: [], recentlyConverted: [], recentlyWon: [], recentlyFailed: [] };
+    @track snapshot = { todayLeads: 0, todayQualified: 0, todayOpportunities: 0, todayClosedWon: 0, todayValidationFailures: 0, todayDuplicates: 0 };
+    @track hasRevenueTracking = false;
+    @track totalRevenue = 0;
 
     // Options
     @track projectOptions = [{ label: 'All Projects', value: '' }];
@@ -50,9 +56,9 @@ export default class MetaLeadIntelligence extends LightningElement {
     @track pageSize = 15;
 
     // Modal / Drawer
-    @track showLeadDrawer = false;
-    @track selectedLeadRecord = {};
-    @track selectedLeadTimeline = [];
+    @track isDrawerOpen = false;
+    @track selectedLeadName = '';
+    @track timelineEvents = [];
     @track isTimelineLoading = false;
 
     dateRangeOptions = [
@@ -62,6 +68,14 @@ export default class MetaLeadIntelligence extends LightningElement {
         { label: 'This Month', value: 'This Month' },
         { label: 'This Quarter', value: 'This Quarter' },
         { label: 'Custom Date', value: 'Custom' }
+    ];
+
+    pageSizeOptions = [
+        { label: '10 per page', value: 10 },
+        { label: '15 per page', value: 15 },
+        { label: '25 per page', value: 25 },
+        { label: '50 per page', value: 50 },
+        { label: '100 per page', value: 100 }
     ];
 
     get filterJsonString() {
@@ -80,6 +94,20 @@ export default class MetaLeadIntelligence extends LightningElement {
         });
     }
 
+    get isCustomDate() {
+        return this.selectedDateRange === 'Custom';
+    }
+
+    get hasActiveFilter() {
+        return this.selectedDateRange !== 'All Time' || this.selectedProject || this.selectedStatus || this.selectedOwner || this.selectedCampaign || this.selectedPage || this.selectedForm || this.searchKey || this.selectedKpiKey;
+    }
+
+    get activeKpiFilter() {
+        if (!this.selectedKpiKey) return '';
+        const found = this.kpiCards.find(c => c.key === this.selectedKpiKey);
+        return found ? found.label : this.selectedKpiKey;
+    }
+
     @wire(getDashboardData, { filterJson: '$filterJsonString' })
     wiredData(result) {
         this.wiredDataResult = result;
@@ -93,51 +121,88 @@ export default class MetaLeadIntelligence extends LightningElement {
     }
 
     processData(data) {
-        // 1. Process KPI Cards
+        // 1. Snapshot
+        if (data.executiveSnapshot) {
+            this.snapshot = data.executiveSnapshot;
+        }
+
+        // 2. Process Fixed 10 KPI Cards
         if (data.kpiList) {
             this.kpiCards = data.kpiList.map(kpi => {
-                let cardClass = 'kpi-card';
-                if (kpi.variant) cardClass += ' kpi-' + kpi.variant;
-                if (this.selectedKpiKey === kpi.key) cardClass += ' kpi-selected';
-                return { ...kpi, cardClass };
+                let isSelected = this.selectedKpiKey === kpi.key;
+                let cssClass = 'kpi-card';
+                if (kpi.variant) cssClass += ' kpi-' + kpi.variant;
+                if (isSelected) cssClass += ' kpi-selected';
+
+                return {
+                    ...kpi,
+                    cssClass: cssClass
+                };
             });
         }
 
-        // 2. Process Funnel Stages
+        // 3. Process Conversion Funnel Stages
         if (data.funnelStages) {
             this.funnelStages = data.funnelStages.map(stage => {
-                let widthPct = Math.max(stage.conversionPct, 4);
+                let pct = stage.conversionPct > 0 ? stage.conversionPct : 5;
                 return {
                     ...stage,
-                    fillStyle: `width: ${widthPct}%;`
+                    barStyle: `width: ${pct}%;`
                 };
             });
         }
 
-        // 3. Process Status Distribution (Donut Legend)
+        // 4. Status Distribution (Donut Legend)
         if (data.statusDistribution) {
-            this.statusDistribution = data.statusDistribution.map(item => {
+            this.statusDistribution = data.statusDistribution.map(s => {
                 return {
-                    ...item,
-                    dotStyle: `background-color: ${item.color};`
+                    ...s,
+                    dotStyle: `background-color: ${s.color};`
                 };
             });
         }
 
-        // 4. Performance Tables
+        // 5. Daily & Monthly Trend Charts
+        if (data.dailyTrend && data.dailyTrend.length > 0) {
+            let maxDaily = Math.max(...data.dailyTrend.map(t => t.count), 1);
+            this.dailyTrendList = data.dailyTrend.map(t => {
+                let heightPct = Math.max(Math.round((t.count / maxDaily) * 100), 12);
+                return {
+                    ...t,
+                    barStyle: `height: ${heightPct}%;`,
+                    tooltip: `${t.label}: ${t.count} Leads`
+                };
+            });
+        } else {
+            this.dailyTrendList = [];
+        }
+
+        if (data.monthlyTrend && data.monthlyTrend.length > 0) {
+            let maxMonthly = Math.max(...data.monthlyTrend.map(mt => mt.count), 1);
+            this.monthlyTrendList = data.monthlyTrend.map(mt => {
+                let heightPct = Math.max(Math.round((mt.count / maxMonthly) * 100), 12);
+                return {
+                    ...mt,
+                    barStyle: `height: ${heightPct}%;`,
+                    tooltip: `${mt.label}: ${mt.count} Leads`
+                };
+            });
+        } else {
+            this.monthlyTrendList = [];
+        }
+
+        // 6. Tables & Lists
         this.campaignPerformance = data.campaignPerformance || [];
         this.projectPerformance = data.projectPerformance || [];
         this.pagePerformance = data.pagePerformance || [];
         this.formPerformance = data.formPerformance || [];
         this.ownerPerformance = data.ownerPerformance || [];
-
-        // 5. Leads Grid
         this.allLeads = data.leads || [];
-        this.currentPage = 1;
-
-        // 6. Validation Failures & Webhook Health
         this.validationFailures = data.validationFailures || [];
         this.webhookHealth = data.webhookHealth || {};
+        this.recentActivities = data.recentActivities || { last10Leads: [], recentlyQualified: [], recentlyConverted: [], recentlyWon: [], recentlyFailed: [] };
+        this.hasRevenueTracking = data.hasRevenueTracking || false;
+        this.totalRevenue = data.totalRevenue || 0;
 
         // 7. Populate Picklist Options dynamically
         if (data.filterOptions) {
@@ -162,34 +227,43 @@ export default class MetaLeadIntelligence extends LightningElement {
         }
     }
 
-    // ── Filter Change Handlers ──
+    // ── Handlers & Click Events ──
     handleFilterChange(event) {
         const name = event.target.name;
         const value = event.target.value;
         this[name] = value;
         this.currentPage = 1;
         this.isLoading = true;
-        this.triggerWireRefresh();
+        refreshApex(this.wiredDataResult);
     }
 
     handleSearchChange(event) {
         this.searchKey = event.target.value;
         this.currentPage = 1;
+        this.isLoading = true;
+        refreshApex(this.wiredDataResult);
     }
 
-    handleKpiClick(event) {
+    handleKpiCardClick(event) {
         const key = event.currentTarget.dataset.key;
         if (this.selectedKpiKey === key) {
-            this.selectedKpiKey = ''; // Toggle off
+            this.selectedKpiKey = '';
         } else {
             this.selectedKpiKey = key;
         }
         this.currentPage = 1;
         this.isLoading = true;
-        this.triggerWireRefresh();
+        refreshApex(this.wiredDataResult);
     }
 
-    handleClearFilters() {
+    handleResetKpiFilter() {
+        this.selectedKpiKey = '';
+        this.currentPage = 1;
+        this.isLoading = true;
+        refreshApex(this.wiredDataResult);
+    }
+
+    handleResetFilters() {
         this.selectedDateRange = 'All Time';
         this.startDate = '';
         this.endDate = '';
