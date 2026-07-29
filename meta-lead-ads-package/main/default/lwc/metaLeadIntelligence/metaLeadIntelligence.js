@@ -1,5 +1,6 @@
 import { LightningElement, track, wire } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
+import { refreshApex } from '@salesforce/apex';
 import getDashboardData from '@salesforce/apex/MetaLeadIntelligenceController.getDashboardData';
 import getLeadTimeline from '@salesforce/apex/MetaLeadIntelligenceController.getLeadTimeline';
 import exportLeadsCsv from '@salesforce/apex/MetaLeadIntelligenceController.exportLeadsCsv';
@@ -7,6 +8,7 @@ import exportLeadsCsv from '@salesforce/apex/MetaLeadIntelligenceController.expo
 export default class MetaLeadIntelligence extends LightningElement {
 
     @track isLoading = true;
+    wiredDataResult;
 
     // Filters
     @track selectedDateRange = 'All Time';
@@ -79,13 +81,14 @@ export default class MetaLeadIntelligence extends LightningElement {
     }
 
     @wire(getDashboardData, { filterJson: '$filterJsonString' })
-    wiredData({ error, data }) {
+    wiredData(result) {
+        this.wiredDataResult = result;
         this.isLoading = false;
-        if (data) {
-            this.rawData = data;
-            this.processData(data);
-        } else if (error) {
-            this.showToast('Error', 'Failed to load dashboard data: ' + this.reduceErrors(error), 'error');
+        if (result.data) {
+            this.rawData = result.data;
+            this.processData(result.data);
+        } else if (result.error) {
+            this.showToast('Error', 'Failed to load dashboard data: ' + this.reduceErrors(result.error), 'error');
         }
     }
 
@@ -164,7 +167,9 @@ export default class MetaLeadIntelligence extends LightningElement {
         const name = event.target.name;
         const value = event.target.value;
         this[name] = value;
+        this.currentPage = 1;
         this.isLoading = true;
+        this.triggerWireRefresh();
     }
 
     handleSearchChange(event) {
@@ -179,7 +184,9 @@ export default class MetaLeadIntelligence extends LightningElement {
         } else {
             this.selectedKpiKey = key;
         }
+        this.currentPage = 1;
         this.isLoading = true;
+        this.triggerWireRefresh();
     }
 
     handleClearFilters() {
@@ -194,13 +201,28 @@ export default class MetaLeadIntelligence extends LightningElement {
         this.selectedForm = '';
         this.searchKey = '';
         this.selectedKpiKey = '';
+        this.currentPage = 1;
         this.isLoading = true;
+        this.triggerWireRefresh();
     }
 
-    handleRefresh() {
+    async triggerWireRefresh() {
+        if (this.wiredDataResult) {
+            try {
+                await refreshApex(this.wiredDataResult);
+            } catch (e) {
+                console.error('Error refreshing dashboard:', e);
+            } finally {
+                this.isLoading = false;
+            }
+        } else {
+            this.isLoading = false;
+        }
+    }
+
+    async handleRefresh() {
         this.isLoading = true;
-        // Refresh by triggering wire
-        this.selectedDateRange = this.selectedDateRange;
+        await this.triggerWireRefresh();
     }
 
     // ── Getters for UI ──
