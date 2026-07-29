@@ -1,0 +1,593 @@
+<template>
+    <div class="lead-intelligence-container">
+        
+        <!-- Header Banner -->
+        <div class="dashboard-header slds-p-around_medium slds-m-bottom_medium">
+            <div class="header-content">
+                <div class="title-group">
+                    <div class="header-icon-box">
+                        <lightning-icon icon-name="custom:custom62" size="medium"></lightning-icon>
+                    </div>
+                    <div>
+                        <h1 class="dashboard-title">Lead Intelligence Dashboard</h1>
+                        <p class="dashboard-subtitle">End-to-end analytics & conversion pipeline for Purplstack Meta Lead Ads</p>
+                    </div>
+                </div>
+                <div class="header-actions">
+                    <lightning-button-icon 
+                        icon-name="utility:refresh" 
+                        variant="border-filled" 
+                        alternative-text="Refresh" 
+                        title="Refresh Dashboard"
+                        onclick={handleRefresh} 
+                        class="slds-m-right_x-small">
+                    </lightning-button-icon>
+                    <lightning-button 
+                        label="Export CSV" 
+                        icon-name="utility:download" 
+                        variant="neutral"
+                        onclick={handleExportCsv}>
+                    </lightning-button>
+                </div>
+            </div>
+        </div>
+
+        <template if:true={isLoading}>
+            <lightning-spinner alternative-text="Loading Lead Intelligence..." size="large"></lightning-spinner>
+        </template>
+
+        <!-- Filter Bar -->
+        <div class="filter-card slds-p-around_medium slds-m-bottom_medium">
+            <div class="filter-grid">
+                <!-- Date Range -->
+                <div class="filter-item">
+                    <lightning-combobox
+                        name="dateRange"
+                        label="Date Range"
+                        value={selectedDateRange}
+                        options={dateRangeOptions}
+                        onchange={handleFilterChange}>
+                    </lightning-combobox>
+                </div>
+
+                <!-- Custom Start & End Date if selected -->
+                <template if:true={isCustomDate}>
+                    <div class="filter-item">
+                        <lightning-input type="date" name="startDate" label="Start Date" value={startDate} onchange={handleFilterChange}></lightning-input>
+                    </div>
+                    <div class="filter-item">
+                        <lightning-input type="date" name="endDate" label="End Date" value={endDate} onchange={handleFilterChange}></lightning-input>
+                    </div>
+                </template>
+
+                <!-- Project Interested -->
+                <div class="filter-item">
+                    <lightning-combobox
+                        name="project"
+                        label="Project Interested"
+                        value={selectedProject}
+                        options={projectOptions}
+                        onchange={handleFilterChange}>
+                    </lightning-combobox>
+                </div>
+
+                <!-- Lead Status -->
+                <div class="filter-item">
+                    <lightning-combobox
+                        name="status"
+                        label="Lead Status"
+                        value={selectedStatus}
+                        options={statusOptions}
+                        onchange={handleFilterChange}>
+                    </lightning-combobox>
+                </div>
+
+                <!-- Lead Owner -->
+                <div class="filter-item">
+                    <lightning-combobox
+                        name="ownerId"
+                        label="Lead Owner"
+                        value={selectedOwner}
+                        options={ownerOptions}
+                        onchange={handleFilterChange}>
+                    </lightning-combobox>
+                </div>
+
+                <!-- Campaign -->
+                <div class="filter-item">
+                    <lightning-combobox
+                        name="campaign"
+                        label="Campaign"
+                        value={selectedCampaign}
+                        options={campaignOptions}
+                        onchange={handleFilterChange}>
+                    </lightning-combobox>
+                </div>
+
+                <!-- Facebook Page -->
+                <div class="filter-item">
+                    <lightning-combobox
+                        name="pageId"
+                        label="Facebook Page"
+                        value={selectedPage}
+                        options={pageOptions}
+                        onchange={handleFilterChange}>
+                    </lightning-combobox>
+                </div>
+
+                <!-- Lead Form -->
+                <div class="filter-item">
+                    <lightning-combobox
+                        name="formId"
+                        label="Lead Form"
+                        value={selectedForm}
+                        options={formOptions}
+                        onchange={handleFilterChange}>
+                    </lightning-combobox>
+                </div>
+
+                <!-- Search Input -->
+                <div class="filter-item search-item">
+                    <lightning-input
+                        type="search"
+                        name="searchKey"
+                        label="Search Lead"
+                        placeholder="Search Name, Phone, Email..."
+                        value={searchKey}
+                        onchange={handleSearchChange}>
+                    </lightning-input>
+                </div>
+            </div>
+
+            <!-- Active Filter Reset Badge -->
+            <template if:true={hasActiveFilters}>
+                <div class="slds-m-top_small filter-reset-bar">
+                    <span class="active-filter-label">Active Filter: {activeFilterSummary}</span>
+                    <lightning-button label="Clear All Filters" variant="base" onclick={handleClearFilters}></lightning-button>
+                </div>
+            </template>
+        </div>
+
+        <!-- 13 KPI Cards Section (Clickable) -->
+        <div class="kpi-section-header slds-m-bottom_x-small">
+            <h2 class="section-title">Key Performance Indicators</h2>
+            <span class="section-subtitle">Click any KPI card to instantly filter the Lead Grid</span>
+        </div>
+        
+        <div class="kpi-grid slds-m-bottom_medium">
+            <template for:each={kpiCards} for:item="kpi">
+                <div key={kpi.key} class={kpi.cardClass} onclick={handleKpiClick} data-key={kpi.key}>
+                    <div class="kpi-card-top">
+                        <span class="kpi-title">{kpi.label}</span>
+                        <span class="kpi-icon-badge">
+                            <lightning-icon icon-name={kpi.icon} size="x-small"></lightning-icon>
+                        </span>
+                    </div>
+                    <div class="kpi-value">{kpi.count}</div>
+                    <div class="kpi-card-bottom">
+                        <span class="kpi-percentage">{kpi.percentage}% of Total</span>
+                        <span class="kpi-trend-badge">{kpi.trend}</span>
+                    </div>
+                </div>
+            </template>
+        </div>
+
+        <!-- Conversion Funnel & Status Distribution Row -->
+        <div class="analytics-row slds-m-bottom_medium">
+            
+            <!-- Lead Funnel Widget -->
+            <div class="analytics-card funnel-card">
+                <div class="card-header-bar">
+                    <div class="card-header-title">
+                        <lightning-icon icon-name="utility:funnel" size="small" class="slds-m-right_x-small"></lightning-icon>
+                        Lead Conversion Funnel
+                    </div>
+                    <span class="card-badge">End-to-End Pipeline</span>
+                </div>
+                <div class="funnel-container">
+                    <template for:each={funnelStages} for:item="stage" for:index="index">
+                        <div key={stage.stage} class="funnel-bar-wrapper">
+                            <div class="funnel-bar-header">
+                                <span class="stage-name">{stage.stage}</span>
+                                <span class="stage-stats"><strong>{stage.count}</strong> ({stage.conversionPct}%)</span>
+                            </div>
+                            <div class="funnel-progress-bg">
+                                <div class="funnel-progress-fill" style={stage.fillStyle}></div>
+                            </div>
+                            <template if:true={stage.dropOffPct}>
+                                <div class="funnel-dropoff">⚠️ Drop-off: {stage.dropOffPct}%</div>
+                            </template>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <!-- Status Distribution Donut Chart Widget -->
+            <div class="analytics-card donut-card">
+                <div class="card-header-bar">
+                    <div class="card-header-title">
+                        <lightning-icon icon-name="utility:chart" size="small" class="slds-m-right_x-small"></lightning-icon>
+                        Lead Status Distribution
+                    </div>
+                    <span class="card-badge">Current Lifecycle</span>
+                </div>
+                
+                <div class="donut-chart-container">
+                    <div class="donut-legend-list">
+                        <template for:each={statusDistribution} for:item="dist">
+                            <div key={dist.label} class="donut-legend-item">
+                                <span class="color-dot" style={dist.dotStyle}></span>
+                                <span class="legend-label">{dist.label}</span>
+                                <span class="legend-value"><strong>{dist.value}</strong></span>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Performance Tabs Section -->
+        <div class="analytics-card slds-m-bottom_medium">
+            <lightning-tabset variant="scoped">
+                
+                <!-- Campaign Performance Tab -->
+                <lightning-tab label="Campaign Performance">
+                    <div class="tab-content-container">
+                        <table class="styled-table">
+                            <thead>
+                                <tr>
+                                    <th>Campaign Name</th>
+                                    <th class="slds-text-align_right">Total Leads</th>
+                                    <th class="slds-text-align_right">Qualified</th>
+                                    <th class="slds-text-align_right">Opportunities</th>
+                                    <th class="slds-text-align_right">Closed Won</th>
+                                    <th class="slds-text-align_right">Conversion Rate</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template for:each={campaignPerformance} for:item="row">
+                                    <tr key={row.name}>
+                                        <td><strong>{row.name}</strong></td>
+                                        <td class="slds-text-align_right">{row.totalLeads}</td>
+                                        <td class="slds-text-align_right">{row.qualifiedLeads}</td>
+                                        <td class="slds-text-align_right">{row.opportunities}</td>
+                                        <td class="slds-text-align_right">{row.wonLeads}</td>
+                                        <td class="slds-text-align_right"><span class="badge-rate">{row.conversionRate}%</span></td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </lightning-tab>
+
+                <!-- Project Performance Tab -->
+                <lightning-tab label="Project Performance">
+                    <div class="tab-content-container">
+                        <table class="styled-table">
+                            <thead>
+                                <tr>
+                                    <th>Project Interested</th>
+                                    <th class="slds-text-align_right">Total Leads</th>
+                                    <th class="slds-text-align_right">Qualified</th>
+                                    <th class="slds-text-align_right">Converted</th>
+                                    <th class="slds-text-align_right">Won Revenue</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template for:each={projectPerformance} for:item="row">
+                                    <tr key={row.name}>
+                                        <td><strong>{row.name}</strong></td>
+                                        <td class="slds-text-align_right">{row.totalLeads}</td>
+                                        <td class="slds-text-align_right">{row.qualifiedLeads}</td>
+                                        <td class="slds-text-align_right">{row.wonLeads}</td>
+                                        <td class="slds-text-align_right">₹{row.revenue}</td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </lightning-tab>
+
+                <!-- Facebook Page Performance Tab -->
+                <lightning-tab label="Facebook Page Performance">
+                    <div class="tab-content-container">
+                        <table class="styled-table">
+                            <thead>
+                                <tr>
+                                    <th>Facebook Page</th>
+                                    <th class="slds-text-align_right">Leads Received</th>
+                                    <th class="slds-text-align_right">Qualified</th>
+                                    <th class="slds-text-align_right">Closed Won</th>
+                                    <th class="slds-text-align_right">Conversion %</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template for:each={pagePerformance} for:item="row">
+                                    <tr key={row.name}>
+                                        <td><strong>{row.name}</strong></td>
+                                        <td class="slds-text-align_right">{row.totalLeads}</td>
+                                        <td class="slds-text-align_right">{row.qualifiedLeads}</td>
+                                        <td class="slds-text-align_right">{row.wonLeads}</td>
+                                        <td class="slds-text-align_right"><span class="badge-rate">{row.conversionRate}%</span></td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </lightning-tab>
+
+                <!-- Lead Form Performance Tab -->
+                <lightning-tab label="Lead Form Performance">
+                    <div class="tab-content-container">
+                        <table class="styled-table">
+                            <thead>
+                                <tr>
+                                    <th>Lead Form Name</th>
+                                    <th class="slds-text-align_right">Leads Received</th>
+                                    <th class="slds-text-align_right">Duplicates</th>
+                                    <th class="slds-text-align_right">Qualified</th>
+                                    <th class="slds-text-align_right">Converted</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template for:each={formPerformance} for:item="row">
+                                    <tr key={row.formName}>
+                                        <td><strong>{row.formName}</strong></td>
+                                        <td class="slds-text-align_right">{row.leadsReceived}</td>
+                                        <td class="slds-text-align_right">{row.duplicates}</td>
+                                        <td class="slds-text-align_right">{row.qualified}</td>
+                                        <td class="slds-text-align_right">{row.converted}</td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </lightning-tab>
+
+                <!-- Owner Performance Tab -->
+                <lightning-tab label="Owner Performance">
+                    <div class="tab-content-container">
+                        <table class="styled-table">
+                            <thead>
+                                <tr>
+                                    <th>Lead Owner</th>
+                                    <th class="slds-text-align_right">Assigned</th>
+                                    <th class="slds-text-align_right">Working</th>
+                                    <th class="slds-text-align_right">Qualified</th>
+                                    <th class="slds-text-align_right">Converted / Won</th>
+                                    <th class="slds-text-align_right">Conversion %</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template for:each={ownerPerformance} for:item="row">
+                                    <tr key={row.name}>
+                                        <td><strong>{row.name}</strong></td>
+                                        <td class="slds-text-align_right">{row.totalLeads}</td>
+                                        <td class="slds-text-align_right">{row.workingLeads}</td>
+                                        <td class="slds-text-align_right">{row.qualifiedLeads}</td>
+                                        <td class="slds-text-align_right">{row.wonLeads}</td>
+                                        <td class="slds-text-align_right"><span class="badge-rate">{row.conversionRate}%</span></td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </lightning-tab>
+
+            </lightning-tabset>
+        </div>
+
+        <!-- Webhook Health & Validation Failures Row -->
+        <div class="analytics-row slds-m-bottom_medium">
+            
+            <!-- Webhook Health Status Widget -->
+            <div class="analytics-card health-card">
+                <div class="card-header-bar">
+                    <div class="card-header-title">
+                        <lightning-icon icon-name="utility:connected" size="small" class="slds-m-right_x-small"></lightning-icon>
+                        Meta Webhook Health Status
+                    </div>
+                    <span class={webhookHealthBadgeClass}>{webhookHealth.statusLabel}</span>
+                </div>
+                <div class="health-body">
+                    <div class="health-status-row">
+                        <span class="health-indicator-dot" style={webhookDotStyle}></span>
+                        <span class="health-status-text">Webhook Listener: <strong>{webhookHealth.statusLabel}</strong></span>
+                    </div>
+                    <div class="health-info-grid">
+                        <div class="health-info-item">
+                            <span class="health-info-label">Active Connected Pages:</span>
+                            <span class="health-info-val">{webhookHealth.activePages}</span>
+                        </div>
+                        <div class="health-info-item">
+                            <span class="health-info-label">Failed Webhook Logs:</span>
+                            <span class="health-info-val">{webhookHealth.failedLogCount}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Validation Failures Widget -->
+            <div class="analytics-card failures-card">
+                <div class="card-header-bar">
+                    <div class="card-header-title">
+                        <lightning-icon icon-name="utility:warning" size="small" class="slds-m-right_x-small"></lightning-icon>
+                        Validation Failures & Errors ({validationFailuresCount})
+                    </div>
+                </div>
+                <div class="failures-body">
+                    <template if:true={hasValidationFailures}>
+                        <div class="failures-list">
+                            <template for:each={validationFailures} for:item="fail">
+                                <div key={fail.id} class="failure-item">
+                                    <span class="failure-type-badge">{fail.errorType}</span>
+                                    <span class="failure-msg">{fail.errorMessage}</span>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+                    <template if:false={hasValidationFailures}>
+                        <div class="empty-state">🎉 No validation errors or failed logs recorded!</div>
+                    </template>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Lead Grid (Datatable) -->
+        <div class="analytics-card slds-m-bottom_medium">
+            <div class="card-header-bar">
+                <div class="card-header-title">
+                    <lightning-icon icon-name="utility:table" size="small" class="slds-m-right_x-small"></lightning-icon>
+                    Meta Leads Grid ({totalLeadsCount} Records)
+                </div>
+                <div class="datatable-header-actions">
+                    <lightning-button label="Export CSV" icon-name="utility:download" size="small" onclick={handleExportCsv}></lightning-button>
+                </div>
+            </div>
+
+            <div class="datatable-wrapper">
+                <table class="styled-table datatable-table">
+                    <thead>
+                        <tr>
+                            <th>Lead Name</th>
+                            <th>Mobile / Phone</th>
+                            <th>Email</th>
+                            <th>Project Interested</th>
+                            <th>Campaign</th>
+                            <th>Facebook Page</th>
+                            <th>Lead Form</th>
+                            <th>Status</th>
+                            <th>Lead Owner</th>
+                            <th>Opportunity</th>
+                            <th>Created Date</th>
+                            <th class="slds-text-align_center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template for:each={paginatedLeads} for:item="lead">
+                            <tr key={lead.id} class="lead-grid-row">
+                                <td>
+                                    <a onclick={handleOpenLead} data-id={lead.id} class="lead-name-link">
+                                        <strong>{lead.name}</strong>
+                                    </a>
+                                </td>
+                                <td>{lead.mobile}</td>
+                                <td>{lead.email}</td>
+                                <td><span class="chip-project">{lead.project}</span></td>
+                                <td>{lead.campaign}</td>
+                                <td>{lead.facebookPage}</td>
+                                <td>{lead.leadForm}</td>
+                                <td><span class="chip-status">{lead.status}</span></td>
+                                <td>{lead.ownerName}</td>
+                                <td>
+                                    <template if:true={lead.opportunityName}>
+                                        <span class="chip-opp">💼 {lead.opportunityName}</span>
+                                    </template>
+                                </td>
+                                <td>{lead.createdDateFormatted}</td>
+                                <td class="slds-text-align_center">
+                                    <lightning-button-icon 
+                                        icon-name="utility:timeline" 
+                                        variant="border-filled" 
+                                        size="small"
+                                        alternative-text="View Lifecycle Timeline"
+                                        title="View Lifecycle Timeline"
+                                        onclick={handleOpenLead} 
+                                        data-id={lead.id}>
+                                    </lightning-button-icon>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination Bar -->
+            <div class="pagination-bar slds-p-around_small">
+                <div class="pagination-info">
+                    Showing Page {currentPage} of {totalPages} ({totalLeadsCount} Leads)
+                </div>
+                <div class="pagination-controls">
+                    <lightning-button label="Previous" icon-name="utility:chevronleft" disabled={isFirstPage} onclick={handlePrevPage}></lightning-button>
+                    <span class="page-number-display">{currentPage}</span>
+                    <lightning-button label="Next" icon-name="utility:chevronright" icon-position="right" disabled={isLastPage} onclick={handleNextPage}></lightning-button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lead Timeline & Details Drawer Modal -->
+        <template if:true={showLeadDrawer}>
+            <section class="slds-modal slds-fade-in-open slds-modal_medium" aria-modal="true">
+                <div class="slds-modal__container">
+                    <header class="slds-modal__header drawer-header">
+                        <lightning-button-icon icon-name="utility:close" class="slds-modal__close" onclick={handleCloseLeadDrawer}></lightning-button-icon>
+                        <h2 class="slds-modal__title slds-hyphenate">Lead Intelligence Timeline & Lifecycle</h2>
+                        <p class="slds-m-top_x-small">Viewing record: <strong>{selectedLeadRecord.name}</strong></p>
+                    </header>
+                    <div class="slds-modal__content slds-p-around_medium">
+                        
+                        <!-- Lead Summary Header Card -->
+                        <div class="lead-summary-card slds-m-bottom_medium">
+                            <div class="summary-col">
+                                <span class="sum-label">Lead Name:</span>
+                                <span class="sum-val"><strong>{selectedLeadRecord.name}</strong></span>
+                            </div>
+                            <div class="summary-col">
+                                <span class="sum-label">Phone:</span>
+                                <span class="sum-val">{selectedLeadRecord.mobile}</span>
+                            </div>
+                            <div class="summary-col">
+                                <span class="sum-label">Email:</span>
+                                <span class="sum-val">{selectedLeadRecord.email}</span>
+                            </div>
+                            <div class="summary-col">
+                                <span class="sum-label">Status:</span>
+                                <span class="sum-val"><span class="chip-status">{selectedLeadRecord.status}</span></span>
+                            </div>
+                            <div class="summary-col">
+                                <span class="sum-label">Owner:</span>
+                                <span class="sum-val">{selectedLeadRecord.ownerName}</span>
+                            </div>
+                        </div>
+
+                        <!-- Timeline Events View -->
+                        <h3 class="section-title slds-m-bottom_small">Vertical Lifecycle Timeline</h3>
+                        
+                        <template if:true={isTimelineLoading}>
+                            <lightning-spinner alternative-text="Loading timeline..." size="medium"></lightning-spinner>
+                        </template>
+
+                        <div class="timeline-vertical-list">
+                            <template for:each={selectedLeadTimeline} for:item="evt">
+                                <div key={evt.title} class="timeline-step">
+                                    <div class="timeline-icon-column">
+                                        <div class={evt.statusClass}>
+                                            <lightning-icon icon-name={evt.icon} size="x-small"></lightning-icon>
+                                        </div>
+                                        <div class="timeline-line"></div>
+                                    </div>
+                                    <div class="timeline-content-column">
+                                        <div class="timeline-event-header">
+                                            <span class="event-title">{evt.title}</span>
+                                            <span class="event-time">{evt.timestamp}</span>
+                                        </div>
+                                        <div class="event-subtitle">{evt.subtitle}</div>
+                                        <div class="event-desc">{evt.description}</div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+
+                    </div>
+                    <footer class="slds-modal__footer">
+                        <lightning-button label="Close" onclick={handleCloseLeadDrawer}></lightning-button>
+                    </footer>
+                </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </template>
+
+    </div>
+</template>
