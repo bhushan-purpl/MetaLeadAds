@@ -20,6 +20,7 @@ public without sharing class MetaFieldConfigService {
         public String utmTermFieldApi;        // e.g. utm_term__c
         public String utmContentFieldApi;     // e.g. utm_content__c
         public String customLeadSourceFieldApi; // e.g. Lead_Source__c (custom)
+        public String integrationSourceFieldApi; // e.g. Integration_Source__c
 
         public FieldConfig() {
             this.projectFieldApi          = '';
@@ -29,6 +30,7 @@ public without sharing class MetaFieldConfigService {
             this.utmTermFieldApi          = '';
             this.utmContentFieldApi       = '';
             this.customLeadSourceFieldApi = '';
+            this.integrationSourceFieldApi= '';
         }
     }
 
@@ -43,7 +45,7 @@ public without sharing class MetaFieldConfigService {
             List<SObject> rows = Database.query(
                 'SELECT Project_Field_API__c, UTM_Source_Field_API__c, UTM_Campaign_Field_API__c, ' +
                 'UTM_Medium_Field_API__c, UTM_Term_Field_API__c, UTM_Content_Field_API__c, ' +
-                'Custom_Lead_Source_Field_API__c ' +
+                'Custom_Lead_Source_Field_API__c, Integration_Source_Field_API__c ' +
                 'FROM Meta_Integration_Settings__mdt WHERE DeveloperName = \'Default\' LIMIT 1'
             );
             if (!rows.isEmpty()) {
@@ -55,6 +57,7 @@ public without sharing class MetaFieldConfigService {
                 String ut = (String)row.get('UTM_Term_Field_API__c');
                 String un = (String)row.get('UTM_Content_Field_API__c');
                 String cl = (String)row.get('Custom_Lead_Source_Field_API__c');
+                String is = (String)row.get('Integration_Source_Field_API__c');
 
                 if (String.isNotBlank(p))  cachedConfig.projectFieldApi          = p.trim();
                 if (String.isNotBlank(us)) cachedConfig.utmSourceFieldApi        = us.trim();
@@ -63,6 +66,7 @@ public without sharing class MetaFieldConfigService {
                 if (String.isNotBlank(ut)) cachedConfig.utmTermFieldApi          = ut.trim();
                 if (String.isNotBlank(un)) cachedConfig.utmContentFieldApi       = un.trim();
                 if (String.isNotBlank(cl)) cachedConfig.customLeadSourceFieldApi = cl.trim();
+                if (String.isNotBlank(is)) cachedConfig.integrationSourceFieldApi= is.trim();
             }
         } catch (Exception e) {
             System.debug('MetaFieldConfigService.getConfig error: ' + e.getMessage());

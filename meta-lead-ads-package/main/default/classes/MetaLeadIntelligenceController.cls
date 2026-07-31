@@ -275,9 +275,9 @@ public with sharing class MetaLeadIntelligenceController {
 
         // Filter strictly by Integration_Source__c
         if (hasIntegrationSource) {
-            leadQuery += ' AND Integration_Source__c = \'Meta Lead Ads\'';
+            leadQuery += ' AND Integration_Source__c = \'PurplSync\'';
         } else {
-            leadQuery += ' AND LeadSource = \'Meta Lead Ads\'';
+            leadQuery += ' AND LeadSource = \'PurplSync\'';
         }
 
         if (startDt != null) {
@@ -750,9 +750,9 @@ public with sharing class MetaLeadIntelligenceController {
             if (hasIntSource) oppQuery += ', Integration_Source__c';
             oppQuery += ' FROM Opportunity WHERE ';
             if (hasIntSource) {
-                oppQuery += 'Integration_Source__c = \'Meta Lead Ads\'';
+                oppQuery += 'Integration_Source__c = \'PurplSync\'';
             } else {
-                oppQuery += 'LeadSource = \'Meta Lead Ads\'';
+                oppQuery += 'LeadSource = \'PurplSync\'';
             }
             oppQuery += ' ORDER BY CreatedDate DESC LIMIT 500';
 
@@ -762,7 +762,7 @@ public with sharing class MetaLeadIntelligenceController {
             Set<Id> convertedOppIds = new Set<Id>();
             for (Lead l : [
                 SELECT ConvertedOpportunityId FROM Lead
-                WHERE IsConverted = true AND Integration_Source__c = 'Meta Lead Ads'
+                WHERE IsConverted = true AND Integration_Source__c = 'PurplSync'
                 AND ConvertedOpportunityId != null
             ]) {
                 convertedOppIds.add(l.ConvertedOpportunityId);
@@ -831,7 +831,7 @@ public with sharing class MetaLeadIntelligenceController {
                     r.amount = amt;
                     r.closeDate = o.CloseDate != null ? o.CloseDate.format() : '';
                     r.ownerName = o.Owner != null ? o.Owner.Name : '';
-                    r.integrationSource = 'Meta Lead Ads';
+                    r.integrationSource = 'PurplSync';
                     r.leadName = oppIdToLeadName.containsKey(o.Id) ? oppIdToLeadName.get(o.Id) : '';
                     wrapper.recentOpportunities.add(r);
                 }

@@ -223,13 +223,14 @@ public with sharing class MetaWebhookController {
             'utmMediumFieldApi'     => '',
             'utmTermFieldApi'       => '',
             'utmContentFieldApi'    => '',
-            'customLeadSourceFieldApi' => ''
+            'customLeadSourceFieldApi' => '',
+            'integrationSourceFieldApi' => ''
         };
         try {
             List<SObject> rows = Database.query(
                 'SELECT Project_Field_API__c, UTM_Source_Field_API__c, UTM_Campaign_Field_API__c, ' +
                 'UTM_Medium_Field_API__c, UTM_Term_Field_API__c, UTM_Content_Field_API__c, ' +
-                'Custom_Lead_Source_Field_API__c ' +
+                'Custom_Lead_Source_Field_API__c, Integration_Source_Field_API__c ' +
                 'FROM Meta_Integration_Settings__mdt WHERE DeveloperName = \'Default\' LIMIT 1'
             );
             if (!rows.isEmpty()) {
@@ -241,6 +242,7 @@ public with sharing class MetaWebhookController {
                 if (row.get('UTM_Term_Field_API__c')        != null) cfg.put('utmTermFieldApi',           (String)row.get('UTM_Term_Field_API__c'));
                 if (row.get('UTM_Content_Field_API__c')     != null) cfg.put('utmContentFieldApi',        (String)row.get('UTM_Content_Field_API__c'));
                 if (row.get('Custom_Lead_Source_Field_API__c') != null) cfg.put('customLeadSourceFieldApi', (String)row.get('Custom_Lead_Source_Field_API__c'));
+                if (row.get('Integration_Source_Field_API__c') != null) cfg.put('integrationSourceFieldApi', (String)row.get('Integration_Source_Field_API__c'));
             }
         } catch (Exception e) {
             System.debug('getFieldConfig error: ' + e.getMessage());
@@ -266,7 +268,8 @@ public with sharing class MetaWebhookController {
                 'utmMediumFieldApi'        => 'UTM_Medium_Field_API__c',
                 'utmTermFieldApi'          => 'UTM_Term_Field_API__c',
                 'utmContentFieldApi'       => 'UTM_Content_Field_API__c',
-                'customLeadSourceFieldApi' => 'Custom_Lead_Source_Field_API__c'
+                'customLeadSourceFieldApi' => 'Custom_Lead_Source_Field_API__c',
+                'integrationSourceFieldApi'=> 'Integration_Source_Field_API__c'
             };
 
             for (String jsKey : fieldMap.keySet()) {

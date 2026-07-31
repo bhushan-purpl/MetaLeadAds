@@ -19,8 +19,8 @@ private class MetaLeadIntelligenceControllerTest {
 
         // Sample Leads
         List<Lead> leads = new List<Lead>{
-            new Lead(FirstName = 'Amit', LastName = 'Sharma', Email = 'amit@example.com', Phone = '9876543210', Company = 'Acme', Status = 'Working', LeadSource = 'Meta Lead Ads'),
-            new Lead(FirstName = 'Rahul', LastName = 'Verma', Email = 'rahul@example.com', Phone = '9876543211', Company = 'Beta', Status = 'Qualified', LeadSource = 'Meta Lead Ads')
+            new Lead(FirstName = 'Amit', LastName = 'Sharma', Email = 'amit@example.com', Phone = '9876543210', Company = 'Acme', Status = 'Working', LeadSource = 'PurplSync'),
+            new Lead(FirstName = 'Rahul', LastName = 'Verma', Email = 'rahul@example.com', Phone = '9876543211', Company = 'Beta', Status = 'Qualified', LeadSource = 'PurplSync')
         };
         insert leads;
 

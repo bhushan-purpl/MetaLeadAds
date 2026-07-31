@@ -230,17 +230,20 @@ public class MetaLeadCalloutJob implements Queueable, Database.AllowsCallouts {
                 Map<String, Schema.SObjectField> leadFieldsMap = Schema.SObjectType.Lead.fields.getMap();
                 for (String fKey : leadFieldsMap.keySet()) {
                     if (fKey == 'integration_source__c' || fKey.endsWith('integration_source__c')) {
-                        try { newLead.put(leadFieldsMap.get(fKey).getDescribe().getName(), 'Meta Lead Ads'); } catch (Exception ex) {}
+                        try { newLead.put(leadFieldsMap.get(fKey).getDescribe().getName(), 'PurplSync'); } catch (Exception ex) {}
                     }
                 }
                 if (String.isBlank(newLead.LeadSource)) {
-                    newLead.LeadSource = 'Meta Lead Ads';
+                    newLead.LeadSource = 'PurplSync';
                 }
 
                 // Set org-configured custom fields via MetaFieldConfigService (no purpl__ hardcoding)
                 MetaFieldConfigService.FieldConfig fCfg = MetaFieldConfigService.getConfig();
                 if (String.isNotBlank(fCfg.customLeadSourceFieldApi)) {
-                    MetaFieldConfigService.safeSetField(newLead, fCfg.customLeadSourceFieldApi, 'Meta Lead Ads');
+                    MetaFieldConfigService.safeSetField(newLead, fCfg.customLeadSourceFieldApi, 'PurplSync');
+                }
+                if (String.isNotBlank(fCfg.integrationSourceFieldApi)) {
+                    MetaFieldConfigService.safeSetField(newLead, fCfg.integrationSourceFieldApi, 'PurplSync');
                 }
 
                 if (!usedDynamicMapping) {
