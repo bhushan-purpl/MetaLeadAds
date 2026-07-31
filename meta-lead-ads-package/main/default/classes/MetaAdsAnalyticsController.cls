@@ -15,6 +15,12 @@ public with sharing class MetaAdsAnalyticsController {
         @AuraEnabled public Decimal avgCpm = 0;
         @AuraEnabled public Decimal avgCpl = 0;
         @AuraEnabled public Decimal conversionRate = 0;
+        // Lead Conversion Metrics
+        @AuraEnabled public Integer convertedLeads = 0;
+        @AuraEnabled public Integer failedLeads = 0;
+        @AuraEnabled public Integer pendingLeads = 0;
+        @AuraEnabled public Decimal successRate = 0;
+        @AuraEnabled public Decimal bookingRatio = 0;
         @AuraEnabled public List<Meta_Campaign_Analytics__c> campaigns = new List<Meta_Campaign_Analytics__c>();
         @AuraEnabled public List<DailyTrendPoint> dailyTrends = new List<DailyTrendPoint>();
     }
@@ -116,6 +122,35 @@ public with sharing class MetaAdsAnalyticsController {
         }
         if (totalLeads > 0) {
             wrapper.avgCpl = totalSpend / Decimal.valueOf(totalLeads);
+        }
+
+        // Lead Conversion Stats from Meta_Lead_Log__c
+        Integer totalLogs = 0;
+        Integer successLogs = 0;
+        Integer failedLogs = 0;
+        Integer pendingLogs = 0;
+        Integer convertedToSF = 0;
+        for (AggregateResult ar : [
+            SELECT Processing_Status__c status, COUNT(Id) cnt
+            FROM Meta_Lead_Log__c
+            GROUP BY Processing_Status__c
+        ]) {
+            String st = (String) ar.get('status');
+            Integer cnt = (Integer) ar.get('cnt');
+            totalLogs += cnt;
+            if (st == 'Success') { successLogs += cnt; convertedToSF += cnt; }
+            else if (st == 'Failed') { failedLogs += cnt; }
+            else { pendingLogs += cnt; }
+        }
+        wrapper.convertedLeads = convertedToSF;
+        wrapper.failedLeads = failedLogs;
+        wrapper.pendingLeads = pendingLogs;
+        if (totalLogs > 0) {
+            wrapper.successRate = (Decimal.valueOf(successLogs) / Decimal.valueOf(totalLogs)) * 100;
+        }
+        // Booking ratio = SF Leads converted as % of total Meta leads captured
+        if (totalLeads > 0) {
+            wrapper.bookingRatio = (Decimal.valueOf(convertedToSF) / Decimal.valueOf(totalLeads)) * 100;
         }
 
         // Daily Trends

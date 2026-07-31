@@ -76,6 +76,12 @@ export default class MetaAdsAnalytics extends LightningElement {
             avgCpc: (data.avgCpc || 0).toFixed(2),
             avgCpm: (data.avgCpm || 0).toFixed(2),
             avgCpl: (data.avgCpl || 0).toFixed(2),
+            conversionRate: (data.conversionRate || 0).toFixed(2),
+            convertedLeads: data.convertedLeads || 0,
+            failedLeads: data.failedLeads || 0,
+            pendingLeads: data.pendingLeads || 0,
+            successRate: (data.successRate || 0).toFixed(2),
+            bookingRatio: (data.bookingRatio || 0).toFixed(2),
             campaigns: (data.campaigns || []).map(c => ({
                 ...c,
                 Spend__c: (c.Spend__c || 0).toFixed(2),

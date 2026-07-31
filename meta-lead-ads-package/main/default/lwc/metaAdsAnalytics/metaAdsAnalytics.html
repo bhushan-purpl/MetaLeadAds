@@ -187,6 +187,92 @@
 
         </div>
 
+        <!-- Lead Conversion & Status Section -->
+        <div class="kpi-section-header slds-m-bottom_x-small slds-m-top_medium">
+            <h2 class="section-title">Lead Conversion & Status</h2>
+            <span class="section-subtitle">Webhook Lead Pipeline · Salesforce Conversion Tracking</span>
+        </div>
+
+        <div class="conversion-grid slds-m-bottom_medium">
+
+            <!-- Click-to-Lead Conversion Rate -->
+            <div class="conv-card conv-purple">
+                <div class="conv-card-top">
+                    <div class="conv-icon-wrap">
+                        <lightning-icon icon-name="utility:change_record_type" size="small"></lightning-icon>
+                    </div>
+                    <div class="conv-label">CLICK → LEAD RATE</div>
+                </div>
+                <div class="conv-value">{metrics.conversionRate}%</div>
+                <div class="conv-desc">% of Ad Clicks that became Leads</div>
+                <div class="conv-bar-track">
+                    <div class="conv-bar-fill conv-bar-purple" style="width:{metrics.conversionRate}%"></div>
+                </div>
+            </div>
+
+            <!-- Converted to Salesforce -->
+            <div class="conv-card conv-green">
+                <div class="conv-card-top">
+                    <div class="conv-icon-wrap">
+                        <lightning-icon icon-name="utility:lead" size="small"></lightning-icon>
+                    </div>
+                    <div class="conv-label">CONVERTED TO SF</div>
+                </div>
+                <div class="conv-value">{metrics.convertedLeads}</div>
+                <div class="conv-desc">Leads successfully created in Salesforce</div>
+                <div class="conv-status-row">
+                    <span class="conv-pill conv-pill-green">✓ Success</span>
+                </div>
+            </div>
+
+            <!-- Lead Success Rate -->
+            <div class="conv-card conv-blue">
+                <div class="conv-card-top">
+                    <div class="conv-icon-wrap">
+                        <lightning-icon icon-name="utility:chart" size="small"></lightning-icon>
+                    </div>
+                    <div class="conv-label">LEAD SUCCESS RATE</div>
+                </div>
+                <div class="conv-value">{metrics.successRate}%</div>
+                <div class="conv-desc">% of webhook leads processed successfully</div>
+                <div class="conv-bar-track">
+                    <div class="conv-bar-fill conv-bar-blue" style="width:{metrics.successRate}%"></div>
+                </div>
+            </div>
+
+            <!-- Failed Leads -->
+            <div class="conv-card conv-red">
+                <div class="conv-card-top">
+                    <div class="conv-icon-wrap">
+                        <lightning-icon icon-name="utility:error" size="small"></lightning-icon>
+                    </div>
+                    <div class="conv-label">FAILED LEADS</div>
+                </div>
+                <div class="conv-value">{metrics.failedLeads}</div>
+                <div class="conv-desc">Leads that failed to process</div>
+                <div class="conv-status-row">
+                    <span class="conv-pill conv-pill-red">✗ Failed</span>
+                    <span class="conv-pill conv-pill-yellow">{metrics.pendingLeads} Pending</span>
+                </div>
+            </div>
+
+            <!-- Booking Ratio -->
+            <div class="conv-card conv-orange">
+                <div class="conv-card-top">
+                    <div class="conv-icon-wrap">
+                        <lightning-icon icon-name="utility:event" size="small"></lightning-icon>
+                    </div>
+                    <div class="conv-label">BOOKING RATIO</div>
+                </div>
+                <div class="conv-value">{metrics.bookingRatio}%</div>
+                <div class="conv-desc">Meta Leads → Salesforce conversion ratio</div>
+                <div class="conv-bar-track">
+                    <div class="conv-bar-fill conv-bar-orange" style="width:{metrics.bookingRatio}%"></div>
+                </div>
+            </div>
+
+        </div>
+
         <!-- Campaign Performance Data Table -->
         <div class="analytics-card slds-m-bottom_medium">
             <div class="card-header-bar">
