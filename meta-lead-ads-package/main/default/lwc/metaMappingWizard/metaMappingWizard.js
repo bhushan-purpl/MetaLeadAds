@@ -162,37 +162,44 @@ export default class MetaMappingWizard extends LightningElement {
     async loadFieldsAndMappings() {
         this.isLoadingFields = true;
         this.errorMessage = '';
+
+        // Fire syncFormQuestions in the background — never block the UI on it
+        syncFormQuestions({ formId: this.selectedFormId, pageId: this.selectedPageId })
+            .catch(syncErr => console.warn('Form question sync failed, using cached data:', syncErr));
+
+        // Safety timeout — if Apex takes > 20s, release the spinner so user is never stuck
+        const safetyTimeout = new Promise(resolve => {
+            setTimeout(() => resolve(null), 20000);
+        });
+
         try {
-            // First sync questions from API to ensure they are fresh
-            try {
-                await syncFormQuestions({ formId: this.selectedFormId, pageId: this.selectedPageId });
-            } catch (syncErr) {
-                // Sync failure is non-fatal — we fall back to cached DB data
-                console.warn('Form question sync failed, using cached data:', syncErr);
+            // Race the Apex call against a 20s timeout
+            const fields = await Promise.race([
+                getFormFieldsForMapping({ formId: this.selectedFormId, pageId: this.selectedPageId }),
+                safetyTimeout
+            ]);
+
+            if (fields === null) {
+                // Timeout hit — show a friendly error but unstick the spinner
+                this.errorMessage = 'Loading took too long. Please try again.';
+            } else {
+                this.allMappings = (fields || []).map((f, index) => ({
+                    id:            'row_' + index,
+                    facebookField: f.facebookField,
+                    label:         f.label || f.facebookField,
+                    category:      f.category || 'standard',
+                    sfField:       f.sfField || '',
+                    isUtm:         f.isUtm === true,
+                    sampleValue:   f.sampleValue || '',
+                    isStatic:      f.facebookField && f.facebookField.startsWith('STATIC::'),
+                    options:       []
+                }));
+                this.isDirty = false;
             }
-
-            // Call master method — returns everything pre-categorized & merged with saved mappings
-            const fields = await getFormFieldsForMapping({
-                formId: this.selectedFormId,
-                pageId: this.selectedPageId
-            });
-
-            this.allMappings = (fields || []).map((f, index) => ({
-                id:            'row_' + index,
-                facebookField: f.facebookField,
-                label:         f.label || f.facebookField,
-                category:      f.category || 'standard',
-                sfField:       f.sfField || '',
-                isUtm:         f.isUtm === true,
-                sampleValue:   f.sampleValue || '',
-                isStatic:      f.facebookField && f.facebookField.startsWith('STATIC::'),
-                options:       []
-            }));
-            this.isDirty = false;
-
         } catch (e) {
             this.errorMessage = e.body ? e.body.message : 'Failed to load form fields.';
         } finally {
+            // ALWAYS reset spinner — no matter what happens
             this.isLoadingFields = false;
         }
     }
@@ -252,15 +259,7 @@ export default class MetaMappingWizard extends LightningElement {
         return match ? match.value : '';
     }
 
-    updateDropdownOptions() {
-        if (!this.allMappings) return;
-        
-        const newTaken = [];
-        for (const row of this.allMappings) {
-            if (row.sfField) newTaken.push(row.sfField);
-        }
-        this.takenValuesList = newTaken;
-    }
+    // NOTE: real updateDropdownOptions is defined below — this stub removed to avoid duplicate
 
     handleMappingChange(event) {
         const rowId  = event.currentTarget.dataset.id;
