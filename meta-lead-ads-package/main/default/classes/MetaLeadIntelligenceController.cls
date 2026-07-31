@@ -261,12 +261,19 @@ public with sharing class MetaLeadIntelligenceController {
         MetaFieldConfigService.FieldConfig fieldConfig = MetaFieldConfigService.getConfig();
         Map<String, Schema.SObjectField> leadFieldsMap = Schema.SObjectType.Lead.fields.getMap();
         
-        Boolean hasIntegrationSource = leadFieldsMap.containsKey('integration_source__c');
+        String intSourceApiName = null;
+        if (leadFieldsMap.containsKey('purpl__integration_source__c')) {
+            intSourceApiName = 'purpl__Integration_Source__c';
+        } else if (leadFieldsMap.containsKey('integration_source__c')) {
+            intSourceApiName = 'Integration_Source__c';
+        }
+        
+        Boolean hasIntegrationSource = (intSourceApiName != null);
         Boolean hasProject = String.isNotBlank(fieldConfig.projectFieldApi) && leadFieldsMap.containsKey(fieldConfig.projectFieldApi.toLowerCase());
         Boolean hasUtmCampaign = String.isNotBlank(fieldConfig.utmCampaignFieldApi) && leadFieldsMap.containsKey(fieldConfig.utmCampaignFieldApi.toLowerCase());
         Boolean hasCustomLeadSource = String.isNotBlank(fieldConfig.customLeadSourceFieldApi) && leadFieldsMap.containsKey(fieldConfig.customLeadSourceFieldApi.toLowerCase());
 
-        if (hasIntegrationSource) leadQuery += ', Integration_Source__c';
+        if (hasIntegrationSource) leadQuery += ', ' + intSourceApiName;
         if (hasProject) leadQuery += ', ' + fieldConfig.projectFieldApi;
         if (hasUtmCampaign) leadQuery += ', ' + fieldConfig.utmCampaignFieldApi;
         if (hasCustomLeadSource) leadQuery += ', ' + fieldConfig.customLeadSourceFieldApi;
@@ -275,7 +282,7 @@ public with sharing class MetaLeadIntelligenceController {
 
         // Filter strictly by Integration_Source__c
         if (hasIntegrationSource) {
-            leadQuery += ' AND Integration_Source__c = \'PurplSync\'';
+            leadQuery += ' AND ' + intSourceApiName + ' = \'PurplSync\'';
         } else {
             leadQuery += ' AND LeadSource = \'PurplSync\'';
         }
@@ -744,13 +751,20 @@ public with sharing class MetaLeadIntelligenceController {
         try {
             // Check if Integration_Source__c exists on Opportunity
             Map<String, Schema.SObjectField> oppFields = Schema.SObjectType.Opportunity.fields.getMap();
-            Boolean hasIntSource = oppFields.containsKey('integration_source__c');
+            
+            String oppIntSourceApi = null;
+            if (oppFields.containsKey('purpl__integration_source__c')) {
+                oppIntSourceApi = 'purpl__Integration_Source__c';
+            } else if (oppFields.containsKey('integration_source__c')) {
+                oppIntSourceApi = 'Integration_Source__c';
+            }
+            Boolean hasIntSource = (oppIntSourceApi != null);
 
             String oppQuery = 'SELECT Id, Name, StageName, Amount, CloseDate, OwnerId, Owner.Name, AccountId, Account.Name';
-            if (hasIntSource) oppQuery += ', Integration_Source__c';
+            if (hasIntSource) oppQuery += ', ' + oppIntSourceApi;
             oppQuery += ' FROM Opportunity WHERE ';
             if (hasIntSource) {
-                oppQuery += 'Integration_Source__c = \'PurplSync\'';
+                oppQuery += oppIntSourceApi + ' = \'PurplSync\'';
             } else {
                 oppQuery += 'LeadSource = \'PurplSync\'';
             }
