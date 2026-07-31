@@ -67,12 +67,16 @@ public without sharing class MetaPageService {
         Map<String, Object> parsed = (Map<String, Object>) JSON.deserializeUntyped(res.getBody());
         List<Object> data = (List<Object>) parsed.get('data');
 
+        Set<String> fetchedPageIds = new Set<String>();
         List<Meta_Page__c> pagesToUpsert = new List<Meta_Page__c>();
         if (data != null) {
             for (Object obj : data) {
                 Map<String, Object> p = (Map<String, Object>) obj;
+                String pageId = (String) p.get('id');
+                fetchedPageIds.add(pageId);
+
                 Meta_Page__c page = new Meta_Page__c();
-                page.Page_ID__c      = (String) p.get('id');
+                page.Page_ID__c      = pageId;
                 page.Page_Name__c    = (String) p.get('name');
                 page.Access_Token__c = (String) p.get('access_token');
                 page.Status__c       = 'Connected';
@@ -84,6 +88,19 @@ public without sharing class MetaPageService {
 
         if (!pagesToUpsert.isEmpty()) {
             upsert pagesToUpsert Page_ID__c;
+        }
+
+        // Deactivate pages that were not returned by Meta (e.g. user switched Facebook accounts)
+        List<Meta_Page__c> activePages = [SELECT Id, Page_ID__c FROM Meta_Page__c WHERE Active__c = true];
+        List<Meta_Page__c> pagesToDeactivate = new List<Meta_Page__c>();
+        for (Meta_Page__c ap : activePages) {
+            if (!fetchedPageIds.contains(ap.Page_ID__c)) {
+                ap.Active__c = false;
+                pagesToDeactivate.add(ap);
+            }
+        }
+        if (!pagesToDeactivate.isEmpty()) {
+            update pagesToDeactivate;
         }
 
         List<Meta_Page__c> records = [SELECT Id, Page_ID__c, Page_Name__c, Status__c, Active__c, Last_Sync__c, Forms_Count__c FROM Meta_Page__c WHERE Active__c = true ORDER BY Page_Name__c];
