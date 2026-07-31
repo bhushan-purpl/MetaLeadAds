@@ -18,6 +18,15 @@ private class MetaAuthControllerTest {
         }
     }
 
+    @testSetup
+    static void setupTestData() {
+        Meta_License_Settings__c license = new Meta_License_Settings__c();
+        license.Status__c = 'Active';
+        license.Expiration_Date__c = Date.today().addDays(365);
+        license.Max_Pages_Allowed__c = 10;
+        insert license;
+    }
+
     @isTest
     static void testGetFacebookLoginUrl() {
         Test.startTest();
@@ -93,10 +102,6 @@ private class MetaAuthControllerTest {
 
     @isTest
     static void testSubscribePage_Success() {
-        Meta_License_Settings__c license = new Meta_License_Settings__c();
-        license.SetupOwnerId = UserInfo.getOrganizationId();
-        license.Max_Pages_Allowed__c = 10;
-        insert license;
 
         Test.setMock(HttpCalloutMock.class, new MetaAuthMock(200, '{"success":true}'));
 
