@@ -144,7 +144,7 @@ public with sharing class MetaAdsAnalyticsController {
         }
 
         // Count actual Leads created with Integration Source
-        Integer convertedToSF = 0;
+        convertedToSF = 0;
         String intSourceApi = null;
         Map<String, Schema.SObjectField> leadFieldsMap = Schema.SObjectType.Lead.fields.getMap();
         if (leadFieldsMap.containsKey('purpl__integration_source__c')) {
@@ -163,7 +163,7 @@ public with sharing class MetaAdsAnalyticsController {
         wrapper.failedLeads = failedLogs;
         wrapper.pendingLeads = pendingLogs;
         if (totalLogs > 0) {
-            wrapper.successRate = (Decimal.valueOf(successLogs) / Decimal.valueOf(totalLogs)) * 100;
+            wrapper.successRate = (Decimal.valueOf(convertedToSF) / Decimal.valueOf(totalLogs)) * 100;
         }
         // Booking ratio = SF Leads converted as % of total Meta leads captured
         if (totalLeads > 0) {
