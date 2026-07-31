@@ -253,10 +253,17 @@ export default class MetaMappingWizard extends LightningElement {
 
     updateDropdownOptions() {
         if (!this.sfFieldOptions || !this.allMappings) return;
+        
+        // Pre-compute taken values to optimize from O(N^2) to O(N)
+        const takenValues = new Set();
+        for (const row of this.allMappings) {
+            if (row.sfField) takenValues.add(row.sfField);
+        }
+
         this.allMappings = this.allMappings.map(row => {
             const availableOptions = this.sfFieldOptions.map(opt => {
                 if (!opt.value) return opt; // keep -- None --
-                const isTaken = this.allMappings.some(otherRow => otherRow.id !== row.id && otherRow.sfField === opt.value);
+                const isTaken = takenValues.has(opt.value) && row.sfField !== opt.value;
                 return {
                     ...opt,
                     disabled: isTaken

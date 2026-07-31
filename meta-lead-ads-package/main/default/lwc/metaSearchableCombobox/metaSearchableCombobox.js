@@ -52,6 +52,23 @@ export default class MetaSearchableCombobox extends LightningElement {
             });
         }
         
+        // Limit to 100 items for immediate rendering, but ensure selected value is present
+        if (filtered.length > 100) {
+            const result = [];
+            const noneOpt = filtered.find(opt => !opt.value);
+            const selectedOpt = this._value ? filtered.find(opt => opt.value === this._value) : null;
+            
+            if (noneOpt) result.push(noneOpt);
+            if (selectedOpt) result.push(selectedOpt);
+            
+            for (let i = 0; i < filtered.length && result.length < 100; i++) {
+                if (filtered[i] !== noneOpt && filtered[i] !== selectedOpt) {
+                    result.push(filtered[i]);
+                }
+            }
+            return result;
+        }
+        
         return filtered;
     }
     
