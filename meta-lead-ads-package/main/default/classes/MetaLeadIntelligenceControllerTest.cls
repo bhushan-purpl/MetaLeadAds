@@ -17,11 +17,19 @@ private class MetaLeadIntelligenceControllerTest {
         Meta_Form__c form = new Meta_Form__c(Form_ID__c = 'FORM-123', Form_Name__c = 'Test Form', Page_ID__c = 'PAGE-123', Page__c = page.Id);
         insert form;
 
-        // Sample Leads
-        List<Lead> leads = new List<Lead>{
-            new Lead(FirstName = 'Amit', LastName = 'Sharma', Email = 'amit@example.com', Phone = '9876543210', Company = 'Acme', Status = 'Working', LeadSource = 'PurplSync'),
-            new Lead(FirstName = 'Rahul', LastName = 'Verma', Email = 'rahul@example.com', Phone = '9876543211', Company = 'Beta', Status = 'Qualified', LeadSource = 'PurplSync')
-        };
+        Lead l1 = new Lead(FirstName = 'Amit', LastName = 'Sharma', Email = 'amit@example.com', Phone = '9876543210', Company = 'Acme', Status = 'Working', LeadSource = 'PurplSync');
+        Lead l2 = new Lead(FirstName = 'Rahul', LastName = 'Verma', Email = 'rahul@example.com', Phone = '9876543211', Company = 'Beta', Status = 'Qualified', LeadSource = 'PurplSync');
+        
+        // Dynamically set Integration_Source__c if present
+        Map<String, Schema.SObjectField> leadFields = Schema.SObjectType.Lead.fields.getMap();
+        String intSourceApi = leadFields.containsKey('purpl__integration_source__c') ? 'purpl__Integration_Source__c' : 
+                              (leadFields.containsKey('integration_source__c') ? 'Integration_Source__c' : null);
+        if (intSourceApi != null) {
+            l1.put(intSourceApi, 'PurplSync');
+            l2.put(intSourceApi, 'PurplSync');
+        }
+
+        List<Lead> leads = new List<Lead>{ l1, l2 };
         insert leads;
 
         // Meta Lead Log
