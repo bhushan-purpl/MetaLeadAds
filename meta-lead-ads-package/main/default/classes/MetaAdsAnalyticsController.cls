@@ -138,9 +138,26 @@ public with sharing class MetaAdsAnalyticsController {
             String st = (String) ar.get('status');
             Integer cnt = (Integer) ar.get('cnt');
             totalLogs += cnt;
-            if (st == 'Success') { successLogs += cnt; convertedToSF += cnt; }
+            if (st == 'Success') { successLogs += cnt; }
             else if (st == 'Failed') { failedLogs += cnt; }
             else { pendingLogs += cnt; }
+        }
+
+        // Count actual Leads created with Integration Source
+        Integer convertedToSF = 0;
+        String intSourceApi = null;
+        Map<String, Schema.SObjectField> leadFieldsMap = Schema.SObjectType.Lead.fields.getMap();
+        if (leadFieldsMap.containsKey('purpl__integration_source__c')) {
+            intSourceApi = 'purpl__Integration_Source__c';
+        } else if (leadFieldsMap.containsKey('integration_source__c')) {
+            intSourceApi = 'Integration_Source__c';
+        }
+
+        if (intSourceApi != null) {
+            String q = 'SELECT COUNT() FROM Lead WHERE ' + intSourceApi + ' != null';
+            convertedToSF = Database.countQuery(q);
+        } else {
+            convertedToSF = successLogs;
         }
         wrapper.convertedLeads = convertedToSF;
         wrapper.failedLeads = failedLogs;
