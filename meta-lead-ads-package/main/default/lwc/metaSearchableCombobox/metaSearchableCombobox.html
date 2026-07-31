@@ -36,8 +36,8 @@
                     <div id="listbox-id-1" class="slds-dropdown slds-dropdown_fluid custom-dropdown" role="listbox">
                         <ul class="slds-listbox slds-listbox_vertical" role="presentation">
                             <template for:each={filteredOptions} for:item="opt">
-                                <li key={opt.value} role="presentation" class="slds-listbox__item" onmousedown={handleSelect} data-value={opt.value}>
-                                    <div class="slds-media slds-listbox__option slds-listbox__option_plain slds-media_small option-row" role="option">
+                                <li key={opt.value} role="presentation" class="slds-listbox__item" onmousedown={handleSelect} data-value={opt.value} data-disabled={opt.disabled}>
+                                    <div class={opt.className} role="option">
                                         <span class="slds-media__figure slds-listbox__option-icon">
                                             <template if:true={opt.selected}>
                                                 <lightning-icon icon-name="utility:check" size="x-small" class="check-icon"></lightning-icon>

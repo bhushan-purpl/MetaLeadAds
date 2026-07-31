@@ -44,6 +44,7 @@ export default class MetaMappingWizard extends LightningElement {
     @track sfFieldOptions   = []; // Initialize to prevent map() crashes
     // Map of rowId → [{label, value}] picklist options for static rows
     @track staticPicklistMap = {};
+    @track takenValuesList = []; // Track taken fields globally
 
     // ─── General ─────────────────────────────────────────────────────
     @track errorMessage     = '';
@@ -252,25 +253,13 @@ export default class MetaMappingWizard extends LightningElement {
     }
 
     updateDropdownOptions() {
-        if (!this.sfFieldOptions || !this.allMappings) return;
+        if (!this.allMappings) return;
         
-        // Pre-compute taken values to optimize from O(N^2) to O(N)
-        const takenValues = new Set();
+        const newTaken = [];
         for (const row of this.allMappings) {
-            if (row.sfField) takenValues.add(row.sfField);
+            if (row.sfField) newTaken.push(row.sfField);
         }
-
-        this.allMappings = this.allMappings.map(row => {
-            const availableOptions = this.sfFieldOptions.map(opt => {
-                if (!opt.value) return opt; // keep -- None --
-                const isTaken = takenValues.has(opt.value) && row.sfField !== opt.value;
-                return {
-                    ...opt,
-                    disabled: isTaken
-                };
-            });
-            return { ...row, options: availableOptions };
-        });
+        this.takenValuesList = newTaken;
     }
 
     handleMappingChange(event) {

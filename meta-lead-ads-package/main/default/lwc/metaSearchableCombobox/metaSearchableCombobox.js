@@ -5,6 +5,7 @@ export default class MetaSearchableCombobox extends LightningElement {
     @api label;
     @api placeholder = 'Select Form...';
     @api disabled = false;
+    @api takenValues = [];
     
     // Internal state
     @track _options = [];
@@ -51,7 +52,7 @@ export default class MetaSearchableCombobox extends LightningElement {
                 return labelMatch || valueMatch;
             });
         }
-        
+        let finalOptions = filtered;
         // Limit to 100 items for immediate rendering, but ensure selected value is present
         if (filtered.length > 100) {
             const result = [];
@@ -66,10 +67,15 @@ export default class MetaSearchableCombobox extends LightningElement {
                     result.push(filtered[i]);
                 }
             }
-            return result;
+            finalOptions = result;
         }
         
-        return filtered;
+        return finalOptions.map(opt => {
+            if (!opt.value) return { ...opt, className: 'slds-media slds-listbox__option slds-listbox__option_plain slds-media_small option-row' };
+            const isTaken = this.takenValues && this.takenValues.includes(opt.value) && this._value !== opt.value;
+            const className = `slds-media slds-listbox__option slds-listbox__option_plain slds-media_small option-row ${isTaken ? 'disabled-option' : ''}`;
+            return { ...opt, disabled: isTaken, className };
+        });
     }
     
     get noOptionsFound() {
@@ -108,6 +114,9 @@ export default class MetaSearchableCombobox extends LightningElement {
     }
     
     handleSelect(event) {
+        const isDisabled = event.currentTarget.dataset.disabled === 'true';
+        if (isDisabled) return;
+        
         const selectedValue = event.currentTarget.dataset.value;
         this._value = selectedValue;
         this.updateDisplayLabel();
