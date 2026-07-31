@@ -22,7 +22,7 @@
 
 .header-content {
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between;
     align-items: center;
 }
 
@@ -91,7 +91,7 @@
 /* KPI Cards Grid */
 .kpi-section-header {
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between;
     align-items: flex-end;
 }
 
@@ -150,7 +150,7 @@
 
 .kpi-card-top {
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between;
     align-items: center;
     margin-bottom: 8px;
 }
@@ -180,7 +180,7 @@
 
 .kpi-card-bottom {
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between;
     align-items: center;
 }
 
@@ -201,7 +201,7 @@
 
 .card-header-bar {
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between;
     align-items: center;
     margin-bottom: 16px;
     padding-bottom: 10px;
