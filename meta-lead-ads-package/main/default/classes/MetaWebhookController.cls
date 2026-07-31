@@ -256,20 +256,26 @@ public with sharing class MetaWebhookController {
         try {
             Map<String, Object> cfg = (Map<String, Object>) JSON.deserializeUntyped(configJson);
 
+            // Dynamically determine namespace
+            String ns = '';
+            if (Schema.getGlobalDescribe().containsKey('purpl__Meta_Integration_Settings__mdt')) {
+                ns = 'purpl__';
+            }
+
             // Use Metadata API to update Custom Metadata record
             Metadata.CustomMetadata mdt = new Metadata.CustomMetadata();
-            mdt.fullName = 'Meta_Integration_Settings__mdt.Default';
+            mdt.fullName = ns + 'Meta_Integration_Settings__mdt.Default';
             mdt.label = 'Default';
 
             Map<String, String> fieldMap = new Map<String, String>{
-                'projectFieldApi'          => 'Project_Field_API__c',
-                'utmSourceFieldApi'        => 'UTM_Source_Field_API__c',
-                'utmCampaignFieldApi'      => 'UTM_Campaign_Field_API__c',
-                'utmMediumFieldApi'        => 'UTM_Medium_Field_API__c',
-                'utmTermFieldApi'          => 'UTM_Term_Field_API__c',
-                'utmContentFieldApi'       => 'UTM_Content_Field_API__c',
-                'customLeadSourceFieldApi' => 'Custom_Lead_Source_Field_API__c',
-                'integrationSourceFieldApi'=> 'Integration_Source_Field_API__c'
+                'projectFieldApi'          => ns + 'Project_Field_API__c',
+                'utmSourceFieldApi'        => ns + 'UTM_Source_Field_API__c',
+                'utmCampaignFieldApi'      => ns + 'UTM_Campaign_Field_API__c',
+                'utmMediumFieldApi'        => ns + 'UTM_Medium_Field_API__c',
+                'utmTermFieldApi'          => ns + 'UTM_Term_Field_API__c',
+                'utmContentFieldApi'       => ns + 'UTM_Content_Field_API__c',
+                'customLeadSourceFieldApi' => ns + 'Custom_Lead_Source_Field_API__c',
+                'integrationSourceFieldApi'=> ns + 'Integration_Source_Field_API__c'
             };
 
             for (String jsKey : fieldMap.keySet()) {
