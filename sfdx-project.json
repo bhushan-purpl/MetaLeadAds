@@ -4,8 +4,8 @@
       "path": "meta-lead-ads-package",
       "default": true,
       "package": "PurplSync",
-      "versionName": "ver 0.12.1",
-      "versionNumber": "0.12.1.NEXT",
+      "versionName": "ver 0.13.0",
+      "versionNumber": "0.13.0.NEXT",
       "versionDescription": "PurplSync for salesforce",
       "ancestorVersion": "HIGHEST"
     }
