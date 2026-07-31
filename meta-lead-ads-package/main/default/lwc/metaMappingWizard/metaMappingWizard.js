@@ -197,6 +197,9 @@ export default class MetaMappingWizard extends LightningElement {
 
     // ─── Load Salesforce Lead field options (for all dropdowns) ──────
     async loadLeadFields() {
+        if (this.sfFieldOptions && this.sfFieldOptions.length > 1) {
+            return; // Already loaded
+        }
         try {
             const fields = await getLeadFields();
             // Build the field type map for picklist detection

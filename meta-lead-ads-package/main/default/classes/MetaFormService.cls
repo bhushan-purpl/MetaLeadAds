@@ -132,7 +132,7 @@ public without sharing class MetaFormService {
         HttpRequest req = new HttpRequest();
         req.setEndpoint(endpoint);
         req.setMethod('GET');
-        req.setTimeout(30000);
+        req.setTimeout(5000);
         HttpResponse res = new Http().send(req);
         if (res.getStatusCode() != 200) throw new AuraHandledException('Failed to fetch questions: ' + res.getBody());
 
