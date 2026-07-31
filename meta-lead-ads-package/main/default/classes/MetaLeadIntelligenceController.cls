@@ -588,15 +588,27 @@ public with sharing class MetaLeadIntelligenceController {
         wrapper.kpiStats = kpis;
         wrapper.kpiList = kpis.values();
 
-        // 4. Build Conversion Funnel
-        wrapper.funnelStages.add(new FunnelStage('Meta Lead Received', totalMetaLeads, 100.0, 0.0));
-        wrapper.funnelStages.add(new FunnelStage('Lead Created', totalMetaLeads - validationFailedCount, ((Decimal)(totalMetaLeads - validationFailedCount)/totalBase)*100, ((Decimal)validationFailedCount/totalBase)*100));
-        wrapper.funnelStages.add(new FunnelStage('Assigned', assignedCount, ((Decimal)assignedCount/totalBase)*100, ((Decimal)(totalMetaLeads - assignedCount)/totalBase)*100));
-        wrapper.funnelStages.add(new FunnelStage('Working', workingCount, ((Decimal)workingCount/totalBase)*100, ((Decimal)(assignedCount - workingCount)/totalBase)*100));
-        wrapper.funnelStages.add(new FunnelStage('Qualified', qualifiedCount, ((Decimal)qualifiedCount/totalBase)*100, ((Decimal)(workingCount - qualifiedCount)/totalBase)*100));
-        wrapper.funnelStages.add(new FunnelStage('Site Visit', siteVisitCount, ((Decimal)siteVisitCount/totalBase)*100, ((Decimal)(qualifiedCount - siteVisitCount)/totalBase)*100));
-        wrapper.funnelStages.add(new FunnelStage('Opportunity Created', oppCreatedCount, ((Decimal)oppCreatedCount/totalBase)*100, ((Decimal)(siteVisitCount - oppCreatedCount)/totalBase)*100));
-        wrapper.funnelStages.add(new FunnelStage('Closed Won', closedWonCount, ((Decimal)closedWonCount/totalBase)*100, ((Decimal)(oppCreatedCount - closedWonCount)/totalBase)*100));
+        // 4. Build Cumulative Conversion Funnel
+        Integer receivedMetaLeads = totalMetaLeads + validationFailedCount;
+        Decimal fBase = receivedMetaLeads > 0 ? (Decimal) receivedMetaLeads : 1;
+        
+        Integer fClosedWon = closedWonCount;
+        Integer fOppCreated = oppCreatedCount; 
+        Integer fSiteVisit = siteVisitCount + fOppCreated;
+        Integer fQualified = qualifiedCount + fSiteVisit;
+        Integer fWorking = workingCount + fQualified;
+        Integer fAssigned = Math.max(assignedCount, fWorking);
+        Integer fCreated = totalMetaLeads;
+        Integer fReceived = receivedMetaLeads;
+
+        wrapper.funnelStages.add(new FunnelStage('Meta Lead Received', fReceived, 100.0, 0.0));
+        wrapper.funnelStages.add(new FunnelStage('Lead Created', fCreated, ((Decimal)fCreated/fBase)*100, ((Decimal)(fReceived - fCreated)/fBase)*100));
+        wrapper.funnelStages.add(new FunnelStage('Assigned', fAssigned, ((Decimal)fAssigned/fBase)*100, ((Decimal)(fCreated - fAssigned)/fBase)*100));
+        wrapper.funnelStages.add(new FunnelStage('Working', fWorking, ((Decimal)fWorking/fBase)*100, ((Decimal)(fAssigned - fWorking)/fBase)*100));
+        wrapper.funnelStages.add(new FunnelStage('Qualified', fQualified, ((Decimal)fQualified/fBase)*100, ((Decimal)(fWorking - fQualified)/fBase)*100));
+        wrapper.funnelStages.add(new FunnelStage('Site Visit', fSiteVisit, ((Decimal)fSiteVisit/fBase)*100, ((Decimal)(fQualified - fSiteVisit)/fBase)*100));
+        wrapper.funnelStages.add(new FunnelStage('Opportunity Created', fOppCreated, ((Decimal)fOppCreated/fBase)*100, ((Decimal)(fSiteVisit - fOppCreated)/fBase)*100));
+        wrapper.funnelStages.add(new FunnelStage('Closed Won', fClosedWon, ((Decimal)fClosedWon/fBase)*100, ((Decimal)(fOppCreated - fClosedWon)/fBase)*100));
 
         // 5. Build Status Distribution for Charts
         String[] colors = new String[]{'#3b82f6', '#f59e0b', '#10b981', '#8b5cf6', '#06b6d4', '#059669', '#ef4444'};
