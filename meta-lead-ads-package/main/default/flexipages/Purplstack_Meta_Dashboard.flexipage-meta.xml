@@ -10,7 +10,7 @@
         <name>main</name>
         <type>Region</type>
     </flexiPageRegions>
-    <masterLabel>Purplstack Meta Dashboard</masterLabel>
+    <masterLabel>PurplSync Meta Dashboard</masterLabel>
     <template>
         <name>flexipage:defaultAppHomeTemplate</name>
     </template>

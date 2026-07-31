@@ -11,12 +11,13 @@
     min-height: 100vh;
 }
 
-/* Header Banner - Deep Indigo & Slate Gradient */
+/* Header Banner - Professional White Theme */
 .dashboard-header {
-    background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%);
+    background: #ffffff;
     border-radius: 16px;
-    color: #ffffff;
-    box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.25);
+    border: 1px solid #e2e8f0;
+    color: #0f172a;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
 }
 
 .header-content {
@@ -33,18 +34,17 @@
 }
 
 .header-icon-box {
-    background: rgba(255, 255, 255, 0.12);
+    background: #f1f5f9;
     padding: 12px;
     border-radius: 14px;
-    backdrop-filter: blur(8px);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    border: 1px solid #e2e8f0;
 }
 
 .dashboard-title {
     font-size: 24px;
     font-weight: 800;
     margin: 0;
-    color: #ffffff;
+    color: #0f172a;
     letter-spacing: -0.4px;
 }
 

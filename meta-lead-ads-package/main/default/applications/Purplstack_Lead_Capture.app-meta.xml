@@ -12,7 +12,7 @@
     <isNavPersonalizationDisabled>false</isNavPersonalizationDisabled>
     <isNavTabPersistenceDisabled>false</isNavTabPersistenceDisabled>
     <isOmniPinnedViewEnabled>false</isOmniPinnedViewEnabled>
-    <label>Purplstack Lead Capture</label>
+    <label>PurplSync Lead Capture</label>
     <navType>Standard</navType>
     <tabs>Purplstack_Lead_Manager</tabs>
     <tabs>Purplstack_Lead_Intelligence</tabs>

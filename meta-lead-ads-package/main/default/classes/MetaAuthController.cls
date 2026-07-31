@@ -401,9 +401,34 @@ public without sharing class MetaAuthController {
     // ─────────────────────────────────────────────────────────────────
     @AuraEnabled
     public static void disconnect() {
+        // Delete tokens
         List<Meta_Auth_Token__c> tokens = [SELECT Id FROM Meta_Auth_Token__c LIMIT 1];
         if (!tokens.isEmpty()) {
             delete tokens;
+        }
+
+        // Delete page subscriptions so old pages don't show when reconnecting a different account
+        List<Meta_Page_Subscription__c> subscriptions = [SELECT Id FROM Meta_Page_Subscription__c LIMIT 100];
+        if (!subscriptions.isEmpty()) {
+            delete subscriptions;
+        }
+
+        // Delete Module 3 pages
+        List<Meta_Page__c> pages = [SELECT Id FROM Meta_Page__c LIMIT 100];
+        if (!pages.isEmpty()) {
+            delete pages;
+        }
+        
+        // Delete forms so old forms don't show
+        List<Meta_Form__c> forms = [SELECT Id FROM Meta_Form__c LIMIT 1000];
+        if (!forms.isEmpty()) {
+            delete forms;
+        }
+
+        // Delete field mappings
+        List<Meta_Field_Mapping__c> mappings = [SELECT Id FROM Meta_Field_Mapping__c LIMIT 1000];
+        if (!mappings.isEmpty()) {
+            delete mappings;
         }
     }
 

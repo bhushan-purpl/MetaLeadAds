@@ -10,7 +10,7 @@
         <name>main</name>
         <type>Region</type>
     </flexiPageRegions>
-    <masterLabel>Purplstack License Manager</masterLabel>
+    <masterLabel>PurplSync License Manager</masterLabel>
     <template>
         <name>flexipage:defaultAppHomeTemplate</name>
     </template>

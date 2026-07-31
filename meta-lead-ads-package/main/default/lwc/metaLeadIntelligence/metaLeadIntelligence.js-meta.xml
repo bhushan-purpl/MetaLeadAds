@@ -3,7 +3,7 @@
     <apiVersion>64.0</apiVersion>
     <isExposed>true</isExposed>
     <masterLabel>Lead Intelligence Dashboard</masterLabel>
-    <description>Executive Lead Intelligence Dashboard for Purplstack Meta Lead Ads Manager</description>
+    <description>Executive Lead Intelligence Dashboard for PurplSync Meta Lead Ads Manager</description>
     <targets>
         <target>lightning__AppPage</target>
         <target>lightning__HomePage</target>

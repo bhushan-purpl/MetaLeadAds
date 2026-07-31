@@ -1,0 +1,233 @@
+<template>
+    <div class="ads-analytics-container">
+        
+        <!-- Header Banner -->
+        <div class="dashboard-header slds-p-around_medium slds-m-bottom_medium">
+            <div class="header-content">
+                <div class="title-group">
+                    <div class="header-icon-box">
+                        <lightning-icon icon-name="standard:marketing_actions" size="medium"></lightning-icon>
+                    </div>
+                    <div class="title-text">
+                        <h1 class="dashboard-title">Meta Ads Analytics</h1>
+                        <p class="dashboard-subtitle">Monitor your campaign performance and ad spend</p>
+                    </div>
+                </div>
+                <div class="header-actions">
+                    <lightning-button 
+                        label="Test API Connection" 
+                        icon-name="utility:check" 
+                        variant="neutral"
+                        onclick={handleTestConnection}
+                        class="slds-m-right_x-small">
+                    </lightning-button>
+                    <lightning-button-icon 
+                        icon-name="utility:refresh" 
+                        variant="border-filled" 
+                        alternative-text="Refresh" 
+                        title="Refresh Analytics"
+                        onclick={handleRefresh}>
+                    </lightning-button-icon>
+                </div>
+            </div>
+        </div>
+
+        <template if:true={isLoading}>
+            <lightning-spinner alternative-text="Loading Ads Analytics..." size="large"></lightning-spinner>
+        </template>
+
+        <!-- Configuration Bar -->
+        <div class="config-card slds-p-around_medium slds-m-bottom_medium">
+            <div class="config-grid">
+                <div class="config-item">
+                    <lightning-combobox
+                        name="adAccount"
+                        label="Selected Ad Account"
+                        value={selectedAdAccount}
+                        options={adAccountOptions}
+                        onchange={handleAdAccountChange}>
+                    </lightning-combobox>
+                </div>
+
+                <div class="config-item">
+                    <lightning-combobox
+                        name="syncFreq"
+                        label="Automatic Sync Frequency"
+                        value={selectedSyncFreq}
+                        options={syncFreqOptions}
+                        onchange={handleFreqChange}>
+                    </lightning-combobox>
+                </div>
+
+                <div class="config-item config-btns">
+                    <lightning-button 
+                        label="Sync Campaigns" 
+                        icon-name="utility:sync" 
+                        variant="brand-outline"
+                        onclick={handleSyncCampaigns}
+                        class="slds-m-right_x-small">
+                    </lightning-button>
+                    <lightning-button 
+                        label="Sync Insights (30 Days)" 
+                        icon-name="utility:download" 
+                        variant="brand"
+                        onclick={handleSyncInsights}>
+                    </lightning-button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 10 KPI Cards Section -->
+        <div class="kpi-section-header slds-m-bottom_x-small">
+            <h2 class="section-title">Key Marketing Performance Indicators</h2>
+            <span class="section-subtitle">Real-time Marketing API Performance Aggregations</span>
+        </div>
+
+        <div class="kpi-grid slds-m-bottom_medium">
+            
+            <!-- Total Spend -->
+            <div class="kpi-card kpi-brand">
+                <div class="kpi-card-top">
+                    <span class="kpi-title">TOTAL SPEND</span>
+                    <span class="kpi-icon-badge"><lightning-icon icon-name="utility:money" size="x-small"></lightning-icon></span>
+                </div>
+                <div class="kpi-value">${metrics.totalSpend}</div>
+                <div class="kpi-card-bottom"><span class="kpi-percentage">Lifetime Spend</span></div>
+            </div>
+
+            <!-- Today's Spend -->
+            <div class="kpi-card kpi-info">
+                <div class="kpi-card-top">
+                    <span class="kpi-title">TODAY'S SPEND</span>
+                    <span class="kpi-icon-badge"><lightning-icon icon-name="utility:clock" size="x-small"></lightning-icon></span>
+                </div>
+                <div class="kpi-value">${metrics.todaySpend}</div>
+                <div class="kpi-card-bottom"><span class="kpi-percentage">Last 24 Hours</span></div>
+            </div>
+
+            <!-- Yesterday's Spend -->
+            <div class="kpi-card kpi-info">
+                <div class="kpi-card-top">
+                    <span class="kpi-title">YESTERDAY SPEND</span>
+                    <span class="kpi-icon-badge"><lightning-icon icon-name="utility:event" size="x-small"></lightning-icon></span>
+                </div>
+                <div class="kpi-value">${metrics.yesterdaySpend}</div>
+                <div class="kpi-card-bottom"><span class="kpi-percentage">Previous Day</span></div>
+            </div>
+
+            <!-- Total Leads -->
+            <div class="kpi-card kpi-success">
+                <div class="kpi-card-top">
+                    <span class="kpi-title">LEADS GENERATED</span>
+                    <span class="kpi-icon-badge"><lightning-icon icon-name="utility:lead" size="x-small"></lightning-icon></span>
+                </div>
+                <div class="kpi-value">{metrics.totalLeads}</div>
+                <div class="kpi-card-bottom"><span class="kpi-percentage">Captured Leads</span></div>
+            </div>
+
+            <!-- CPL -->
+            <div class="kpi-card kpi-success">
+                <div class="kpi-card-top">
+                    <span class="kpi-title">AVG CPL</span>
+                    <span class="kpi-icon-badge"><lightning-icon icon-name="utility:calculator" size="x-small"></lightning-icon></span>
+                </div>
+                <div class="kpi-value">${metrics.avgCpl}</div>
+                <div class="kpi-card-bottom"><span class="kpi-percentage">Cost Per Lead</span></div>
+            </div>
+
+            <!-- CTR -->
+            <div class="kpi-card kpi-warning">
+                <div class="kpi-card-top">
+                    <span class="kpi-title">CLICK-THROUGH RATE</span>
+                    <span class="kpi-icon-badge"><lightning-icon icon-name="utility:touch_action" size="x-small"></lightning-icon></span>
+                </div>
+                <div class="kpi-value">{metrics.avgCtr}%</div>
+                <div class="kpi-card-bottom"><span class="kpi-percentage">Avg CTR</span></div>
+            </div>
+
+            <!-- CPC -->
+            <div class="kpi-card kpi-warning">
+                <div class="kpi-card-top">
+                    <span class="kpi-title">AVG CPC</span>
+                    <span class="kpi-icon-badge"><lightning-icon icon-name="utility:cursor" size="x-small"></lightning-icon></span>
+                </div>
+                <div class="kpi-value">${metrics.avgCpc}</div>
+                <div class="kpi-card-bottom"><span class="kpi-percentage">Cost Per Click</span></div>
+            </div>
+
+            <!-- CPM -->
+            <div class="kpi-card kpi-brand">
+                <div class="kpi-card-top">
+                    <span class="kpi-title">AVG CPM</span>
+                    <span class="kpi-icon-badge"><lightning-icon icon-name="utility:preview" size="x-small"></lightning-icon></span>
+                </div>
+                <div class="kpi-value">${metrics.avgCpm}</div>
+                <div class="kpi-card-bottom"><span class="kpi-percentage">Cost Per 1K Impr.</span></div>
+            </div>
+
+            <!-- Total Impressions -->
+            <div class="kpi-card kpi-info">
+                <div class="kpi-card-top">
+                    <span class="kpi-title">IMPRESSIONS</span>
+                    <span class="kpi-icon-badge"><lightning-icon icon-name="utility:chart" size="x-small"></lightning-icon></span>
+                </div>
+                <div class="kpi-value">{metrics.totalImpressions}</div>
+                <div class="kpi-card-bottom"><span class="kpi-percentage">Ad Impressions</span></div>
+            </div>
+
+            <!-- Total Clicks -->
+            <div class="kpi-card kpi-info">
+                <div class="kpi-card-top">
+                    <span class="kpi-title">TOTAL CLICKS</span>
+                    <span class="kpi-icon-badge"><lightning-icon icon-name="utility:magicwand" size="x-small"></lightning-icon></span>
+                </div>
+                <div class="kpi-value">{metrics.totalClicks}</div>
+                <div class="kpi-card-bottom"><span class="kpi-percentage">Total Clicks</span></div>
+            </div>
+
+        </div>
+
+        <!-- Campaign Performance Data Table -->
+        <div class="analytics-card slds-m-bottom_medium">
+            <div class="card-header-bar">
+                <div class="card-header-title">
+                    <lightning-icon icon-name="utility:table" size="small" class="slds-m-right_x-small"></lightning-icon>
+                    Campaign Analytics Performance
+                </div>
+                <span class="card-badge">Meta Marketing API</span>
+            </div>
+            
+            <div class="table-scroll-wrapper">
+                <table class="styled-table">
+                    <thead>
+                        <tr>
+                            <th>Campaign Name</th>
+                            <th class="slds-text-align_right">Spend</th>
+                            <th class="slds-text-align_right">Leads</th>
+                            <th class="slds-text-align_right">CPL</th>
+                            <th class="slds-text-align_right">Clicks</th>
+                            <th class="slds-text-align_right">CTR (%)</th>
+                            <th class="slds-text-align_right">CPC</th>
+                            <th class="slds-text-align_right">Impressions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template for:each={metrics.campaigns} for:item="row">
+                            <tr key={row.Id}>
+                                <td><strong>{row.Campaign_Name__c}</strong></td>
+                                <td class="slds-text-align_right">${row.Spend__c}</td>
+                                <td class="slds-text-align_right">{row.Leads__c}</td>
+                                <td class="slds-text-align_right"><span class="badge-rate">${row.CPL__c}</span></td>
+                                <td class="slds-text-align_right">{row.Clicks__c}</td>
+                                <td class="slds-text-align_right">{row.CTR__c}%</td>
+                                <td class="slds-text-align_right">${row.CPC__c}</td>
+                                <td class="slds-text-align_right">{row.Impressions__c}</td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</template>

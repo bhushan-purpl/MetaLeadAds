@@ -65,7 +65,7 @@
         <enabled>true</enabled>
     </classAccesses>
     <hasActivationRequired>false</hasActivationRequired>
-    <label>Purplstack Meta Lead Ads Admin</label>
+    <label>PurplSync Meta Lead Ads Admin</label>
     <fieldPermissions>
         <editable>true</editable>
         <field>Lead.Integration_Source__c</field>

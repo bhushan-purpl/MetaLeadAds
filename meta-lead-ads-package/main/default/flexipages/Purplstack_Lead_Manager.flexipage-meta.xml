@@ -14,7 +14,7 @@
         <name>main</name>
         <type>Region</type>
     </flexiPageRegions>
-    <masterLabel>Purplstack Lead Manager</masterLabel>
+    <masterLabel>PurplSync Lead Manager</masterLabel>
     <template>
         <name>flexipage:defaultAppHomeTemplate</name>
     </template>
