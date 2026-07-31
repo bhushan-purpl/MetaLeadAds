@@ -180,6 +180,31 @@ public with sharing class MetaLeadIntelligenceController {
         @AuraEnabled public FilterOptions filterOptions = new FilterOptions();
     }
 
+    // ── Opportunity Tracking Wrapper ──
+    public class OppTrackingWrapper {
+        @AuraEnabled public Integer totalOpportunities = 0;
+        @AuraEnabled public Decimal totalPipelineValue = 0;
+        @AuraEnabled public Decimal closedWonAmount = 0;
+        @AuraEnabled public Integer closedWonCount = 0;
+        @AuraEnabled public Integer closedLostCount = 0;
+        @AuraEnabled public Integer openCount = 0;
+        @AuraEnabled public Decimal conversionRate = 0;  // % of opps that are Closed Won
+        @AuraEnabled public List<Map<String, Object>> stageBreakdown = new List<Map<String, Object>>();
+        @AuraEnabled public List<OppRow> recentOpportunities = new List<OppRow>();
+    }
+
+    public class OppRow {
+        @AuraEnabled public String id;
+        @AuraEnabled public String name;
+        @AuraEnabled public String stageName;
+        @AuraEnabled public String accountName;
+        @AuraEnabled public Decimal amount;
+        @AuraEnabled public String closeDate;
+        @AuraEnabled public String ownerName;
+        @AuraEnabled public String integrationSource;
+        @AuraEnabled public String leadName;
+    }
+
     // ── Main Dashboard Data Endpoint ──
     @AuraEnabled(cacheable=true)
     public static DashboardDataWrapper getDashboardData(String filterJson) {
@@ -719,6 +744,124 @@ public with sharing class MetaLeadIntelligenceController {
         }
 
         return timeline;
+    }
+
+    // ── Opportunity Tracking from Meta Lead Source ──
+    @AuraEnabled(cacheable=true)
+    public static OppTrackingWrapper getOpportunityTracking() {
+        OppTrackingWrapper wrapper = new OppTrackingWrapper();
+        try {
+            // Check if Integration_Source__c exists on Opportunity
+            Map<String, Schema.SObjectField> oppFields = Schema.SObjectType.Opportunity.fields.getMap();
+            Boolean hasIntSource = oppFields.containsKey('integration_source__c');
+
+            String oppQuery = 'SELECT Id, Name, StageName, Amount, CloseDate, OwnerId, Owner.Name, AccountId, Account.Name';
+            if (hasIntSource) oppQuery += ', Integration_Source__c';
+            oppQuery += ' FROM Opportunity WHERE (';
+            if (hasIntSource) {
+                oppQuery += 'Integration_Source__c = \'Meta Lead Ads\' OR ';
+            }
+            oppQuery += 'LeadSource = \'Meta Lead Ads\') ORDER BY CreatedDate DESC LIMIT 500';
+
+            List<Opportunity> opps = Database.query(oppQuery);
+
+            // Also get Opportunities from converted Meta Leads
+            Set<Id> convertedOppIds = new Set<Id>();
+            for (Lead l : [
+                SELECT ConvertedOpportunityId FROM Lead
+                WHERE IsConverted = true AND (LeadSource = 'Meta Lead Ads' OR Integration_Source__c = 'Meta Lead Ads')
+                AND ConvertedOpportunityId != null
+            ]) {
+                convertedOppIds.add(l.ConvertedOpportunityId);
+            }
+
+            // Merge both sets
+            Set<Id> allOppIds = new Set<Id>();
+            Map<Id, Opportunity> oppMap = new Map<Id, Opportunity>();
+            for (Opportunity o : opps) {
+                allOppIds.add(o.Id);
+                oppMap.put(o.Id, o);
+            }
+
+            // Fetch additional converted opps not already in list
+            if (!convertedOppIds.isEmpty()) {
+                Set<Id> missingIds = new Set<Id>();
+                for (Id cid : convertedOppIds) {
+                    if (!allOppIds.contains(cid)) missingIds.add(cid);
+                }
+                if (!missingIds.isEmpty()) {
+                    for (Opportunity o : [SELECT Id, Name, StageName, Amount, CloseDate, OwnerId, Owner.Name, AccountId, Account.Name FROM Opportunity WHERE Id IN :missingIds]) {
+                        oppMap.put(o.Id, o);
+                    }
+                }
+            }
+
+            // Map Lead names to Opp IDs for converted leads
+            Map<Id, String> oppIdToLeadName = new Map<Id, String>();
+            for (Lead l : [
+                SELECT Name, ConvertedOpportunityId FROM Lead
+                WHERE ConvertedOpportunityId IN :oppMap.keySet()
+            ]) {
+                oppIdToLeadName.put(l.ConvertedOpportunityId, l.Name);
+            }
+
+            // Build stage breakdown map
+            Map<String, Integer> stageCounts = new Map<String, Integer>();
+            Map<String, Decimal> stageAmounts = new Map<String, Decimal>();
+            String[] stageColors = new String[]{'#3b82f6','#8b5cf6','#f59e0b','#10b981','#ef4444','#06b6d4','#ec4899'};
+            Integer scIdx = 0;
+
+            wrapper.totalOpportunities = oppMap.size();
+            for (Opportunity o : oppMap.values()) {
+                Decimal amt = o.Amount != null ? o.Amount : 0;
+                wrapper.totalPipelineValue += amt;
+
+                String stage = o.StageName != null ? o.StageName : 'Unknown';
+                stageCounts.put(stage, stageCounts.containsKey(stage) ? stageCounts.get(stage) + 1 : 1);
+                stageAmounts.put(stage, (stageAmounts.containsKey(stage) ? stageAmounts.get(stage) : 0) + amt);
+
+                if (stage.containsIgnoreCase('Closed Won') || stage.containsIgnoreCase('Won')) {
+                    wrapper.closedWonCount++;
+                    wrapper.closedWonAmount += amt;
+                } else if (stage.containsIgnoreCase('Closed Lost') || stage.containsIgnoreCase('Lost')) {
+                    wrapper.closedLostCount++;
+                } else {
+                    wrapper.openCount++;
+                }
+
+                if (wrapper.recentOpportunities.size() < 20) {
+                    OppRow r = new OppRow();
+                    r.id = o.Id;
+                    r.name = o.Name;
+                    r.stageName = stage;
+                    r.accountName = o.Account != null ? o.Account.Name : '';
+                    r.amount = amt;
+                    r.closeDate = o.CloseDate != null ? o.CloseDate.format() : '';
+                    r.ownerName = o.Owner != null ? o.Owner.Name : '';
+                    r.integrationSource = 'Meta Lead Ads';
+                    r.leadName = oppIdToLeadName.containsKey(o.Id) ? oppIdToLeadName.get(o.Id) : '';
+                    wrapper.recentOpportunities.add(r);
+                }
+            }
+
+            // Build stage breakdown list
+            for (String stage : stageCounts.keySet()) {
+                Map<String, Object> sb = new Map<String, Object>();
+                sb.put('stage', stage);
+                sb.put('count', stageCounts.get(stage));
+                sb.put('amount', stageAmounts.get(stage));
+                sb.put('color', stageColors[Math.mod(scIdx, stageColors.size())]);
+                wrapper.stageBreakdown.add(sb);
+                scIdx++;
+            }
+
+            if (wrapper.totalOpportunities > 0) {
+                wrapper.conversionRate = ((Decimal)wrapper.closedWonCount / (Decimal)wrapper.totalOpportunities * 100).setScale(1);
+            }
+        } catch (Exception e) {
+            System.debug('getOpportunityTracking error: ' + e.getMessage());
+        }
+        return wrapper;
     }
 
     // ── Export Filtered Leads to CSV ──

@@ -4,6 +4,7 @@ import { refreshApex } from '@salesforce/apex';
 import getDashboardData from '@salesforce/apex/MetaLeadIntelligenceController.getDashboardData';
 import getLeadTimeline from '@salesforce/apex/MetaLeadIntelligenceController.getLeadTimeline';
 import exportLeadsCsv from '@salesforce/apex/MetaLeadIntelligenceController.exportLeadsCsv';
+import getOpportunityTracking from '@salesforce/apex/MetaLeadIntelligenceController.getOpportunityTracking';
 
 export default class MetaLeadIntelligence extends LightningElement {
 
@@ -36,6 +37,30 @@ export default class MetaLeadIntelligence extends LightningElement {
     @track allLeads = [];
     @track validationFailures = [];
     @track webhookHealth = {};
+
+    // Opportunity Tracking
+    @track oppTracking = {
+        totalOpportunities: 0,
+        totalPipelineValue: 0,
+        closedWonAmount: 0,
+        closedWonCount: 0,
+        closedLostCount: 0,
+        openCount: 0,
+        conversionRate: 0,
+        stageBreakdown: [],
+        recentOpportunities: []
+    };
+
+    @wire(getOpportunityTracking)
+    wiredOppTracking({ data, error }) {
+        if (data) {
+            this.oppTracking = {
+                ...data,
+                totalPipelineValue: data.totalPipelineValue ? Number(data.totalPipelineValue).toLocaleString('en-IN', { maximumFractionDigits: 0 }) : '0',
+                closedWonAmount: data.closedWonAmount ? Number(data.closedWonAmount).toLocaleString('en-IN', { maximumFractionDigits: 0 }) : '0'
+            };
+        }
+    }
 
     // Options
     @track projectOptions = [{ label: 'All Projects', value: '' }];

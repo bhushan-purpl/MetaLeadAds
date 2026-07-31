@@ -151,6 +151,130 @@
             </template>
         </div>
 
+        <!-- ── Opportunity Tracking Section ── -->
+        <div class="opp-section-header slds-m-bottom_x-small slds-m-top_medium">
+            <h2 class="section-title">Opportunity Tracking</h2>
+            <span class="section-subtitle">Meta Lead Ads → Salesforce Opportunity Pipeline</span>
+        </div>
+
+        <!-- Opportunity KPI Row -->
+        <div class="opp-kpi-row slds-m-bottom_medium">
+            <div class="opp-kpi-card opp-blue">
+                <div class="opp-kpi-icon"><lightning-icon icon-name="utility:opportunity" size="small"></lightning-icon></div>
+                <div class="opp-kpi-body">
+                    <div class="opp-kpi-label">TOTAL OPPORTUNITIES</div>
+                    <div class="opp-kpi-value">{oppTracking.totalOpportunities}</div>
+                    <div class="opp-kpi-sub">From Meta Lead Ads</div>
+                </div>
+            </div>
+            <div class="opp-kpi-card opp-purple">
+                <div class="opp-kpi-icon"><lightning-icon icon-name="utility:moneybag" size="small"></lightning-icon></div>
+                <div class="opp-kpi-body">
+                    <div class="opp-kpi-label">TOTAL PIPELINE</div>
+                    <div class="opp-kpi-value">₹{oppTracking.totalPipelineValue}</div>
+                    <div class="opp-kpi-sub">Opportunity Amount</div>
+                </div>
+            </div>
+            <div class="opp-kpi-card opp-green">
+                <div class="opp-kpi-icon"><lightning-icon icon-name="utility:check" size="small"></lightning-icon></div>
+                <div class="opp-kpi-body">
+                    <div class="opp-kpi-label">CLOSED WON</div>
+                    <div class="opp-kpi-value">{oppTracking.closedWonCount}</div>
+                    <div class="opp-kpi-sub">₹{oppTracking.closedWonAmount}</div>
+                </div>
+            </div>
+            <div class="opp-kpi-card opp-red">
+                <div class="opp-kpi-icon"><lightning-icon icon-name="utility:close" size="small"></lightning-icon></div>
+                <div class="opp-kpi-body">
+                    <div class="opp-kpi-label">CLOSED LOST</div>
+                    <div class="opp-kpi-value">{oppTracking.closedLostCount}</div>
+                    <div class="opp-kpi-sub">Lost Opportunities</div>
+                </div>
+            </div>
+            <div class="opp-kpi-card opp-orange">
+                <div class="opp-kpi-icon"><lightning-icon icon-name="utility:chart" size="small"></lightning-icon></div>
+                <div class="opp-kpi-body">
+                    <div class="opp-kpi-label">WIN RATE</div>
+                    <div class="opp-kpi-value">{oppTracking.conversionRate}%</div>
+                    <div class="opp-kpi-sub">Closed Won / Total</div>
+                </div>
+            </div>
+            <div class="opp-kpi-card opp-teal">
+                <div class="opp-kpi-icon"><lightning-icon icon-name="utility:open_folder" size="small"></lightning-icon></div>
+                <div class="opp-kpi-body">
+                    <div class="opp-kpi-label">OPEN PIPELINE</div>
+                    <div class="opp-kpi-value">{oppTracking.openCount}</div>
+                    <div class="opp-kpi-sub">Active Opportunities</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Opportunity Stage Breakdown + Recent Conversions Row -->
+        <div class="opp-detail-row slds-m-bottom_medium">
+
+            <!-- Stage Breakdown -->
+            <div class="analytics-card opp-stage-card">
+                <div class="card-header-bar">
+                    <div class="card-header-title">
+                        <lightning-icon icon-name="utility:opportunity" size="small" class="slds-m-right_x-small"></lightning-icon>
+                        Opportunity Stage Breakdown
+                    </div>
+                    <span class="card-badge">Meta Source</span>
+                </div>
+                <template if:true={oppTracking.stageBreakdown}>
+                    <template for:each={oppTracking.stageBreakdown} for:item="sb">
+                        <div key={sb.stage} class="stage-bar-row">
+                            <div class="stage-bar-label">{sb.stage}</div>
+                            <div class="stage-bar-count-pill" style="background:{sb.color}20;color:{sb.color};border:1px solid {sb.color}40">{sb.count}</div>
+                        </div>
+                    </template>
+                    <template if:false={oppTracking.stageBreakdown.length}>
+                        <p class="empty-state-text">No opportunities yet from Meta Lead Ads.</p>
+                    </template>
+                </template>
+            </div>
+
+            <!-- Recent Converted Opportunities -->
+            <div class="analytics-card opp-recent-card">
+                <div class="card-header-bar">
+                    <div class="card-header-title">
+                        <lightning-icon icon-name="utility:lead" size="small" class="slds-m-right_x-small"></lightning-icon>
+                        Recent Lead → Opportunity Conversions
+                    </div>
+                    <span class="card-badge">Last 20</span>
+                </div>
+                <div class="table-scroll-wrapper">
+                    <table class="opp-table">
+                        <thead>
+                            <tr>
+                                <th>Opportunity</th>
+                                <th>Lead Name</th>
+                                <th>Stage</th>
+                                <th>Amount</th>
+                                <th>Owner</th>
+                                <th>Close Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template for:each={oppTracking.recentOpportunities} for:item="opp">
+                                <tr key={opp.id}>
+                                    <td><strong>{opp.name}</strong></td>
+                                    <td>{opp.leadName}</td>
+                                    <td><span class="opp-stage-badge">{opp.stageName}</span></td>
+                                    <td>₹{opp.amount}</td>
+                                    <td>{opp.ownerName}</td>
+                                    <td>{opp.closeDate}</td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                    <template if:false={oppTracking.recentOpportunities.length}>
+                        <p class="empty-state-text slds-p-around_medium">No converted opportunities found from Meta Lead Ads.</p>
+                    </template>
+                </div>
+            </div>
+        </div>
+
         <!-- Conversion Funnel & Status Distribution Row -->
         <div class="analytics-row slds-m-bottom_medium">
             

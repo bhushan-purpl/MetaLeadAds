@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Integration_Source__c</fullName>
+    <description>Identifies the integration source that generated this Opportunity (e.g. Meta Lead Ads, Google Ads, WhatsApp, Website). Auto-populated when a Meta Lead is converted.</description>
+    <externalId>false</externalId>
+    <label>Integration Source</label>
+    <length>100</length>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>
