@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomTab xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Setup webhook and field configuration</description>
+    <lwcComponent>metaWebhookSetup</lwcComponent>
+    <label>Meta Webhook Setup</label>
+    <motif>Custom53: Bell</motif>
+</CustomTab>

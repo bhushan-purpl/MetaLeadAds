@@ -63,31 +63,31 @@ export default class MetaAdsAnalytics extends LightningElement {
 
     processMetrics(data) {
         this.metrics = {
-            totalSpend: (data.totalSpend || 0).toFixed(2),
-            todaySpend: (data.todaySpend || 0).toFixed(2),
-            yesterdaySpend: (data.yesterdaySpend || 0).toFixed(2),
-            thisWeekSpend: (data.thisWeekSpend || 0).toFixed(2),
-            thisMonthSpend: (data.thisMonthSpend || 0).toFixed(2),
+            totalSpend: Number(data.totalSpend || 0).toFixed(2),
+            todaySpend: Number(data.todaySpend || 0).toFixed(2),
+            yesterdaySpend: Number(data.yesterdaySpend || 0).toFixed(2),
+            thisWeekSpend: Number(data.thisWeekSpend || 0).toFixed(2),
+            thisMonthSpend: Number(data.thisMonthSpend || 0).toFixed(2),
             totalLeads: data.totalLeads || 0,
             totalClicks: data.totalClicks || 0,
             totalImpressions: data.totalImpressions || 0,
             totalReach: data.totalReach || 0,
-            avgCtr: (data.avgCtr || 0).toFixed(2),
-            avgCpc: (data.avgCpc || 0).toFixed(2),
-            avgCpm: (data.avgCpm || 0).toFixed(2),
-            avgCpl: (data.avgCpl || 0).toFixed(2),
-            conversionRate: (data.conversionRate || 0).toFixed(2),
+            avgCtr: Number(data.avgCtr || 0).toFixed(2),
+            avgCpc: Number(data.avgCpc || 0).toFixed(2),
+            avgCpm: Number(data.avgCpm || 0).toFixed(2),
+            avgCpl: Number(data.avgCpl || 0).toFixed(2),
+            conversionRate: Number(data.conversionRate || 0).toFixed(2),
             convertedLeads: data.convertedLeads || 0,
             failedLeads: data.failedLeads || 0,
             pendingLeads: data.pendingLeads || 0,
-            successRate: (data.successRate || 0).toFixed(2),
-            bookingRatio: (data.bookingRatio || 0).toFixed(2),
+            successRate: Number(data.successRate || 0).toFixed(2),
+            bookingRatio: Number(data.bookingRatio || 0).toFixed(2),
             campaigns: (data.campaigns || []).map(c => ({
                 ...c,
-                Spend__c: (c.Spend__c || 0).toFixed(2),
-                CPL__c: (c.CPL__c || 0).toFixed(2),
-                CPC__c: (c.CPC__c || 0).toFixed(2),
-                CTR__c: (c.CTR__c || 0).toFixed(2)
+                Spend__c: Number(c.Spend__c || 0).toFixed(2),
+                CPL__c: Number(c.CPL__c || 0).toFixed(2),
+                CPC__c: Number(c.CPC__c || 0).toFixed(2),
+                CTR__c: Number(c.CTR__c || 0).toFixed(2)
             }))
         };
     }
