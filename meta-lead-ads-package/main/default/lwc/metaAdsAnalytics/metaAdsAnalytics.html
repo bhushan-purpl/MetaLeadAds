@@ -1,6 +1,34 @@
 <template>
     <div class="ads-analytics-container">
         
+        <!-- Header Banner -->
+        <div class="dashboard-header slds-p-around_medium slds-m-bottom_medium">
+            <div class="header-content">
+                <div class="title-group">
+                    <div class="header-icon-box">
+                        <lightning-icon icon-name="standard:marketing_actions" size="medium"></lightning-icon>
+                    </div>
+                    <div class="title-text">
+                    </div>
+                </div>
+                <div class="header-actions">
+                    <lightning-button 
+                        label="Test API Connection" 
+                        icon-name="utility:check" 
+                        variant="neutral"
+                        onclick={handleTestConnection}
+                        class="slds-m-right_x-small">
+                    </lightning-button>
+                    <lightning-button-icon 
+                        icon-name="utility:refresh" 
+                        variant="border-filled" 
+                        alternative-text="Refresh" 
+                        title="Refresh Analytics"
+                        onclick={handleRefresh}>
+                    </lightning-button-icon>
+                </div>
+            </div>
+        </div>
 
         <template if:true={isLoading}>
             <lightning-spinner alternative-text="Loading Ads Analytics..." size="large"></lightning-spinner>
