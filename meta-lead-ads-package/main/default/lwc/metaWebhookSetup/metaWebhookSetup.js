@@ -4,6 +4,8 @@ import getConfig from '@salesforce/apex/MetaWebhookController.getConfig';
 import checkSubscriptionStatus from '@salesforce/apex/MetaWebhookController.checkSubscriptionStatus';
 import subscribeWebhook from '@salesforce/apex/MetaWebhookController.subscribeWebhook';
 import unsubscribeWebhook from '@salesforce/apex/MetaWebhookController.unsubscribeWebhook';
+import getFieldConfig from '@salesforce/apex/MetaWebhookController.getFieldConfig';
+import saveFieldConfig from '@salesforce/apex/MetaWebhookController.saveFieldConfig';
 
 export default class MetaWebhookSetup extends LightningElement {
 
@@ -15,6 +17,18 @@ export default class MetaWebhookSetup extends LightningElement {
     @track pageId        = '';
     @track hasToken      = false;
     @track tokenPreview  = '';
+
+    // Field Config
+    @track fieldConfig = {
+        projectFieldApi: '',
+        utmSourceFieldApi: '',
+        utmCampaignFieldApi: '',
+        utmMediumFieldApi: '',
+        utmTermFieldApi: '',
+        utmContentFieldApi: '',
+        customLeadSourceFieldApi: ''
+    };
+    @track isSavingFieldConfig = false;
 
     // UI State
     @track isLoading      = false;
@@ -42,6 +56,11 @@ export default class MetaWebhookSetup extends LightningElement {
             this.pageId       = config.pageId       || '';
             this.hasToken     = config.hasToken === 'true';
             this.tokenPreview = config.tokenPreview || 'Not Configured';
+
+            const fieldCfg = await getFieldConfig();
+            if (fieldCfg) {
+                this.fieldConfig = { ...fieldCfg };
+            }
 
             // Auto-check status if we already have a page ID
             if (this.pageId) {
@@ -155,6 +174,28 @@ export default class MetaWebhookSetup extends LightningElement {
             const fields = app.subscribed_fields || [];
             return fields.includes('leadgen');
         });
+    }
+
+    // ── Field Configuration Handlers ──
+    handleFieldConfigChange(event) {
+        const fieldName = event.target.dataset.field;
+        this.fieldConfig[fieldName] = event.target.value;
+    }
+
+    async saveFieldConfig() {
+        this.isSavingFieldConfig = true;
+        try {
+            const result = await saveFieldConfig({ configJson: JSON.stringify(this.fieldConfig) });
+            if (result === 'SUCCESS') {
+                this.showToast('Success', 'Field configuration saved successfully! (Note: It may take up to 30 seconds for the Metadata API deployment to complete).', 'success');
+            } else {
+                this.showToast('Error', 'Failed to save field configuration.', 'error');
+            }
+        } catch (error) {
+            this.showToast('Error', error.body ? error.body.message : error.message, 'error');
+        } finally {
+            this.isSavingFieldConfig = false;
+        }
     }
 
     copyToClipboard(text) {

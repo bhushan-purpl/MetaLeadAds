@@ -65,6 +65,55 @@
             </div>
         </div>
 
+        <!-- ── Field Configuration Card ── -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-icon">🗂️</span>
+                <h2>Lead Field Configuration</h2>
+            </div>
+            <p class="card-desc">Enter the API Names of the Lead fields in your org that should receive this data. If left blank, these fields will be ignored.</p>
+            
+            <div class="field-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 15px;">
+                <div class="field-group">
+                    <label class="field-label">Custom Lead Source API</label>
+                    <input type="text" class="url-input" value={fieldConfig.customLeadSourceFieldApi} data-field="customLeadSourceFieldApi" onchange={handleFieldConfigChange} placeholder="e.g. Lead_Source__c" />
+                    <p class="hint">In addition to standard LeadSource, populate this custom field.</p>
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Project / Property API</label>
+                    <input type="text" class="url-input" value={fieldConfig.projectFieldApi} data-field="projectFieldApi" onchange={handleFieldConfigChange} placeholder="e.g. Project_Interested__c" />
+                    <p class="hint">Mapped to UTM Campaign by default if present.</p>
+                </div>
+                <div class="field-group">
+                    <label class="field-label">UTM Source API</label>
+                    <input type="text" class="url-input" value={fieldConfig.utmSourceFieldApi} data-field="utmSourceFieldApi" onchange={handleFieldConfigChange} placeholder="e.g. utm_source__c" />
+                </div>
+                <div class="field-group">
+                    <label class="field-label">UTM Campaign API</label>
+                    <input type="text" class="url-input" value={fieldConfig.utmCampaignFieldApi} data-field="utmCampaignFieldApi" onchange={handleFieldConfigChange} placeholder="e.g. utm_campaign__c" />
+                </div>
+                <div class="field-group">
+                    <label class="field-label">UTM Medium API</label>
+                    <input type="text" class="url-input" value={fieldConfig.utmMediumFieldApi} data-field="utmMediumFieldApi" onchange={handleFieldConfigChange} placeholder="e.g. utm_medium__c" />
+                </div>
+                <div class="field-group">
+                    <label class="field-label">UTM Content API</label>
+                    <input type="text" class="url-input" value={fieldConfig.utmContentFieldApi} data-field="utmContentFieldApi" onchange={handleFieldConfigChange} placeholder="e.g. utm_content__c" />
+                </div>
+                <div class="field-group">
+                    <label class="field-label">UTM Term API</label>
+                    <input type="text" class="url-input" value={fieldConfig.utmTermFieldApi} data-field="utmTermFieldApi" onchange={handleFieldConfigChange} placeholder="e.g. utm_term__c" />
+                </div>
+            </div>
+
+            <div class="action-row" style="margin-top: 20px; justify-content: flex-end;">
+                <button class="btn btn-primary" onclick={saveFieldConfig} disabled={isSavingFieldConfig}>
+                    <span if:true={isSavingFieldConfig}>Saving...</span>
+                    <span if:false={isSavingFieldConfig}>Save Field Configuration</span>
+                </button>
+            </div>
+        </div>
+
         <!-- ── Setup & Support Card ── -->
         <div class="card support-card" style="border-left: 4px solid #6c5ce7; background: linear-gradient(to right, #f3f0ff, #ffffff);">
             <div class="card-header">

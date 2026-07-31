@@ -258,29 +258,26 @@ public with sharing class MetaLeadIntelligenceController {
         String leadQuery = 'SELECT Id, FirstName, LastName, Name, Email, Phone, MobilePhone, Company, Status, OwnerId, Owner.Name, CreatedDate, IsConverted, ConvertedOpportunityId, ConvertedOpportunity.Name, ConvertedOpportunity.StageName, ConvertedOpportunity.Amount';
         
         // Dynamic custom fields check
+        MetaFieldConfigService.FieldConfig fieldConfig = MetaFieldConfigService.getConfig();
         Map<String, Schema.SObjectField> leadFieldsMap = Schema.SObjectType.Lead.fields.getMap();
-        Boolean hasIntegrationSource = leadFieldsMap.containsKey('purpl__integration_source__c') || leadFieldsMap.containsKey('integration_source__c');
-        Boolean hasProject = leadFieldsMap.containsKey('purpl__project_interested__c') || leadFieldsMap.containsKey('project_interested__c');
-        Boolean hasForm1 = leadFieldsMap.containsKey('purpl__meta_form_1__c') || leadFieldsMap.containsKey('meta_form_1__c');
-        Boolean hasForm2 = leadFieldsMap.containsKey('purpl__meta_form_2__c') || leadFieldsMap.containsKey('meta_form_2__c');
-        Boolean hasUtmSource = leadFieldsMap.containsKey('purpl__utm_source__c') || leadFieldsMap.containsKey('utm_source__c');
-        Boolean hasUtmCampaign = leadFieldsMap.containsKey('purpl__utm_campaign__c') || leadFieldsMap.containsKey('utm_campaign__c');
+        
+        Boolean hasIntegrationSource = leadFieldsMap.containsKey('integration_source__c');
+        Boolean hasProject = String.isNotBlank(fieldConfig.projectFieldApi) && leadFieldsMap.containsKey(fieldConfig.projectFieldApi.toLowerCase());
+        Boolean hasUtmCampaign = String.isNotBlank(fieldConfig.utmCampaignFieldApi) && leadFieldsMap.containsKey(fieldConfig.utmCampaignFieldApi.toLowerCase());
+        Boolean hasCustomLeadSource = String.isNotBlank(fieldConfig.customLeadSourceFieldApi) && leadFieldsMap.containsKey(fieldConfig.customLeadSourceFieldApi.toLowerCase());
 
-        if (hasIntegrationSource) leadQuery += leadFieldsMap.containsKey('purpl__integration_source__c') ? ', purpl__Integration_Source__c' : ', Integration_Source__c';
-        if (hasProject) leadQuery += leadFieldsMap.containsKey('purpl__project_interested__c') ? ', purpl__Project_Interested__c' : ', Project_Interested__c';
-        if (hasForm1) leadQuery += leadFieldsMap.containsKey('purpl__meta_form_1__c') ? ', purpl__Meta_Form_1__c' : ', Meta_Form_1__c';
-        if (hasForm2) leadQuery += leadFieldsMap.containsKey('purpl__meta_form_2__c') ? ', purpl__Meta_Form_2__c' : ', Meta_Form_2__c';
-        if (hasUtmCampaign) leadQuery += leadFieldsMap.containsKey('purpl__utm_campaign__c') ? ', purpl__UTM_Campaign__c' : ', UTM_Campaign__c';
+        if (hasIntegrationSource) leadQuery += ', Integration_Source__c';
+        if (hasProject) leadQuery += ', ' + fieldConfig.projectFieldApi;
+        if (hasUtmCampaign) leadQuery += ', ' + fieldConfig.utmCampaignFieldApi;
+        if (hasCustomLeadSource) leadQuery += ', ' + fieldConfig.customLeadSourceFieldApi;
 
         leadQuery += ' FROM Lead WHERE Id != null';
 
-        // Filter by Backend Integration Source or LeadSource or Form if field present
+        // Filter by Backend Integration Source or LeadSource
         if (hasIntegrationSource) {
-            String integrationField = leadFieldsMap.containsKey('purpl__integration_source__c') ? 'purpl__Integration_Source__c' : 'Integration_Source__c';
-            leadQuery += ' AND (' + integrationField + ' = \'Meta Lead Ads\' OR LeadSource = \'Meta Lead Ads\'';
-            if (hasForm1) {
-                String form1Field = leadFieldsMap.containsKey('purpl__meta_form_1__c') ? 'purpl__Meta_Form_1__c' : 'Meta_Form_1__c';
-                leadQuery += ' OR ' + form1Field + ' != null';
+            leadQuery += ' AND (Integration_Source__c = \'Meta Lead Ads\' OR LeadSource = \'Meta Lead Ads\'';
+            if (hasCustomLeadSource) {
+                leadQuery += ' OR ' + fieldConfig.customLeadSourceFieldApi + ' = \'Meta Lead Ads\'';
             }
             leadQuery += ')';
         }
@@ -384,7 +381,7 @@ public with sharing class MetaLeadIntelligenceController {
             // Project Interested field extraction
             String projName = 'General Enquiry';
             if (hasProject) {
-                String pVal = (String) l.get(leadFieldsMap.containsKey('purpl__project_interested__c') ? 'purpl__Project_Interested__c' : 'Project_Interested__c');
+                String pVal = (String) l.get(fieldConfig.projectFieldApi);
                 if (String.isNotBlank(pVal)) projName = pVal;
             }
             projectSet.add(projName);
@@ -392,17 +389,13 @@ public with sharing class MetaLeadIntelligenceController {
             // Campaign extraction
             String campName = 'Organic / Direct Meta';
             if (hasUtmCampaign) {
-                String cVal = (String) l.get(leadFieldsMap.containsKey('purpl__utm_campaign__c') ? 'purpl__UTM_Campaign__c' : 'UTM_Campaign__c');
+                String cVal = (String) l.get(fieldConfig.utmCampaignFieldApi);
                 if (String.isNotBlank(cVal)) campName = cVal;
             }
             campaignSet.add(campName);
 
-            // Form & Page extraction from Log or Lead
+            // Form & Page extraction from Log
             String formId = '';
-            if (hasForm1) {
-                String fVal = (String) l.get(leadFieldsMap.containsKey('purpl__meta_form_1__c') ? 'purpl__Meta_Form_1__c' : 'Meta_Form_1__c');
-                if (String.isNotBlank(fVal)) formId = fVal;
-            }
             String sLeadId = String.valueOf(l.Id);
             Meta_Lead_Log__c logRec = leadIdToLogMap.get(sLeadId);
             if (logRec == null && sLeadId.length() >= 15) {

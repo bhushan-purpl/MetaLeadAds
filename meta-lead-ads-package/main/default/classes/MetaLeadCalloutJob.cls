@@ -226,7 +226,7 @@ public class MetaLeadCalloutJob implements Queueable, Database.AllowsCallouts {
                 if (String.isBlank(newLead.PostalCode)) newLead.PostalCode = leadFields.get('zip_code');
                 if (String.isBlank(newLead.Country))    newLead.Country    = leadFields.get('country');
 
-                // Automatically populate Integration Source and Lead Source by default without requiring manual mapping
+                // Automatically populate Integration Source and standard Lead Source
                 Map<String, Schema.SObjectField> leadFieldsMap = Schema.SObjectType.Lead.fields.getMap();
                 for (String fKey : leadFieldsMap.keySet()) {
                     if (fKey == 'integration_source__c' || fKey.endsWith('integration_source__c')) {
@@ -236,11 +236,11 @@ public class MetaLeadCalloutJob implements Queueable, Database.AllowsCallouts {
                 if (String.isBlank(newLead.LeadSource)) {
                     newLead.LeadSource = 'Meta Lead Ads';
                 }
-                if (leadFieldsMap.containsKey('purpl__lead_source__c')) {
-                    Object lsVal = newLead.get('purpl__Lead_Source__c');
-                    if (lsVal == null || String.isBlank(String.valueOf(lsVal))) {
-                        try { newLead.put('purpl__Lead_Source__c', 'Meta Lead Ads'); } catch (Exception ex) {}
-                    }
+
+                // Set org-configured custom fields via MetaFieldConfigService (no purpl__ hardcoding)
+                MetaFieldConfigService.FieldConfig fCfg = MetaFieldConfigService.getConfig();
+                if (String.isNotBlank(fCfg.customLeadSourceFieldApi)) {
+                    MetaFieldConfigService.safeSetField(newLead, fCfg.customLeadSourceFieldApi, 'Meta Lead Ads');
                 }
 
                 if (!usedDynamicMapping) {

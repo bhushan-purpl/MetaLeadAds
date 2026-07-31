@@ -212,4 +212,76 @@ public with sharing class MetaWebhookController {
         }
         return result;
     }
+
+    // ── Get Org Field Configuration (field API names) ──
+    @AuraEnabled(cacheable=false)
+    public static Map<String, String> getFieldConfig() {
+        Map<String, String> cfg = new Map<String, String>{
+            'projectFieldApi'       => '',
+            'utmSourceFieldApi'     => '',
+            'utmCampaignFieldApi'   => '',
+            'utmMediumFieldApi'     => '',
+            'utmTermFieldApi'       => '',
+            'utmContentFieldApi'    => '',
+            'customLeadSourceFieldApi' => ''
+        };
+        try {
+            List<SObject> rows = Database.query(
+                'SELECT Project_Field_API__c, UTM_Source_Field_API__c, UTM_Campaign_Field_API__c, ' +
+                'UTM_Medium_Field_API__c, UTM_Term_Field_API__c, UTM_Content_Field_API__c, ' +
+                'Custom_Lead_Source_Field_API__c ' +
+                'FROM Meta_Integration_Settings__mdt WHERE DeveloperName = \'Default\' LIMIT 1'
+            );
+            if (!rows.isEmpty()) {
+                SObject row = rows[0];
+                if (row.get('Project_Field_API__c')         != null) cfg.put('projectFieldApi',          (String)row.get('Project_Field_API__c'));
+                if (row.get('UTM_Source_Field_API__c')      != null) cfg.put('utmSourceFieldApi',         (String)row.get('UTM_Source_Field_API__c'));
+                if (row.get('UTM_Campaign_Field_API__c')    != null) cfg.put('utmCampaignFieldApi',       (String)row.get('UTM_Campaign_Field_API__c'));
+                if (row.get('UTM_Medium_Field_API__c')      != null) cfg.put('utmMediumFieldApi',         (String)row.get('UTM_Medium_Field_API__c'));
+                if (row.get('UTM_Term_Field_API__c')        != null) cfg.put('utmTermFieldApi',           (String)row.get('UTM_Term_Field_API__c'));
+                if (row.get('UTM_Content_Field_API__c')     != null) cfg.put('utmContentFieldApi',        (String)row.get('UTM_Content_Field_API__c'));
+                if (row.get('Custom_Lead_Source_Field_API__c') != null) cfg.put('customLeadSourceFieldApi', (String)row.get('Custom_Lead_Source_Field_API__c'));
+            }
+        } catch (Exception e) {
+            System.debug('getFieldConfig error: ' + e.getMessage());
+        }
+        return cfg;
+    }
+
+    // ── Save Org Field Configuration via Metadata API ──
+    @AuraEnabled
+    public static String saveFieldConfig(String configJson) {
+        try {
+            Map<String, Object> cfg = (Map<String, Object>) JSON.deserializeUntyped(configJson);
+
+            // Use Metadata API to update Custom Metadata record
+            Metadata.CustomMetadata mdt = new Metadata.CustomMetadata();
+            mdt.fullName = 'Meta_Integration_Settings__mdt.Default';
+            mdt.label = 'Default';
+
+            Map<String, String> fieldMap = new Map<String, String>{
+                'projectFieldApi'          => 'Project_Field_API__c',
+                'utmSourceFieldApi'        => 'UTM_Source_Field_API__c',
+                'utmCampaignFieldApi'      => 'UTM_Campaign_Field_API__c',
+                'utmMediumFieldApi'        => 'UTM_Medium_Field_API__c',
+                'utmTermFieldApi'          => 'UTM_Term_Field_API__c',
+                'utmContentFieldApi'       => 'UTM_Content_Field_API__c',
+                'customLeadSourceFieldApi' => 'Custom_Lead_Source_Field_API__c'
+            };
+
+            for (String jsKey : fieldMap.keySet()) {
+                Metadata.CustomMetadataValue val = new Metadata.CustomMetadataValue();
+                val.field = fieldMap.get(jsKey);
+                val.value = cfg.containsKey(jsKey) ? (String)cfg.get(jsKey) : '';
+                mdt.values.add(val);
+            }
+
+            Metadata.DeployContainer deployContainer = new Metadata.DeployContainer();
+            deployContainer.addMetadata(mdt);
+            Metadata.Operations.enqueueDeployment(deployContainer, null);
+            return 'SUCCESS';
+        } catch (Exception e) {
+            throw new AuraHandledException('Save failed: ' + e.getMessage());
+        }
+    }
 }
