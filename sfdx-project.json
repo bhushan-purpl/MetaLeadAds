@@ -4,8 +4,8 @@
       "path": "meta-lead-ads-package",
       "default": true,
       "package": "MetaLeadAds",
-      "versionName": "ver 0.10.2",
-      "versionNumber": "0.10.2.NEXT",
+      "versionName": "ver 0.11.0",
+      "versionNumber": "0.11.0.NEXT",
       "versionDescription": "Meta Lead Capture for salesforce",
       "ancestorVersion": "HIGHEST"
     }
