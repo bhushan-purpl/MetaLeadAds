@@ -42,7 +42,7 @@
                 <!-- Date Range -->
                 <div class="filter-item">
                     <lightning-combobox
-                        name="dateRange"
+                        name="selectedDateRange"
                         label="Date Range"
                         value={selectedDateRange}
                         options={dateRangeOptions}
@@ -63,7 +63,7 @@
                 <!-- Project Interested -->
                 <div class="filter-item">
                     <lightning-combobox
-                        name="project"
+                        name="selectedProject"
                         label="Project Interested"
                         value={selectedProject}
                         options={projectOptions}
@@ -74,7 +74,7 @@
                 <!-- Lead Status -->
                 <div class="filter-item">
                     <lightning-combobox
-                        name="status"
+                        name="selectedStatus"
                         label="Lead Status"
                         value={selectedStatus}
                         options={statusOptions}
@@ -85,7 +85,7 @@
                 <!-- Facebook Page -->
                 <div class="filter-item">
                     <lightning-combobox
-                        name="pageId"
+                        name="selectedPage"
                         label="Facebook Page"
                         value={selectedPage}
                         options={pageOptions}
@@ -96,12 +96,12 @@
                 <!-- Lead Form -->
                 <div class="filter-item">
                     <c-meta-searchable-combobox
-                        name="formId"
+                        name="selectedForm"
                         label="Lead Form"
                         value={selectedForm}
                         placeholder="Select Form..."
                         options={formOptions}
-                        onchange={handleFormChange}>
+                        onchange={handleFilterChange}>
                     </c-meta-searchable-combobox>
                 </div>
 
