@@ -68,6 +68,9 @@ public without sharing class MetaAuthController {
         if (String.isBlank(userToken)) {
             throw new AuraHandledException('Not connected to Facebook. Please connect first.');
         }
+        if (!MetaLicenseService.isLicenseActive()) {
+            throw new AuraHandledException('License Expired: Your license key is expired or inactive. Please activate a valid license key.');
+        }
         
         Meta_Integration_Settings__mdt config = getConfig();
         String endpoint = 'https://graph.facebook.com/' + getApiVersion(config) 
@@ -107,6 +110,9 @@ public without sharing class MetaAuthController {
     // ─────────────────────────────────────────────────────────────────
     @AuraEnabled
     public static String subscribePage(String pageId, String pageAccessToken, String pageName) {
+        if (!MetaLicenseService.isLicenseActive()) {
+            throw new AuraHandledException('License Expired: Your license key is expired or inactive. Please activate a valid license key.');
+        }
         try {
             Meta_Integration_Settings__mdt config = getConfig();
             String endpoint = 'https://graph.facebook.com/' + getApiVersion(config) + '/' + pageId + '/subscribed_apps';
@@ -184,6 +190,9 @@ public without sharing class MetaAuthController {
 
     @AuraEnabled(cacheable=false)
     public static List<SubscriptionWrapper> getActiveSubscriptions() {
+        if (!MetaLicenseService.isLicenseActive()) {
+            throw new AuraHandledException('License Expired: Your license key is expired or inactive. Please activate a valid license key.');
+        }
         List<SubscriptionWrapper> wrappers = new List<SubscriptionWrapper>();
         for (Meta_Page_Subscription__c sub : [
             SELECT Id, Page_ID__c, Page_Name__c, Enable_Logs__c, Enable_Lead_Creation__c
