@@ -170,7 +170,11 @@
                                             <lightning-icon icon-name="utility:arrowright" size="xx-small"></lightning-icon>
                                         </div>
                                         <div class="sf-field-cell">
-                                            <c-meta-searchable-combobox name={row.id} data-id={row.id} value={row.sfField} placeholder="-- None --" options={sfFieldOptions} taken-values={takenValuesList} onchange={handleMappingChange}></c-meta-searchable-combobox>
+                                            <select class="native-select" data-id={row.id} onchange={handleNativeMappingChange}>
+                                                <template for:each={sfFieldOptions} for:item="opt">
+                                                    <option key={opt.value} value={opt.value} data-selected={opt.value}>{opt.label}</option>
+                                                </template>
+                                            </select>
                                         </div>
                                     </div>
                                 </template>
@@ -201,7 +205,11 @@
                                             <lightning-icon icon-name="utility:arrowright" size="xx-small"></lightning-icon>
                                         </div>
                                         <div class="sf-field-cell">
-                                            <c-meta-searchable-combobox name={row.id} data-id={row.id} value={row.sfField} placeholder="-- None --" options={sfFieldOptions} taken-values={takenValuesList} onchange={handleMappingChange}></c-meta-searchable-combobox>
+                                            <select class="native-select" data-id={row.id} onchange={handleNativeMappingChange}>
+                                                <template for:each={sfFieldOptions} for:item="opt">
+                                                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                                </template>
+                                            </select>
                                         </div>
                                     </div>
                                 </template>
@@ -232,7 +240,11 @@
                                             <lightning-icon icon-name="utility:arrowright" size="xx-small"></lightning-icon>
                                         </div>
                                         <div class="sf-field-cell">
-                                            <c-meta-searchable-combobox name={row.id} data-id={row.id} value={row.sfField} placeholder="-- None --" options={sfFieldOptions} taken-values={takenValuesList} onchange={handleMappingChange}></c-meta-searchable-combobox>
+                                            <select class="native-select" data-id={row.id} onchange={handleNativeMappingChange}>
+                                                <template for:each={sfFieldOptions} for:item="opt">
+                                                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                                </template>
+                                            </select>
                                         </div>
                                     </div>
                                 </template>
@@ -264,7 +276,11 @@
                                             <lightning-icon icon-name="utility:arrowright" size="xx-small"></lightning-icon>
                                         </div>
                                         <div class="sf-field-cell">
-                                            <c-meta-searchable-combobox name={row.id} data-id={row.id} value={row.sfField} placeholder="-- None --" options={sfFieldOptions} taken-values={takenValuesList} onchange={handleMappingChange}></c-meta-searchable-combobox>
+                                            <select class="native-select" data-id={row.id} onchange={handleNativeMappingChange}>
+                                                <template for:each={sfFieldOptions} for:item="opt">
+                                                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                                </template>
+                                            </select>
                                         </div>
                                     </div>
                                 </template>
@@ -308,7 +324,11 @@
                                         <lightning-icon icon-name="utility:arrowright" size="xx-small"></lightning-icon>
                                     </div>
                                     <div class="sf-field-cell">
-                                        <c-meta-searchable-combobox name={row.id} data-id={row.id} value={row.sfField} placeholder="-- None --" options={row.options} onchange={handleStaticSfFieldChange}></c-meta-searchable-combobox>
+                                        <select class="native-select" data-id={row.id} onchange={handleNativeStaticSfFieldChange}>
+                                            <template for:each={sfFieldOptions} for:item="opt">
+                                                <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                            </template>
+                                        </select>
                                     </div>
                                 </div>
                             </template>

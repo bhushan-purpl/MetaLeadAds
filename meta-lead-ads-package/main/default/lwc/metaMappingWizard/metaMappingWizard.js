@@ -55,6 +55,17 @@ export default class MetaMappingWizard extends LightningElement {
         this.loadLeadFields();
     }
 
+    // After each render, sync the native <select> selected values to match allMappings data
+    renderedCallback() {
+        if (this.currentStep !== 3 || !this.allMappings || this.allMappings.length === 0) return;
+        const selects = this.template.querySelectorAll('select.native-select');
+        selects.forEach(sel => {
+            const rowId = sel.dataset.id;
+            const row = this.allMappings.find(r => r.id === rowId);
+            if (row) sel.value = row.sfField || '';
+        });
+    }
+
     // ─── Step navigation ─────────────────────────────────────────────
     async goToStep2() {
         this.currentStep = 2;
@@ -269,6 +280,40 @@ export default class MetaMappingWizard extends LightningElement {
         );
         this.updateDropdownOptions();
         this.isDirty = true;
+    }
+
+    // Native <select> handler — used instead of c-meta-searchable-combobox for performance
+    handleNativeMappingChange(event) {
+        const rowId = event.currentTarget.dataset.id;
+        const sfField = event.target.value;
+        this.allMappings = this.allMappings.map(row =>
+            row.id === rowId ? { ...row, sfField } : row
+        );
+        this.updateDropdownOptions();
+        this.isDirty = true;
+    }
+
+    async handleNativeStaticSfFieldChange(event) {
+        const rowId   = event.currentTarget.dataset.id;
+        const sfField = event.target.value;
+        this.allMappings = this.allMappings.map(row =>
+            row.id === rowId ? { ...row, sfField, sampleValue: '', isPicklistMode: false, picklistOptions: [] } : row
+        );
+        this.updateDropdownOptions();
+        this.isDirty = true;
+        if (!sfField) return;
+        if (this.sfFieldTypeMap[sfField] === 'PICKLIST') {
+            try {
+                const picklistOpts = await getPicklistValues({ fieldApiName: sfField });
+                this.allMappings = this.allMappings.map(row =>
+                    row.id === rowId
+                        ? { ...row, isPicklistMode: true, picklistOptions: picklistOpts }
+                        : row
+                );
+            } catch (e) {
+                console.error('Failed to load picklist values:', e);
+            }
+        }
     }
 
     // ─── Handle Static Value Text Input ──
