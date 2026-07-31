@@ -18,6 +18,7 @@
     <tabs>Purplstack_Lead_Intelligence</tabs>
     <tabs>Purplstack_Meta_Dashboard</tabs>
     <tabs>Purplstack_License_Manager</tabs>
+    <tabs>Meta_Webhook_Setup</tabs>
     <uiType>Lightning</uiType>
     <utilityBar>Purplstack_Lead_Capture_UtilityBar</utilityBar>
 </CustomApplication>

@@ -170,4 +170,8 @@
         <tab>Purplstack_Meta_Dashboard</tab>
         <visibility>Visible</visibility>
     </tabSettings>
+    <tabSettings>
+        <tab>Meta_Webhook_Setup</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
 </PermissionSet>
