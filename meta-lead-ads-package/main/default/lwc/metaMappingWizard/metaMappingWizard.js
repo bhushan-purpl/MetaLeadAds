@@ -41,6 +41,7 @@ export default class MetaMappingWizard extends LightningElement {
     @track selectedCopySourceId = '';
     // Map of fieldApiName → 'PICKLIST' | 'TEXT' (populated from getLeadFields)
     sfFieldTypeMap          = {};
+    @track sfFieldOptions   = []; // Initialize to prevent map() crashes
     // Map of rowId → [{label, value}] picklist options for static rows
     @track staticPicklistMap = {};
 
@@ -212,6 +213,8 @@ export default class MetaMappingWizard extends LightningElement {
             ];
         } catch (e) {
             console.error('Failed to load Salesforce Lead fields:', e);
+            this.sfFieldOptions = [];
+            this.errorMessage = e.body ? e.body.message : 'Failed to load Salesforce Lead fields.';
         }
     }
 
@@ -248,7 +251,21 @@ export default class MetaMappingWizard extends LightningElement {
         return match ? match.value : '';
     }
 
-    // ─── Handle dropdown change (lightning-combobox fires event.detail.value) ──
+    updateDropdownOptions() {
+        if (!this.sfFieldOptions || !this.allMappings) return;
+        this.allMappings = this.allMappings.map(row => {
+            const availableOptions = this.sfFieldOptions.map(opt => {
+                if (!opt.value) return opt; // keep -- None --
+                const isTaken = this.allMappings.some(otherRow => otherRow.id !== row.id && otherRow.sfField === opt.value);
+                return {
+                    ...opt,
+                    disabled: isTaken
+                };
+            });
+            return { ...row, options: availableOptions };
+        });
+    }
+
     handleMappingChange(event) {
         const rowId  = event.currentTarget.dataset.id;
         const sfField = event.detail.value;
