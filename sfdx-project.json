@@ -4,8 +4,8 @@
       "path": "meta-lead-ads-package",
       "default": true,
       "package": "PurplSync",
-      "versionName": "ver 0.13.0",
-      "versionNumber": "0.13.0.NEXT",
+      "versionName": "ver 0.18.0",
+      "versionNumber": "0.18.0.NEXT",
       "versionDescription": "PurplSync for salesforce",
       "ancestorVersion": "HIGHEST"
     }
@@ -32,6 +32,10 @@
     "MetaLeadAds@0.10.2-1": "04tfu0000002z4DAAQ",
     "MetaLeadAds@0.11.0-1": "04tfu00000033W1AAI",
     "PurplSync@0.12.0-1": "04tfu00000033ZFAAY",
-    "PurplSync@0.13.0-1": "04tfu00000033arAAA"
+    "PurplSync@0.13.0-1": "04tfu00000033arAAA",
+    "PurplSync@0.14.0-1": "04tfu00000033e5AAA",
+    "PurplSync@0.15.0-1": "04tfu00000033fhAAA",
+    "PurplSync@0.16.0-1": "04tfu00000033hJAAQ",
+    "PurplSync@0.17.0-2": "04tfu00000033kXAAQ"
   }
 }
