@@ -273,13 +273,11 @@ public with sharing class MetaLeadIntelligenceController {
 
         leadQuery += ' FROM Lead WHERE Id != null';
 
-        // Filter by Backend Integration Source or LeadSource
+        // Filter strictly by Integration_Source__c
         if (hasIntegrationSource) {
-            leadQuery += ' AND (Integration_Source__c = \'Meta Lead Ads\' OR LeadSource = \'Meta Lead Ads\'';
-            if (hasCustomLeadSource) {
-                leadQuery += ' OR ' + fieldConfig.customLeadSourceFieldApi + ' = \'Meta Lead Ads\'';
-            }
-            leadQuery += ')';
+            leadQuery += ' AND Integration_Source__c = \'Meta Lead Ads\'';
+        } else {
+            leadQuery += ' AND LeadSource = \'Meta Lead Ads\'';
         }
 
         if (startDt != null) {
@@ -750,11 +748,13 @@ public with sharing class MetaLeadIntelligenceController {
 
             String oppQuery = 'SELECT Id, Name, StageName, Amount, CloseDate, OwnerId, Owner.Name, AccountId, Account.Name';
             if (hasIntSource) oppQuery += ', Integration_Source__c';
-            oppQuery += ' FROM Opportunity WHERE (';
+            oppQuery += ' FROM Opportunity WHERE ';
             if (hasIntSource) {
-                oppQuery += 'Integration_Source__c = \'Meta Lead Ads\' OR ';
+                oppQuery += 'Integration_Source__c = \'Meta Lead Ads\'';
+            } else {
+                oppQuery += 'LeadSource = \'Meta Lead Ads\'';
             }
-            oppQuery += 'LeadSource = \'Meta Lead Ads\') ORDER BY CreatedDate DESC LIMIT 500';
+            oppQuery += ' ORDER BY CreatedDate DESC LIMIT 500';
 
             List<Opportunity> opps = Database.query(oppQuery);
 
@@ -762,7 +762,7 @@ public with sharing class MetaLeadIntelligenceController {
             Set<Id> convertedOppIds = new Set<Id>();
             for (Lead l : [
                 SELECT ConvertedOpportunityId FROM Lead
-                WHERE IsConverted = true AND (LeadSource = 'Meta Lead Ads' OR Integration_Source__c = 'Meta Lead Ads')
+                WHERE IsConverted = true AND Integration_Source__c = 'Meta Lead Ads'
                 AND ConvertedOpportunityId != null
             ]) {
                 convertedOppIds.add(l.ConvertedOpportunityId);
