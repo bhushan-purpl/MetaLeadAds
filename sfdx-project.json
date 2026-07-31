@@ -3,19 +3,19 @@
     {
       "path": "meta-lead-ads-package",
       "default": true,
-      "package": "MetaLeadAds",
-      "versionName": "ver 0.11.0",
-      "versionNumber": "0.11.0.NEXT",
-      "versionDescription": "Meta Lead Capture for salesforce",
+      "package": "PurplSync",
+      "versionName": "ver 0.11.1",
+      "versionNumber": "0.11.1.NEXT",
+      "versionDescription": "PurplSync for salesforce",
       "ancestorVersion": "HIGHEST"
     }
   ],
-  "name": "MetaLeadAds",
+  "name": "PurplSync",
   "namespace": "purpl",
   "sfdcLoginUrl": "https://login.salesforce.com",
   "sourceApiVersion": "64.0",
   "packageAliases": {
-    "MetaLeadAds": "0Hofu000000GOxdCAG",
+    "PurplSync": "0Hofu000000GOxdCAG",
     "MetaLeadAds@0.1.0-1": "04tfu0000002y6XAAQ",
     "MetaLeadAds@0.1.0-2": "04tfu0000002y89AAA",
     "MetaLeadAds@0.1.0-3": "04tfu0000002y9lAAA",
