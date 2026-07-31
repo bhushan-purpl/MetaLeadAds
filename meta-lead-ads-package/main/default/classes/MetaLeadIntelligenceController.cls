@@ -666,8 +666,14 @@ public with sharing class MetaLeadIntelligenceController {
         for (String p : projectSet) {
             if (String.isNotBlank(p)) wrapper.filterOptions.projects.add(new Map<String, String>{'label' => p, 'value' => p});
         }
-        for (String st : statusSet) {
-            if (String.isNotBlank(st)) wrapper.filterOptions.statuses.add(new Map<String, String>{'label' => st, 'value' => st});
+
+        // Always load ALL Lead Status values from the Salesforce schema picklist
+        // so the filter shows every possible status, not just ones in existing records
+        Schema.DescribeFieldResult statusDescribe = Lead.Status.getDescribe();
+        for (Schema.PicklistEntry pe : statusDescribe.getPicklistValues()) {
+            if (pe.isActive()) {
+                wrapper.filterOptions.statuses.add(new Map<String, String>{'label' => pe.getLabel(), 'value' => pe.getValue()});
+            }
         }
         for (String oId : ownerOptionsMap.keySet()) {
             wrapper.filterOptions.owners.add(new Map<String, String>{'label' => ownerOptionsMap.get(oId), 'value' => oId});
