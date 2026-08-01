@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Profile xmlns="http://soap.sforce.com/2006/04/metadata">
     <applicationVisibilities>
-        <application>Purplstack_Lead_Capture</application>
+        <application>PurplSync_Lead_Capture</application>
         <default>false</default>
         <visible>false</visible>
     </applicationVisibilities>
@@ -376,15 +376,15 @@
         <layout>Meta_Integration_Settings__mdt-Meta Integration Settings Layout</layout>
     </layoutAssignments>
     <tabVisibilities>
-        <tab>Purplstack_Lead_Manager</tab>
+        <tab>PurplSync_Lead_Manager</tab>
         <visibility>DefaultOff</visibility>
     </tabVisibilities>
     <tabVisibilities>
-        <tab>Purplstack_License_Manager</tab>
+        <tab>PurplSync_License_Manager</tab>
         <visibility>DefaultOff</visibility>
     </tabVisibilities>
     <tabVisibilities>
-        <tab>Purplstack_Meta_Dashboard</tab>
+        <tab>PurplSync_Meta_Dashboard</tab>
         <visibility>DefaultOff</visibility>
     </tabVisibilities>
     <userLicense>External Apps Login</userLicense>

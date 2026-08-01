@@ -5,7 +5,7 @@
         <visible>true</visible>
     </applicationVisibilities>
     <applicationVisibilities>
-        <application>Purplstack_Lead_Capture</application>
+        <application>PurplSync_Lead_Capture</application>
         <visible>true</visible>
     </applicationVisibilities>
     <classAccesses>
@@ -35,7 +35,7 @@
         <visibility>Visible</visibility>
     </tabSettings>
     <tabSettings>
-        <tab>Purplstack_Lead_Intelligence</tab>
+        <tab>PurplSync_Lead_Intelligence</tab>
         <visibility>Visible</visibility>
     </tabSettings>
 </PermissionSet>
