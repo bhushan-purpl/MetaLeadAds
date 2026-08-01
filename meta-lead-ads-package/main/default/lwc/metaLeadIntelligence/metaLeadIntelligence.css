@@ -11,13 +11,21 @@
     min-height: 100vh;
 }
 
-/* Header Banner - Professional White Theme */
+/* Header Banner - Modern Business Standard */
 .dashboard-header {
-    background: #ffffff;
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
     border-radius: 16px;
-    border: 1px solid #e2e8f0;
+    border: 1px solid rgba(226, 232, 240, 0.8);
     color: #0f172a;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.04), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+    position: relative;
+    overflow: hidden;
+}
+.dashboard-header::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 4px;
+    background: linear-gradient(90deg, #3b82f6, #8b5cf6);
 }
 
 .header-content {
@@ -34,10 +42,11 @@
 }
 
 .header-icon-box {
-    background: #f1f5f9;
-    padding: 12px;
-    border-radius: 14px;
-    border: 1px solid #e2e8f0;
+    background: linear-gradient(135deg, #eff6ff 0%, #e0e7ff 100%);
+    padding: 14px;
+    border-radius: 16px;
+    border: 1px solid rgba(191, 219, 254, 0.5);
+    box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.8), 0 4px 6px -1px rgba(0, 0, 0, 0.05);
 }
 
 .dashboard-title {
@@ -54,12 +63,14 @@
     margin-top: 2px;
 }
 
-/* Filter Card */
+/* Filter Card - Glassmorphism */
 .filter-card {
-    background: #ffffff;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     border-radius: 16px;
-    border: 1px solid #e2e8f0;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
+    border: 1px solid rgba(226, 232, 240, 0.7);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
 }
 
 .filter-grid {
@@ -126,18 +137,19 @@
 }
 
 .kpi-card {
-    border-radius: 14px;
-    padding: 16px;
+    border-radius: 16px;
+    padding: 18px;
     cursor: pointer;
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
     position: relative;
     overflow: hidden;
+    background: #ffffff;
 }
 
 .kpi-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 14px 28px -6px rgba(0, 0, 0, 0.1);
+    transform: translateY(-5px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
 /* Vibrant KPI Card Color Themes */
@@ -272,6 +284,10 @@
     gap: 16px;
 }
 
+.analytics-row-vertical {
+    grid-template-columns: 1fr;
+}
+
 @media (max-width: 1024px) {
     .analytics-row {
         grid-template-columns: 1fr;
@@ -312,54 +328,97 @@
     border-radius: 12px;
 }
 
-/* Visual Funnel Styling */
-.funnel-container {
+/* Horizontal Funnel Pipeline Styling (Concept 2) */
+.funnel-horizontal-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 8px;
+    overflow-x: auto;
+}
+
+.funnel-chevron-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    min-width: 140px;
+}
+
+.chevron-step {
+    flex: 1;
+    border-radius: 14px;
+    padding: 18px 12px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.9) 0%, rgba(248,250,252,0.6) 100%);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    box-shadow: 0 8px 20px -4px rgba(0, 0, 0, 0.05);
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    align-items: center;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s;
 }
 
-.funnel-bar-wrapper {
-    background: transparent;
-    border: none;
-    padding: 2px 0;
+.chevron-step:hover {
+    transform: translateY(-2px);
 }
 
-.funnel-bar-header {
+.chevron-step-1 { border-top: 4px solid #3b82f6; box-shadow: 0 10px 20px -4px rgba(59, 130, 246, 0.15); }
+.chevron-step-2 { border-top: 4px solid #0ea5e9; box-shadow: 0 10px 20px -4px rgba(14, 165, 233, 0.15); }
+.chevron-step-3 { border-top: 4px solid #8b5cf6; box-shadow: 0 10px 20px -4px rgba(139, 92, 246, 0.15); }
+.chevron-step-4 { border-top: 4px solid #10b981; box-shadow: 0 10px 20px -4px rgba(16, 185, 129, 0.15); }
+.chevron-step-5 { border-top: 4px solid #f59e0b; box-shadow: 0 10px 20px -4px rgba(245, 158, 11, 0.15); }
+.chevron-step-6 { border-top: 4px solid #ec4899; box-shadow: 0 10px 20px -4px rgba(236, 72, 153, 0.15); }
+
+.chevron-content {
     display: flex;
-    justify-content: space-between;
-    font-size: 13px;
-    margin-bottom: 4px;
-    padding: 0 10px;
-}
-
-.stage-name {
-    font-weight: 600;
-    color: #334155;
-}
-
-.funnel-progress-bg {
-    height: 22px;
-    background: transparent;
-    display: flex;
-    justify-content: center;
+    flex-direction: column;
+    align-items: center;
     width: 100%;
 }
 
-.funnel-progress-fill {
-    height: 100%;
-    background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 50%, #3b82f6 100%);
-    border-radius: 12px;
-    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.3);
+.chevron-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #475569;
+    margin-bottom: 8px;
 }
 
-.funnel-dropoff {
+.chevron-count {
+    font-size: 26px;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 6px;
+    letter-spacing: -0.5px;
+}
+
+.chevron-pct {
     font-size: 11px;
+    font-weight: 700;
+    color: #64748b;
+    background: #f1f5f9;
+    padding: 3px 8px;
+    border-radius: 12px;
+}
+
+.chevron-dropoff-pill {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
     color: #ef4444;
-    margin-top: 4px;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 6px 10px;
+    border-radius: 20px;
     text-align: center;
-    font-weight: 600;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    white-space: nowrap;
+    z-index: 10;
+    line-height: 1.2;
 }
 
 /* Donut Chart Legend Styling */

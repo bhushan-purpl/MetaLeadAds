@@ -31,7 +31,7 @@
                 <template if:true={isLoadingPages}>
                     <lightning-spinner alternative-text="Loading pages..." size="medium"></lightning-spinner>
                 </template>
-                <div class="page-select-grid">
+                <div class="page-select-list">
                     <template for:each={pages} for:item="page">
                         <div key={page.Id} class={page.cardClass} onclick={handleSelectPage}
                              data-id={page.Page_ID} data-name={page.Page_Name}>
@@ -41,7 +41,9 @@
                                 <p>{page.Forms_Count} forms</p>
                             </div>
                             <template if:true={page.isSelected}>
-                                <lightning-icon icon-name="utility:check" size="x-small" class="check-icon"></lightning-icon>
+                                <div class="check-icon-container">
+                                    <lightning-icon icon-name="utility:check" size="x-small"></lightning-icon>
+                                </div>
                             </template>
                         </div>
                     </template>
@@ -91,7 +93,9 @@
                                 <p>{form.Mapped_Fields} / {form.Total_Fields} Mapped Fields &nbsp;·&nbsp; <span class={form.mappedClass}>{form.mappedLabel}</span></p>
                             </div>
                             <template if:true={form.isSelected}>
-                                <lightning-icon icon-name="utility:check" size="x-small" class="check-icon"></lightning-icon>
+                                <div class="check-icon-container">
+                                    <lightning-icon icon-name="utility:check" size="x-small"></lightning-icon>
+                                </div>
                             </template>
                         </div>
                     </template>

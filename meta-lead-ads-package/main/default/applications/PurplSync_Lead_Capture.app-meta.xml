@@ -14,11 +14,11 @@
     <isOmniPinnedViewEnabled>false</isOmniPinnedViewEnabled>
     <label>PurplSync Lead Capture</label>
     <navType>Standard</navType>
-    <tabs>Purplstack_Lead_Manager</tabs>
-    <tabs>Purplstack_Lead_Intelligence</tabs>
-    <tabs>Purplstack_Meta_Dashboard</tabs>
-    <tabs>Purplstack_License_Manager</tabs>
-    <tabs>Meta_Webhook_Setup</tabs>
+    <tabs>PurplSync_Lead_Manager</tabs>
+    <tabs>PurplSync_Lead_Intelligence</tabs>
+    <tabs>PurplSync_Meta_Dashboard</tabs>
+    <tabs>PurplSync_Meta_Ads_Analytics</tabs>
+    <tabs>PurplSync_License_Manager</tabs>
     <uiType>Lightning</uiType>
-    <utilityBar>Purplstack_Lead_Capture_UtilityBar</utilityBar>
+    <utilityBar>PurplSync_Lead_Capture_UtilityBar</utilityBar>
 </CustomApplication>

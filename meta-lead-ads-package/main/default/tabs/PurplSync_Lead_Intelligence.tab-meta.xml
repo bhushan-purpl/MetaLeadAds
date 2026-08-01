@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<CustomTab xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Lead Intelligence Dashboard for PurplSync Meta Lead Ads Manager</description>
+    <lwcComponent>metaLeadIntelligence</lwcComponent>
+    <label>Lead Intelligence</label>
+    <motif>Custom62: Chalkboard</motif>
+</CustomTab>

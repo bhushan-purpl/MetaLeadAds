@@ -130,11 +130,13 @@ export default class MetaLeadIntelligence extends LightningElement {
 
         // 2. Process Funnel Stages
         if (data.funnelStages) {
-            this.funnelStages = data.funnelStages.map(stage => {
+            this.funnelStages = data.funnelStages.map((stage, idx) => {
                 let widthPct = Math.max(stage.conversionPct, 4);
+                let chevronClass = `chevron-step chevron-step-${idx + 1}`;
                 return {
                     ...stage,
-                    fillStyle: `width: ${widthPct}%;`
+                    fillStyle: `width: ${widthPct}%;`,
+                    chevronClass: chevronClass
                 };
             });
         }

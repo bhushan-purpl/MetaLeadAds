@@ -276,9 +276,9 @@
         </div>
 
         <!-- Conversion Funnel & Status Distribution Row -->
-        <div class="analytics-row slds-m-bottom_medium">
+        <div class="analytics-row analytics-row-vertical slds-m-bottom_medium">
             
-            <!-- Lead Funnel Widget -->
+            <!-- Lead Funnel Widget - Horizontal Pipeline Concept -->
             <div class="analytics-card funnel-card">
                 <div class="card-header-bar">
                     <div class="card-header-title">
@@ -287,18 +287,20 @@
                     </div>
                     <span class="card-badge">End-to-End Pipeline</span>
                 </div>
-                <div class="funnel-container">
-                    <template for:each={funnelStages} for:item="stage" for:index="index">
-                        <div key={stage.stage} class="funnel-bar-wrapper">
-                            <div class="funnel-bar-header">
-                                <span class="stage-name">{stage.stage}</span>
-                                <span class="stage-stats"><strong>{stage.count}</strong> ({stage.conversionPct}%)</span>
-                            </div>
-                            <div class="funnel-progress-bg">
-                                <div class="funnel-progress-fill" style={stage.fillStyle}></div>
+                <div class="funnel-horizontal-container">
+                    <template for:each={funnelStages} for:item="stage" for:index="idx">
+                        <div key={stage.stage} class="funnel-chevron-wrapper">
+                            <div class={stage.chevronClass}>
+                                <div class="chevron-content">
+                                    <span class="chevron-label">{stage.stage}</span>
+                                    <span class="chevron-count">{stage.count}</span>
+                                    <span class="chevron-pct">{stage.conversionPct}% Conv.</span>
+                                </div>
                             </div>
                             <template if:true={stage.dropOffPct}>
-                                <div class="funnel-dropoff">⚠️ Drop-off: {stage.dropOffPct}%</div>
+                                <div class="chevron-dropoff-pill">
+                                    {stage.dropOffPct}%<br/>Drop
+                                </div>
                             </template>
                         </div>
                     </template>

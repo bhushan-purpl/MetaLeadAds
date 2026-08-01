@@ -295,23 +295,40 @@ export default class MetaLeadManager extends LightningElement {
                     }
                 }
                 
-                let statusBadgeClass = 'slds-badge ';
-                if (log.Processing_Status === 'Success') statusBadgeClass += 'slds-theme_success';
-                else if (log.Processing_Status === 'Failed') statusBadgeClass += 'slds-theme_error';
-                else if (log.Processing_Status === 'Duplicate') statusBadgeClass += 'slds-theme_warning';
-                else statusBadgeClass += 'slds-theme_default';
-
                 // Prettify JSON strings for the modal
+                let initials = 'ML';
+                if (fullName && fullName !== ('Meta Lead ' + log.Meta_Lead_ID)) {
+                    let parts = fullName.split(' ');
+                    if (parts.length > 1) {
+                        initials = (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+                    } else {
+                        initials = parts[0].substring(0, 2).toUpperCase();
+                    }
+                }
+
+                let statusBadgeClass = 'slds-badge ';
+                if (log.Processing_Status === 'Success') {
+                    statusBadgeClass = 'mapped-badge'; // Reuse green badge style or define custom
+                }
+                else if (log.Processing_Status === 'Failed') {
+                    statusBadgeClass = 'unmapped-badge'; // Reuse red/orange badge style
+                }
+                else {
+                    statusBadgeClass = 'slds-badge';
+                }
+
                 let prettyPayload = log.Lead_Payload ? JSON.stringify(parsedPayload, null, 2) : '';
                 let prettyRaw = log.Raw_Lead_Data ? JSON.stringify(parsedLead, null, 2) : '';
 
                 return {
                     ...log,
                     LeadName: fullName,
+                    initials: initials,
                     Email: email,
                     Phone: phone,
-                    FormName: log.Form_ID, // Use ID as fallback
+                    FormName: formName,
                     ReceivedOn: new Date(log.CreatedDate).toLocaleString(),
+                    Salesforce_Lead_Name: log.Salesforce_Lead__r ? log.Salesforce_Lead__r.Name : '',
                     StatusBadgeClass: statusBadgeClass,
                     isFailed: log.Processing_Status === 'Failed',
                     PrettyPayload: prettyPayload,

@@ -42,22 +42,33 @@
         <!-- Page Cards -->
         <template if:false={isLoading}>
             <template if:true={hasPages}>
-                <div class="page-grid">
+                <div class="page-list-header">
+                    <div class="plh-col plh-name">Page Name</div>
+                    <div class="plh-col plh-status">Status</div>
+                    <div class="plh-col plh-forms">Forms</div>
+                    <div class="plh-col plh-actions">Actions</div>
+                </div>
+                <div class="page-list">
                     <template for:each={pages} for:item="page">
-                        <div key={page.Id} class="page-card" onclick={handlePageClick} data-id={page.Page_ID} data-name={page.Page_Name}>
-                            <div class="page-card-avatar">
-                                <span class="avatar-initials">{page.initials}</span>
-                            </div>
-                            <div class="page-card-info">
-                                <h3 class="page-card-name">{page.Page_Name}</h3>
-                                <p class="page-card-id">ID: {page.Page_ID}</p>
-                                <div class="page-card-meta">
-                                    <span class="forms-badge">{page.Forms_Count} Forms</span>
-                                    <span class={page.statusClass}>{page.Status}</span>
+                        <div key={page.Id} class="page-list-item" onclick={handlePageClick} data-id={page.Page_ID} data-name={page.Page_Name}>
+                            <div class="pli-col pli-name">
+                                <div class="page-avatar">
+                                    <span class="avatar-initials">{page.initials}</span>
+                                </div>
+                                <div class="page-info">
+                                    <h3 class="page-name">{page.Page_Name}</h3>
+                                    <p class="page-id">ID: {page.Page_ID}</p>
                                 </div>
                             </div>
-                            <div class="page-card-arrow">
-                                <lightning-icon icon-name="utility:chevronright" size="x-small"></lightning-icon>
+                            <div class="pli-col pli-status">
+                                <span class={page.statusClass}>{page.Status}</span>
+                            </div>
+                            <div class="pli-col pli-forms">
+                                <span class="forms-badge">{page.Forms_Count} Forms</span>
+                            </div>
+                            <div class="pli-col pli-actions">
+                                <lightning-button-icon icon-name="utility:settings" variant="bare" size="medium" class="action-btn"></lightning-button-icon>
+                                <lightning-button-icon icon-name="utility:threedots" variant="bare" size="medium" class="action-btn slds-m-left_x-small"></lightning-button-icon>
                             </div>
                         </div>
                     </template>

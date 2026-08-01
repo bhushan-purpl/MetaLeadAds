@@ -16,16 +16,23 @@
         <!-- ── Webhook URL Card ── -->
         <div class="card">
             <div class="card-header">
-                <span class="card-icon">🌐</span>
-                <h2>Webhook Endpoint</h2>
+                <h2>Webhook Configuration</h2>
             </div>
-            <p class="card-desc">Paste this URL into <strong>Meta for Developers → Webhooks → Edit Subscription → Callback URL</strong></p>
-            <div class="copy-row">
-                <input type="text" class="url-input" value={webhookUrl} readonly />
-                <button class="copy-btn" onclick={copyWebhookUrl}>
-                    <span if:true={copiedUrl}>✅ Copied!</span>
-                    <span if:false={copiedUrl}>📋 Copy</span>
-                </button>
+            
+            <div class="steps-indicator">
+                <div class="step active"><span class="step-num">1</span> Setup (Verify Token, Endpoint URL, Subscription)</div>
+                <div class="step"><span class="step-num step-num-inactive">2</span> Map (Lead Fields)</div>
+            </div>
+
+            <div class="field-group" style="margin-top: 24px;">
+                <label class="field-label">Webhook URL</label>
+                <div class="copy-row">
+                    <input type="text" class="url-input" value={webhookUrl} readonly />
+                    <button class="copy-btn" onclick={copyWebhookUrl}>
+                        <span if:true={copiedUrl}>✅ Copied!</span>
+                        <span if:false={copiedUrl}>📋 Copy</span>
+                    </button>
+                </div>
             </div>
 
             <div class="field-group" style="margin-top:20px">
@@ -65,44 +72,73 @@
             </div>
         </div>
 
-        <!-- ── Field Configuration Card ── -->
+        <!-- ── Lead Field Configuration Card ── -->
         <div class="card">
             <div class="card-header">
-                <span class="card-icon">🗂️</span>
                 <h2>Lead Field Configuration</h2>
             </div>
-            <p class="card-desc">Enter the API Names of the Lead fields in your org that should receive this data. If left blank, these fields will be ignored.</p>
+            <p class="card-desc" style="margin-bottom: 24px; color: #1e293b; font-weight: 500;">Map inbound lead fields to Salesforce API names</p>
             
-            <div class="field-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 15px;">
-                <div class="field-group">
-                    <label class="field-label">Custom Lead Source API</label>
-                    <input type="text" class="url-input" value={fieldConfig.customLeadSourceFieldApi} data-field="customLeadSourceFieldApi" onchange={handleFieldConfigChange} placeholder="e.g. Lead_Source__c" />
-                    <p class="hint">In addition to standard LeadSource, populate this custom field.</p>
+            <div class="mapping-table">
+                <div class="mapping-header">
+                    <div class="mapping-col-left">Meta Lead Field</div>
+                    <div class="mapping-col-right">Salesforce API Name</div>
                 </div>
-                <div class="field-group">
-                    <label class="field-label">Project / Property API</label>
-                    <input type="text" class="url-input" value={fieldConfig.projectFieldApi} data-field="projectFieldApi" onchange={handleFieldConfigChange} placeholder="e.g. Project_Interested__c" />
-                    <p class="hint">Mapped to UTM Campaign by default if present.</p>
+
+                <div class="mapping-row">
+                    <div class="mapping-label">Custom Lead Source</div>
+                    <div class="mapping-arrow">→</div>
+                    <div class="mapping-input">
+                        <input type="text" class="text-input" value={fieldConfig.customLeadSourceFieldApi} data-field="customLeadSourceFieldApi" onchange={handleFieldConfigChange} placeholder="Custom_Lead_Source__c" />
+                    </div>
                 </div>
-                <div class="field-group">
-                    <label class="field-label">UTM Source API</label>
-                    <input type="text" class="url-input" value={fieldConfig.utmSourceFieldApi} data-field="utmSourceFieldApi" onchange={handleFieldConfigChange} placeholder="e.g. utm_source__c" />
+                
+                <div class="mapping-row">
+                    <div class="mapping-label">Project / Property</div>
+                    <div class="mapping-arrow">→</div>
+                    <div class="mapping-input">
+                        <input type="text" class="text-input" value={fieldConfig.projectFieldApi} data-field="projectFieldApi" onchange={handleFieldConfigChange} placeholder="Project_Interested__c" />
+                    </div>
                 </div>
-                <div class="field-group">
-                    <label class="field-label">UTM Campaign API</label>
-                    <input type="text" class="url-input" value={fieldConfig.utmCampaignFieldApi} data-field="utmCampaignFieldApi" onchange={handleFieldConfigChange} placeholder="e.g. utm_campaign__c" />
+                
+                <div class="mapping-row">
+                    <div class="mapping-label">UTM Source</div>
+                    <div class="mapping-arrow">→</div>
+                    <div class="mapping-input">
+                        <input type="text" class="text-input" value={fieldConfig.utmSourceFieldApi} data-field="utmSourceFieldApi" onchange={handleFieldConfigChange} placeholder="utm_source__c" />
+                    </div>
                 </div>
-                <div class="field-group">
-                    <label class="field-label">UTM Medium API</label>
-                    <input type="text" class="url-input" value={fieldConfig.utmMediumFieldApi} data-field="utmMediumFieldApi" onchange={handleFieldConfigChange} placeholder="e.g. utm_medium__c" />
+                
+                <div class="mapping-row">
+                    <div class="mapping-label">UTM Campaign</div>
+                    <div class="mapping-arrow">→</div>
+                    <div class="mapping-input">
+                        <input type="text" class="text-input" value={fieldConfig.utmCampaignFieldApi} data-field="utmCampaignFieldApi" onchange={handleFieldConfigChange} placeholder="utm_campaign__c" />
+                    </div>
                 </div>
-                <div class="field-group">
-                    <label class="field-label">UTM Content API</label>
-                    <input type="text" class="url-input" value={fieldConfig.utmContentFieldApi} data-field="utmContentFieldApi" onchange={handleFieldConfigChange} placeholder="e.g. utm_content__c" />
+                
+                <div class="mapping-row">
+                    <div class="mapping-label">UTM Medium</div>
+                    <div class="mapping-arrow">→</div>
+                    <div class="mapping-input">
+                        <input type="text" class="text-input" value={fieldConfig.utmMediumFieldApi} data-field="utmMediumFieldApi" onchange={handleFieldConfigChange} placeholder="utm_medium__c" />
+                    </div>
                 </div>
-                <div class="field-group">
-                    <label class="field-label">UTM Term API</label>
-                    <input type="text" class="url-input" value={fieldConfig.utmTermFieldApi} data-field="utmTermFieldApi" onchange={handleFieldConfigChange} placeholder="e.g. utm_term__c" />
+                
+                <div class="mapping-row">
+                    <div class="mapping-label">UTM Content</div>
+                    <div class="mapping-arrow">→</div>
+                    <div class="mapping-input">
+                        <input type="text" class="text-input" value={fieldConfig.utmContentFieldApi} data-field="utmContentFieldApi" onchange={handleFieldConfigChange} placeholder="utm_content__c" />
+                    </div>
+                </div>
+                
+                <div class="mapping-row">
+                    <div class="mapping-label">UTM Term</div>
+                    <div class="mapping-arrow">→</div>
+                    <div class="mapping-input">
+                        <input type="text" class="text-input" value={fieldConfig.utmTermFieldApi} data-field="utmTermFieldApi" onchange={handleFieldConfigChange} placeholder="utm_term__c" />
+                    </div>
                 </div>
             </div>
 

@@ -1,5 +1,5 @@
 <template>
-    <lightning-card title={cardTitle} icon-name="utility:socialshare">
+    <div>
         <div class="slds-p-around_medium">
 
             <!-- ══════════════════════════════════════════════════════ -->
@@ -12,8 +12,8 @@
                              alt="Facebook" 
                              class="fb-logo" />
                     </div>
-                    <h2 class="slds-text-heading_medium slds-m-top_medium">Connect Your Meta Account</h2>
-                    <p class="slds-text-body_regular slds-m-top_small slds-m-bottom_large">
+                    <h2 class="connect-title">Connect Your Meta Account</h2>
+                    <p class="connect-subtitle">
                         Connect your Facebook account to start receiving Lead Ads directly into Salesforce.
                     </p>
                     <lightning-button
@@ -21,7 +21,7 @@
                         icon-name="utility:user"
                         variant="brand"
                         onclick={handleConnectFacebook}
-                        class="connect-btn">
+                        class="purpl-button">
                     </lightning-button>
                 </div>
             </template>
@@ -76,48 +76,50 @@
                 <!-- Active Subscriptions Table -->
                 <template if:true={hasSubscriptions}>
                     <div class="slds-m-top_large">
-                        <h3 class="slds-text-heading_small slds-m-bottom_small">
+                        <h3 class="section-title">
                             <lightning-icon icon-name="utility:connected_apps" size="x-small" class="slds-m-right_x-small"></lightning-icon>
                             Active Subscriptions
                         </h3>
-                        <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-m-top_small">
-                            <thead>
-                                <tr class="slds-line-height_reset">
-                                    <th scope="col"><div class="slds-truncate">Page Name</div></th>
-                                    <th scope="col"><div class="slds-truncate">Page ID</div></th>
-                                    <th scope="col"><div class="slds-truncate">Enable Logs</div></th>
-                                    <th scope="col"><div class="slds-truncate">Create Leads</div></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <template for:each={activeSubscriptions} for:item="sub">
-                                    <tr key={sub.Id}>
-                                        <td data-label="Page Name"><div class="slds-truncate">{sub.Page_Name}</div></td>
-                                        <td data-label="Page ID"><div class="slds-truncate">{sub.Page_ID}</div></td>
-                                        <td data-label="Enable Logs">
-                                            <lightning-input type="toggle" 
-                                                             data-id={sub.Id}
-                                                             data-type="logs"
-                                                             checked={sub.Enable_Logs}
-                                                             onchange={handleToggleChange}
-                                                             message-toggle-active="" 
-                                                             message-toggle-inactive="">
-                                            </lightning-input>
-                                        </td>
-                                        <td data-label="Create Leads">
-                                            <lightning-input type="toggle" 
-                                                             data-id={sub.Id}
-                                                             data-type="leads"
-                                                             checked={sub.Enable_Lead_Creation}
-                                                             onchange={handleToggleChange}
-                                                             message-toggle-active="" 
-                                                             message-toggle-inactive="">
-                                            </lightning-input>
-                                        </td>
+                        <div class="table-container">
+                            <table class="custom-table">
+                                <thead>
+                                    <tr>
+                                        <th>Page Name</th>
+                                        <th>Page ID</th>
+                                        <th>Enable Logs</th>
+                                        <th>Create Leads</th>
                                     </tr>
-                                </template>
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    <template for:each={activeSubscriptions} for:item="sub">
+                                        <tr key={sub.Id}>
+                                            <td><div class="lead-name-cell">{sub.Page_Name}</div></td>
+                                            <td><div class="slds-truncate">{sub.Page_ID}</div></td>
+                                            <td>
+                                                <lightning-input type="toggle" 
+                                                                 data-id={sub.Id}
+                                                                 data-type="logs"
+                                                                 checked={sub.Enable_Logs}
+                                                                 onchange={handleToggleChange}
+                                                                 message-toggle-active="" 
+                                                                 message-toggle-inactive="">
+                                                </lightning-input>
+                                            </td>
+                                            <td>
+                                                <lightning-input type="toggle" 
+                                                                 data-id={sub.Id}
+                                                                 data-type="leads"
+                                                                 checked={sub.Enable_Lead_Creation}
+                                                                 onchange={handleToggleChange}
+                                                                 message-toggle-active="" 
+                                                                 message-toggle-inactive="">
+                                                </lightning-input>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </template>
 
@@ -213,7 +215,12 @@
                                             <td data-label="Status">
                                                 <span class={log.StatusBadgeClass}>{log.Processing_Status}</span>
                                             </td>
-                                            <td data-label="Lead Name"><div class="slds-truncate">{log.LeadName}</div></td>
+                                            <td data-label="Lead Name">
+                                                <div class="lead-name-cell slds-truncate">
+                                                    <div class="lead-avatar">{log.initials}</div>
+                                                    {log.LeadName}
+                                                </div>
+                                            </td>
                                             <td data-label="Email"><div class="slds-truncate">{log.Email}</div></td>
                                             <td data-label="Phone"><div class="slds-truncate">{log.Phone}</div></td>
                                             <td data-label="Form Name"><div class="slds-truncate">{log.FormName}</div></td>
@@ -256,10 +263,10 @@
                     </template>
                     
                     <template if:false={hasLogs}>
-                        <div class="empty-state slds-text-align_center slds-p-around_xx-large slds-border_top slds-border_bottom slds-border_left slds-border_right slds-m-top_medium">
-                            <div class="empty-icon slds-text-heading_large slds-m-bottom_medium">📭</div>
-                            <h3 class="slds-text-heading_small slds-m-bottom_xx-small">No Meta leads have been received yet.</h3>
-                            <p class="slds-text-color_weak">Submit a Facebook Test Lead to view incoming activity.</p>
+                        <div class="empty-state-premium">
+                            <div class="empty-icon-premium">📭</div>
+                            <h3>No Meta leads have been received yet.</h3>
+                            <p>Submit a Facebook Test Lead to view incoming activity.</p>
                         </div>
                     </template>
                 </div>
@@ -392,5 +399,5 @@
             </template>
 
         </div>
-    </lightning-card>
+    </div>
 </template>

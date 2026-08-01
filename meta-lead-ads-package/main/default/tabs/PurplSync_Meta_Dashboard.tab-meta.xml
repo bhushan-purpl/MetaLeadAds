@@ -1,7 +1,7 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='UTF-8'?>
 <CustomTab xmlns="http://soap.sforce.com/2006/04/metadata">
     <description>Created by Lightning App Builder</description>
-    <flexiPage>Purplstack_Meta_Dashboard</flexiPage>
+    <lwcComponent>metaLeadDashboard</lwcComponent>
     <label>PurplSync Meta Dashboard</label>
     <motif>Custom24: Building</motif>
 </CustomTab>
