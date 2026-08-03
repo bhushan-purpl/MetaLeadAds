@@ -106,7 +106,7 @@ public class MetaLeadCalloutJob implements Queueable, Database.AllowsCallouts {
                 // The early check for isLeadCreationEnabled was removed here so Graph API callout still executes
 
                 String endpoint = 'https://graph.facebook.com/' + apiVersion + '/' + leadgenId
-                                + '?fields=id,created_time,field_data,ad_id,ad_name,adset_id,adset_name,campaign_id,campaign_name,form_id,platform,is_organic,referrer_data'
+                                + '?fields=id,created_time,field_data,ad_id,ad_name,adset_id,adset_name,campaign_id,campaign_name,form_id,platform,is_organic'
                                 + '&access_token=' + EncodingUtil.urlEncode(accessToken, 'UTF-8');
 
                 HttpRequest req = new HttpRequest();
@@ -315,24 +315,12 @@ public class MetaLeadCalloutJob implements Queueable, Database.AllowsCallouts {
                 utmInfo.put('adset_name',     responseMap.get('adset_name'));
                 utmInfo.put('ad_id',          responseMap.get('ad_id'));
                 utmInfo.put('ad_name',        responseMap.get('ad_name'));
-                // Pull utm_ fields from field_data if present
+                // Pull utm_ fields from field_data if present (only available for paid ad leads)
                 utmInfo.put('utm_source',     leadFields.get('utm_source'));
                 utmInfo.put('utm_medium',     leadFields.get('utm_medium'));
                 utmInfo.put('utm_campaign',   leadFields.get('utm_campaign'));
                 utmInfo.put('utm_content',    leadFields.get('utm_content'));
                 utmInfo.put('utm_term',       leadFields.get('utm_term'));
-                // referrer_data from Meta (available on some leads)
-                if (responseMap.containsKey('referrer_data')) {
-                    Object refData = responseMap.get('referrer_data');
-                    if (refData instanceof Map<String, Object>) {
-                        Map<String, Object> refMap = (Map<String, Object>) refData;
-                        if (refMap.containsKey('utm_source'))   utmInfo.put('referrer_utm_source',   refMap.get('utm_source'));
-                        if (refMap.containsKey('utm_medium'))   utmInfo.put('referrer_utm_medium',   refMap.get('utm_medium'));
-                        if (refMap.containsKey('utm_campaign')) utmInfo.put('referrer_utm_campaign', refMap.get('utm_campaign'));
-                        if (refMap.containsKey('utm_content'))  utmInfo.put('referrer_utm_content',  refMap.get('utm_content'));
-                        if (refMap.containsKey('utm_term'))     utmInfo.put('referrer_utm_term',     refMap.get('utm_term'));
-                    }
-                }
                 // Remove null entries to keep it clean
                 Map<String, Object> cleanUtmInfo = new Map<String, Object>();
                 for (String k : utmInfo.keySet()) {
