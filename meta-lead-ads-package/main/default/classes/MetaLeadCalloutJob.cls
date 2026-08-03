@@ -106,7 +106,7 @@ public class MetaLeadCalloutJob implements Queueable, Database.AllowsCallouts {
                 // The early check for isLeadCreationEnabled was removed here so Graph API callout still executes
 
                 String endpoint = 'https://graph.facebook.com/' + apiVersion + '/' + leadgenId
-                                + '?fields=id,created_time,field_data,ad_id,ad_name,adset_id,adset_name,campaign_id,campaign_name,form_id,platform,is_organic'
+                                + '?fields=id,created_time,field_data,ad_id,ad_name,adset_id,adset_name,campaign_id,campaign_name,form_id,platform,is_organic,referrer_data'
                                 + '&access_token=' + EncodingUtil.urlEncode(accessToken, 'UTF-8');
 
                 HttpRequest req = new HttpRequest();
@@ -305,7 +305,48 @@ public class MetaLeadCalloutJob implements Queueable, Database.AllowsCallouts {
                     newLead.Description += '\nAd: ' + String.valueOf(responseMap.get('ad_name'));
                 }
 
-                String prettyJson = JSON.serializePretty(responseMap);
+                // Build a utm_info summary block for easy visibility in Raw Lead Data
+                Map<String, Object> utmInfo = new Map<String, Object>();
+                utmInfo.put('is_organic',    responseMap.get('is_organic'));
+                utmInfo.put('platform',       responseMap.get('platform'));
+                utmInfo.put('campaign_id',    responseMap.get('campaign_id'));
+                utmInfo.put('campaign_name',  responseMap.get('campaign_name'));
+                utmInfo.put('adset_id',       responseMap.get('adset_id'));
+                utmInfo.put('adset_name',     responseMap.get('adset_name'));
+                utmInfo.put('ad_id',          responseMap.get('ad_id'));
+                utmInfo.put('ad_name',        responseMap.get('ad_name'));
+                // Pull utm_ fields from field_data if present
+                utmInfo.put('utm_source',     leadFields.get('utm_source'));
+                utmInfo.put('utm_medium',     leadFields.get('utm_medium'));
+                utmInfo.put('utm_campaign',   leadFields.get('utm_campaign'));
+                utmInfo.put('utm_content',    leadFields.get('utm_content'));
+                utmInfo.put('utm_term',       leadFields.get('utm_term'));
+                // referrer_data from Meta (available on some leads)
+                if (responseMap.containsKey('referrer_data')) {
+                    Object refData = responseMap.get('referrer_data');
+                    if (refData instanceof Map<String, Object>) {
+                        Map<String, Object> refMap = (Map<String, Object>) refData;
+                        if (refMap.containsKey('utm_source'))   utmInfo.put('referrer_utm_source',   refMap.get('utm_source'));
+                        if (refMap.containsKey('utm_medium'))   utmInfo.put('referrer_utm_medium',   refMap.get('utm_medium'));
+                        if (refMap.containsKey('utm_campaign')) utmInfo.put('referrer_utm_campaign', refMap.get('utm_campaign'));
+                        if (refMap.containsKey('utm_content'))  utmInfo.put('referrer_utm_content',  refMap.get('utm_content'));
+                        if (refMap.containsKey('utm_term'))     utmInfo.put('referrer_utm_term',     refMap.get('utm_term'));
+                    }
+                }
+                // Remove null entries to keep it clean
+                Map<String, Object> cleanUtmInfo = new Map<String, Object>();
+                for (String k : utmInfo.keySet()) {
+                    if (utmInfo.get(k) != null) cleanUtmInfo.put(k, utmInfo.get(k));
+                }
+
+                // Inject utm_info at the top of the raw response map
+                Map<String, Object> enrichedMap = new Map<String, Object>();
+                enrichedMap.put('_utm_info', cleanUtmInfo);
+                for (String k : responseMap.keySet()) {
+                    enrichedMap.put(k, responseMap.get(k));
+                }
+
+                String prettyJson = JSON.serializePretty(enrichedMap);
                 logRec.Raw_Lead_Data__c = prettyJson.abbreviate(32768);
                 
                 ContentVersion cv = new ContentVersion();
