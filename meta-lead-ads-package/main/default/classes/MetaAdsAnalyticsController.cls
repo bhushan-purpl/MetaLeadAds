@@ -189,4 +189,53 @@ public with sharing class MetaAdsAnalyticsController {
 
         return wrapper;
     }
+
+    public class MonthlyAnalyticsRow {
+        @AuraEnabled public String monthLabel;
+        @AuraEnabled public Decimal spend = 0;
+        @AuraEnabled public Integer leads = 0;
+        @AuraEnabled public Integer clicks = 0;
+        @AuraEnabled public Integer impressions = 0;
+        @AuraEnabled public Decimal cpl = 0;
+        @AuraEnabled public Decimal cpc = 0;
+        @AuraEnabled public Decimal ctr = 0;
+    }
+
+    @AuraEnabled(cacheable=false)
+    public static List<MonthlyAnalyticsRow> getMonthlyAnalytics() {
+        // Aggregate Meta_Campaign_Analytics__c by month from Analytics_Date__c
+        List<AggregateResult> results = [
+            SELECT CALENDAR_YEAR(Analytics_Date__c) yr,
+                   CALENDAR_MONTH(Analytics_Date__c) mo,
+                   SUM(Spend__c) spend,
+                   SUM(Leads__c) leads,
+                   SUM(Clicks__c) clicks,
+                   SUM(Impressions__c) impressions
+            FROM Meta_Campaign_Analytics__c
+            WHERE Analytics_Date__c != null
+            GROUP BY CALENDAR_YEAR(Analytics_Date__c), CALENDAR_MONTH(Analytics_Date__c)
+            ORDER BY CALENDAR_YEAR(Analytics_Date__c) DESC, CALENDAR_MONTH(Analytics_Date__c) DESC
+            LIMIT 24
+        ];
+
+        String[] monthNames = new String[]{'', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                                                'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'};
+        List<MonthlyAnalyticsRow> rows = new List<MonthlyAnalyticsRow>();
+
+        for (AggregateResult ar : results) {
+            MonthlyAnalyticsRow row = new MonthlyAnalyticsRow();
+            Integer yr = (Integer) ar.get('yr');
+            Integer mo = (Integer) ar.get('mo');
+            row.monthLabel  = (mo != null && mo >= 1 && mo <= 12 ? monthNames[mo] : '?') + ' ' + (yr != null ? String.valueOf(yr) : '');
+            row.spend       = ar.get('spend')       != null ? (Decimal)  ar.get('spend')       : 0;
+            row.leads       = ar.get('leads')       != null ? Integer.valueOf(ar.get('leads'))       : 0;
+            row.clicks      = ar.get('clicks')      != null ? Integer.valueOf(ar.get('clicks'))      : 0;
+            row.impressions = ar.get('impressions') != null ? Integer.valueOf(ar.get('impressions')) : 0;
+            if (row.leads > 0)        row.cpl = row.spend / Decimal.valueOf(row.leads);
+            if (row.clicks > 0)       row.cpc = row.spend / Decimal.valueOf(row.clicks);
+            if (row.impressions > 0)  row.ctr = (Decimal.valueOf(row.clicks) / Decimal.valueOf(row.impressions)) * 100;
+            rows.add(row);
+        }
+        return rows;
+    }
 }

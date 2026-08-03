@@ -315,5 +315,57 @@
             </div>
         </div>
 
+        <!-- Monthly Ads Spend Analytics -->
+        <div class="analytics-card slds-m-bottom_medium">
+            <div class="card-header">
+                <div class="card-title">
+                    <lightning-icon icon-name="utility:date_input" size="small" class="slds-m-right_x-small"></lightning-icon>
+                    Monthly Ads Spend Analytics
+                </div>
+                <span class="card-badge">Month-wise Performance</span>
+            </div>
+
+            <template if:true={hasMonthlyData}>
+                <div class="table-scroll-wrapper">
+                    <table class="styled-table">
+                        <thead>
+                            <tr>
+                                <th>Month</th>
+                                <th class="slds-text-align_right">Spend</th>
+                                <th class="slds-text-align_right">Lead Count</th>
+                                <th class="slds-text-align_right">CPL</th>
+                                <th class="slds-text-align_right">Clicks</th>
+                                <th class="slds-text-align_right">CTR (%)</th>
+                                <th class="slds-text-align_right">CPC</th>
+                                <th class="slds-text-align_right">Impressions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template for:each={monthlyRows} for:item="row">
+                                <tr key={row.monthLabel}>
+                                    <td><strong>{row.monthLabel}</strong></td>
+                                    <td class="slds-text-align_right">{row.fSpend}</td>
+                                    <td class="slds-text-align_right">{row.leads}</td>
+                                    <td class="slds-text-align_right"><span class="badge-rate">{row.fCpl}</span></td>
+                                    <td class="slds-text-align_right">{row.clicks}</td>
+                                    <td class="slds-text-align_right">{row.fCtr}</td>
+                                    <td class="slds-text-align_right">{row.fCpc}</td>
+                                    <td class="slds-text-align_right">{row.impressions}</td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </template>
+
+            <template if:false={hasMonthlyData}>
+                <div class="empty-state slds-p-around_large slds-text-align_center">
+                    <lightning-icon icon-name="utility:chart" size="large" class="slds-m-bottom_small"></lightning-icon>
+                    <p class="slds-text-heading_small slds-m-bottom_x-small">No Monthly Data Yet</p>
+                    <p class="slds-text-color_weak">Sync Insights to populate month-wise analytics.</p>
+                </div>
+            </template>
+        </div>
+
     </div>
 </template>

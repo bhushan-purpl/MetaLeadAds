@@ -3,6 +3,7 @@ import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { refreshApex } from '@salesforce/apex';
 import getAdAccounts from '@salesforce/apex/MetaAdsAnalyticsController.getAdAccounts';
 import getDashboardAnalytics from '@salesforce/apex/MetaAdsAnalyticsController.getDashboardAnalytics';
+import getMonthlyAnalytics from '@salesforce/apex/MetaAdsAnalyticsController.getMonthlyAnalytics';
 import syncNow from '@salesforce/apex/MetaAdsAnalyticsController.syncNow';
 import testMarketingApiConnection from '@salesforce/apex/MetaAdsAnalyticsController.testMarketingApiConnection';
 
@@ -35,18 +36,30 @@ export default class MetaAdsAnalytics extends LightningElement {
         { label: 'Daily', value: 'Daily' }
     ];
 
+    @track monthlyRows = [];
+    @track hasMonthlyData = false;
+
     wiredAnalyticsResult;
 
-    @wire(getAdAccounts)
-    wiredAdAccounts({ data, error }) {
-        if (data) {
-            this.adAccountOptions = data.map(acc => ({
-                label: acc.name + ' (' + acc.account_id + ')',
-                value: acc.id
-            }));
-            if (data.length > 0) {
+    connectedCallback() {
+        this.loadAdAccounts();
+        this.loadMonthlyAnalytics();
+    }
+
+    async loadAdAccounts() {
+        try {
+            const data = await getAdAccounts();
+            if (data && data.length > 0) {
+                this.adAccountOptions = data.map(acc => ({
+                    label: (acc.name || 'Unknown') + ' (' + (acc.account_id || acc.id) + ')',
+                    value: acc.id
+                }));
                 this.selectedAdAccount = data[0].id;
+            } else {
+                this.adAccountOptions = [{ label: 'No Ad Accounts Found', value: '' }];
             }
+        } catch(e) {
+            this.showToast('Error', 'Failed to load ad accounts: ' + (e.body ? e.body.message : e.message), 'error');
         }
     }
 
@@ -56,6 +69,7 @@ export default class MetaAdsAnalytics extends LightningElement {
         this.isLoading = false;
         if (result.data) {
             this.processMetrics(result.data);
+            this.loadMonthlyAnalytics();
         } else if (result.error) {
             this.showToast('Error', 'Failed to load Ads Analytics', 'error');
         }
@@ -153,7 +167,28 @@ export default class MetaAdsAnalytics extends LightningElement {
     async handleRefresh() {
         this.isLoading = true;
         await refreshApex(this.wiredAnalyticsResult);
+        await this.loadMonthlyAnalytics();
         this.isLoading = false;
+    }
+
+    async loadMonthlyAnalytics() {
+        try {
+            const data = await getMonthlyAnalytics();
+            if (data && data.length > 0) {
+                this.monthlyRows = data.map(row => ({
+                    ...row,
+                    fSpend:  '₹' + Number(row.spend  || 0).toFixed(2),
+                    fCpl:    '₹' + Number(row.cpl    || 0).toFixed(2),
+                    fCpc:    '₹' + Number(row.cpc    || 0).toFixed(2),
+                    fCtr:    Number(row.ctr || 0).toFixed(2) + '%'
+                }));
+                this.hasMonthlyData = true;
+            } else {
+                this.hasMonthlyData = false;
+            }
+        } catch(e) {
+            this.hasMonthlyData = false;
+        }
     }
 
     showToast(title, message, variant) {
