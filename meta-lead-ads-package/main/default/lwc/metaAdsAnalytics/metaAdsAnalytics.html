@@ -14,6 +14,9 @@
                     </div>
                 </div>
                 <div class="header-actions">
+                    <div class="slds-m-right_medium slds-p-top_xx-small">
+                        <lightning-input type="toggle" label="Data Source" message-toggle-active="Live Data" message-toggle-inactive="Demo Data" checked={isLiveMode} onchange={handleModeToggle}></lightning-input>
+                    </div>
                     <lightning-button 
                         label="Test API Connection" 
                         icon-name="utility:check" 
@@ -34,6 +37,13 @@
 
         <template if:true={isLoading}>
             <lightning-spinner alternative-text="Loading Ads Analytics..." size="large"></lightning-spinner>
+        </template>
+
+        <template if:true={isDemoMode}>
+            <div class="demo-banner slds-p-around_x-small slds-m-bottom_medium slds-text-align_center">
+                <lightning-icon icon-name="utility:warning" size="x-small" class="slds-m-right_x-small" variant="warning"></lightning-icon>
+                <strong>Demo Data Active:</strong> You are viewing sample dashboard data. Toggle to "Live Data" to see actual Meta Ads metrics.
+            </div>
         </template>
 
         <!-- Configuration Bar -->

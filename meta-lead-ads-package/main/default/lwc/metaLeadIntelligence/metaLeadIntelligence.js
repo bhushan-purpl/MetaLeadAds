@@ -11,6 +11,19 @@ export default class MetaLeadIntelligence extends LightningElement {
     @track isLoading = true;
     wiredDataResult;
 
+    // Demo Mode
+    @track isDemoMode = true;
+    get isLiveMode() {
+        return !this.isDemoMode;
+    }
+
+    handleModeToggle(event) {
+        this.isDemoMode = !event.target.checked;
+        if (this.rawData) {
+            this.processData(this.rawData);
+        }
+    }
+
     // Filters
     @track selectedDateRange = 'All Time';
     @track startDate = '';
@@ -118,9 +131,28 @@ export default class MetaLeadIntelligence extends LightningElement {
     }
 
     processData(data) {
+        let displayData = data;
+        
+        if (this.isDemoMode) {
+            displayData = {
+                ...data,
+                kpiList: [
+                    { label: 'Total Leads', value: 1248, key: 'total', variant: 'brand', iconName: 'utility:groups' },
+                    { label: 'Qualified', value: 186, key: 'qualified', variant: 'success', iconName: 'utility:success' },
+                    { label: 'Converted', value: 74, key: 'converted', variant: 'warning', iconName: 'utility:money' },
+                    { label: 'Duplicate', value: 38, key: 'duplicate', variant: 'error', iconName: 'utility:copy' }
+                ],
+                funnelStages: [
+                    { stageName: 'Total Leads', count: 1248, conversionPct: 100 },
+                    { stageName: 'Qualified', count: 186, conversionPct: 15 },
+                    { stageName: 'Converted', count: 74, conversionPct: 6 }
+                ]
+            };
+        }
+
         // 1. Process KPI Cards
-        if (data.kpiList) {
-            this.kpiCards = data.kpiList.map(kpi => {
+        if (displayData.kpiList) {
+            this.kpiCards = displayData.kpiList.map(kpi => {
                 let cardClass = 'kpi-card';
                 if (kpi.variant) cardClass += ' kpi-' + kpi.variant;
                 if (this.selectedKpiKey === kpi.key) cardClass += ' kpi-selected';
@@ -129,8 +161,8 @@ export default class MetaLeadIntelligence extends LightningElement {
         }
 
         // 2. Process Funnel Stages
-        if (data.funnelStages) {
-            this.funnelStages = data.funnelStages.map((stage, idx) => {
+        if (displayData.funnelStages) {
+            this.funnelStages = displayData.funnelStages.map((stage, idx) => {
                 let widthPct = Math.max(stage.conversionPct, 4);
                 let chevronClass = `chevron-step chevron-step-${idx + 1}`;
                 return {
@@ -142,8 +174,8 @@ export default class MetaLeadIntelligence extends LightningElement {
         }
 
         // 3. Process Status Distribution (Donut Legend)
-        if (data.statusDistribution) {
-            this.statusDistribution = data.statusDistribution.map(item => {
+        if (displayData.statusDistribution) {
+            this.statusDistribution = displayData.statusDistribution.map(item => {
                 return {
                     ...item,
                     dotStyle: `background-color: ${item.color};`

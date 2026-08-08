@@ -897,3 +897,11 @@
     text-align: center;
     font-style: italic;
 }
+
+.demo-banner {
+    background-color: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeeba;
+    border-radius: 6px;
+    font-size: 14px;
+}

@@ -11,6 +11,14 @@
     min-height: 100vh;
 }
 
+.demo-banner {
+    background-color: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeeba;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
 /* Header Banner */
 .dashboard-header {
     background: #ffffff;
