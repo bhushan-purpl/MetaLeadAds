@@ -4,16 +4,8 @@
         <application>PurplSync_Meta_Ads_Analytics</application>
         <visible>true</visible>
     </applicationVisibilities>
-    <applicationVisibilities>
-        <application>PurplSync_Lead_Capture</application>
-        <visible>true</visible>
-    </applicationVisibilities>
     <classAccesses>
         <apexClass>MetaAdsAnalyticsController</apexClass>
-        <enabled>true</enabled>
-    </classAccesses>
-    <classAccesses>
-        <apexClass>MetaLeadIntelligenceController</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -21,21 +13,21 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
-        <apexClass>MetaMappingService</apexClass>
+        <apexClass>MetaLeadIntelligenceController</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
         <apexClass>MetaLicenseService</apexClass>
         <enabled>true</enabled>
     </classAccesses>
+    <classAccesses>
+        <apexClass>MetaMappingService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
     <hasActivationRequired>false</hasActivationRequired>
     <label>PurplSync Meta Lead Ads Marketing</label>
     <tabSettings>
         <tab>PurplSync_Meta_Ads_Analytics</tab>
-        <visibility>Visible</visibility>
-    </tabSettings>
-    <tabSettings>
-        <tab>PurplSync_Lead_Intelligence</tab>
         <visibility>Visible</visibility>
     </tabSettings>
 </PermissionSet>

@@ -756,6 +756,9 @@
         <layout>Meta_Integration_Settings__mdt-Meta Integration Settings Layout</layout>
     </layoutAssignments>
     <layoutAssignments>
+        <layout>Meta_Lead_Log__c-Meta Lead Log Layout</layout>
+    </layoutAssignments>
+    <layoutAssignments>
         <layout>Opportunity-Opportunity Layout</layout>
     </layoutAssignments>
     <objectPermissions>

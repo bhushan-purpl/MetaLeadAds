@@ -4,18 +4,58 @@
     <protected>false</protected>
     <values>
         <field>App_ID__c</field>
-        <value xsi:type="xsd:string">123456789</value>
+        <value xsi:type="xsd:string">1057801250023936</value>
     </values>
     <values>
         <field>App_Secret__c</field>
-        <value xsi:type="xsd:string">mock_secret</value>
+        <value xsi:type="xsd:string">f04c8a448acdf919a1307ed1ed883dbd</value>
+    </values>
+    <values>
+        <field>Custom_Lead_Source_Field_API__c</field>
+        <value xsi:type="xsd:string">LeadSource</value>
     </values>
     <values>
         <field>Graph_API_Version__c</field>
         <value xsi:type="xsd:string">v17.0</value>
     </values>
     <values>
+        <field>Integration_Source_Field_API__c</field>
+        <value xsi:nil="true"/>
+    </values>
+    <values>
+        <field>Page_Access_Token__c</field>
+        <value xsi:nil="true"/>
+    </values>
+    <values>
+        <field>Project_Field_API__c</field>
+        <value xsi:type="xsd:string">purpl__Project_Interested__c</value>
+    </values>
+    <values>
         <field>Redirect_URI__c</field>
-        <value xsi:type="xsd:string">https://login.salesforce.com/services/authcallback/meta</value>
+        <value xsi:type="xsd:string">https://power-momentum-7033-dev-ed.scratch.my.salesforce-sites.com/meta/services/apexrest/purpl/metaAuthCallback</value>
+    </values>
+    <values>
+        <field>UTM_Campaign_Field_API__c</field>
+        <value xsi:nil="true"/>
+    </values>
+    <values>
+        <field>UTM_Content_Field_API__c</field>
+        <value xsi:nil="true"/>
+    </values>
+    <values>
+        <field>UTM_Medium_Field_API__c</field>
+        <value xsi:nil="true"/>
+    </values>
+    <values>
+        <field>UTM_Source_Field_API__c</field>
+        <value xsi:nil="true"/>
+    </values>
+    <values>
+        <field>UTM_Term_Field_API__c</field>
+        <value xsi:nil="true"/>
+    </values>
+    <values>
+        <field>Verify_Token__c</field>
+        <value xsi:type="xsd:string">meta_lead_verify_token</value>
     </values>
 </CustomMetadata>
