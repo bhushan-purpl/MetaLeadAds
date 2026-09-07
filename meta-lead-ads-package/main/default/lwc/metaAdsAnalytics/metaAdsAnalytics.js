@@ -115,9 +115,9 @@ export default class MetaAdsAnalytics extends LightningElement {
                 successRate: 99.04,
                 bookingRatio: 3.8,
                 campaigns: [
-                    { Name: 'Diwali Special Offer 2026', Spend__c: 125000, CPL__c: 180, CPC__c: 4.5, CTR__c: 5.2, Leads__c: 694 },
-                    { Name: 'Retargeting - Website Visitors', Spend__c: 45000, CPL__c: 210, CPC__c: 6.8, CTR__c: 3.9, Leads__c: 214 },
-                    { Name: 'Lookalike Audience 1%', Spend__c: 75000, CPL__c: 220, CPC__c: 7.1, CTR__c: 4.5, Leads__c: 340 }
+                    { Campaign_Name__c: 'Diwali Special Offer 2026', Spend__c: 125000, CPL__c: 180, CPC__c: 4.5, CTR__c: 5.2, Leads__c: 694, Clicks__c: 27777, Impressions__c: 534173 },
+                    { Campaign_Name__c: 'Retargeting - Website Visitors', Spend__c: 45000, CPL__c: 210, CPC__c: 6.8, CTR__c: 3.9, Leads__c: 214, Clicks__c: 6617, Impressions__c: 169666 },
+                    { Campaign_Name__c: 'Lookalike Audience 1%', Spend__c: 75000, CPL__c: 220, CPC__c: 7.1, CTR__c: 4.5, Leads__c: 340, Clicks__c: 10563, Impressions__c: 234733 }
                 ]
             };
         }
@@ -220,9 +220,9 @@ export default class MetaAdsAnalytics extends LightningElement {
     async loadMonthlyAnalytics() {
         if (this.isDemoMode) {
             const dummyMonthly = [
-                { monthYear: 'August 2026', spend: 84500, leads: 430, cpl: 196.5, cpc: 5.8, ctr: 4.6, impressions: 290000 },
-                { monthYear: 'July 2026', spend: 95000, leads: 480, cpl: 197.9, cpc: 6.1, ctr: 4.4, impressions: 310000 },
-                { monthYear: 'June 2026', spend: 65500, leads: 338, cpl: 193.7, cpc: 5.5, ctr: 4.9, impressions: 240000 }
+                { monthLabel: 'August 2026', spend: 84500, leads: 430, cpl: 196.5, cpc: 5.8, ctr: 4.6, impressions: 290000 },
+                { monthLabel: 'July 2026', spend: 95000, leads: 480, cpl: 197.9, cpc: 6.1, ctr: 4.4, impressions: 310000 },
+                { monthLabel: 'June 2026', spend: 65500, leads: 338, cpl: 193.7, cpc: 5.5, ctr: 4.9, impressions: 240000 }
             ];
             this.monthlyRows = dummyMonthly.map(row => ({
                 ...row,

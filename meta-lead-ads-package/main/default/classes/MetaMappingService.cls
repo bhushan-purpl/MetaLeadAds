@@ -361,7 +361,8 @@ public without sharing class MetaMappingService {
         Set<String> trackingKeys = new Set<String>{
             'utm_source','utm_medium','utm_campaign','utm_term','utm_content','utm_adgroup',
             'campaign_id','campaign_name','ad_id','ad_name','adset_id','adset_name',
-            'page_id','form_id','leadgen_id','fbclid','gclid','created_time'
+            'page_id','form_id','leadgen_id','fbclid','gclid','created_time',
+            'is_organic', 'platform', 'partner_name', 'retailer_item_id', 'vehicle', 'home_listing'
         };
         return trackingKeys.contains(key.toLowerCase());
     }
@@ -373,6 +374,7 @@ public without sharing class MetaMappingService {
 
         String bestField = '';
         Integer bestScore = 0;
+        Boolean isTrack = isTrackingKey(fbKey);
 
         for (String sfField : SF_SYNONYMS.keySet()) {
             for (String synonym : SF_SYNONYMS.get(sfField)) {
@@ -385,6 +387,11 @@ public without sharing class MetaMappingService {
                 } else if (String.isNotBlank(l) && l.contains(syn)) {
                     score = 50;
                 }
+
+                if (isTrack && (sfField == 'Name' || sfField == 'FirstName' || sfField == 'LastName' || sfField == 'Email' || sfField == 'Phone' || sfField == 'MobilePhone' || sfField == 'Company')) {
+                    score = 0;
+                }
+
                 if (score > bestScore) {
                     bestScore = score;
                     bestField = sfField;

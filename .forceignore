@@ -10,3 +10,73 @@ package.xml
 
 # LWC Jest
 **/__tests__/**
+
+# ─── Not supported in 2GP packages ───────────────────────────────────────────
+**/sites/**
+**/LeadConvertSettings/**
+
+# ─── Guest User Profile ───────────────────────────────────────────────────────
+**/profiles/PurplLeadCapture*
+
+# ─── Site-related Visualforce pages (pulled from org, not part of package) ───
+**/pages/AnswersHome*
+**/pages/BandwidthExceeded*
+**/pages/ChangePassword*
+**/pages/Exception*
+**/pages/FileNotFound*
+**/pages/ForgotPassword*
+**/pages/ForgotPasswordConfirm*
+**/pages/IdeasHome*
+**/pages/InMaintenance*
+**/pages/MyProfilePage*
+**/pages/SiteLogin*
+**/pages/SiteRegister*
+**/pages/SiteRegisterConfirm*
+**/pages/SiteTemplate*
+**/pages/StdExceptionTemplate*
+**/pages/Unauthorized*
+**/pages/UnderConstruction*
+
+# ─── Site-related Aura components ────────────────────────────────────────────
+**/components/SiteFooter*
+**/components/SiteHeader*
+**/components/SiteLogin*
+**/components/SitePoweredBy*
+
+# ─── Site-related Apex classes ────────────────────────────────────────────────
+**/classes/SiteLoginController*
+**/classes/SiteLoginControllerTest*
+**/classes/SiteRegisterController*
+**/classes/SiteRegisterControllerTest*
+**/classes/MyProfilePageController*
+**/classes/MyProfilePageControllerTest*
+**/classes/ForgotPasswordController*
+**/classes/ForgotPasswordControllerTest*
+**/classes/ChangePasswordController*
+**/classes/ChangePasswordControllerTest*
+
+# ─── Site static resource ─────────────────────────────────────────────────────
+**/staticresources/SiteSamples*
+
+# ─── Standard object layouts (org defaults, not part of package) ──────────────
+**/layouts/Lead-Lead Layout*
+**/layouts/Lead-Lead %28Marketing%29*
+**/layouts/Lead-Lead %28Sales%29*
+**/layouts/Lead-Lead %28Support%29*
+**/layouts/Opportunity-Opportunity Layout*
+**/layouts/Opportunity-Opportunity %28Marketing%29*
+**/layouts/Opportunity-Opportunity %28Sales%29*
+**/layouts/Opportunity-Opportunity %28Support%29*
+
+# ─── Standard list views (org defaults - only exclude standard Lead/Opp ones) ──
+**/objects/Lead/listViews/ALL*
+**/objects/Opportunity/listViews/ALL*
+
+# ─── Standard object custom fields added outside of package ──────────────────
+**/objects/Lead/fields/Meta_Form_1__c*
+**/objects/Lead/fields/Meta_Form_2__c*
+**/objects/Lead/fields/Project_Interested__c*
+**/objects/Opportunity/fields/Project_Interested__c*
+
+# ─── Layouts not in v0.19.2 ancestor ─────────────────────────────────────────
+**/layouts/Meta_Lead_Log__c-Meta Lead Log Layout*

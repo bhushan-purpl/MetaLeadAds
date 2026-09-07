@@ -101,7 +101,7 @@
                     <span class="kpi-title">TOTAL SPEND</span>
                     <span class="kpi-icon-badge"><lightning-icon icon-name="utility:money" size="x-small"></lightning-icon></span>
                 </div>
-                <div class="kpi-value">${metrics.totalSpend}</div>
+                <div class="kpi-value">₹{metrics.totalSpend}</div>
                 <div class="kpi-card-bottom"><span class="kpi-percentage">Lifetime Spend</span></div>
             </div>
 
@@ -111,7 +111,7 @@
                     <span class="kpi-title">TODAY'S SPEND</span>
                     <span class="kpi-icon-badge"><lightning-icon icon-name="utility:clock" size="x-small"></lightning-icon></span>
                 </div>
-                <div class="kpi-value">${metrics.todaySpend}</div>
+                <div class="kpi-value">₹{metrics.todaySpend}</div>
                 <div class="kpi-card-bottom"><span class="kpi-percentage">Last 24 Hours</span></div>
             </div>
 
@@ -121,7 +121,7 @@
                     <span class="kpi-title">YESTERDAY SPEND</span>
                     <span class="kpi-icon-badge"><lightning-icon icon-name="utility:event" size="x-small"></lightning-icon></span>
                 </div>
-                <div class="kpi-value">${metrics.yesterdaySpend}</div>
+                <div class="kpi-value">₹{metrics.yesterdaySpend}</div>
                 <div class="kpi-card-bottom"><span class="kpi-percentage">Previous Day</span></div>
             </div>
 
@@ -141,7 +141,7 @@
                     <span class="kpi-title">AVG CPL</span>
                     <span class="kpi-icon-badge"><lightning-icon icon-name="utility:calculator" size="x-small"></lightning-icon></span>
                 </div>
-                <div class="kpi-value">${metrics.avgCpl}</div>
+                <div class="kpi-value">₹{metrics.avgCpl}</div>
                 <div class="kpi-card-bottom"><span class="kpi-percentage">Cost Per Lead</span></div>
             </div>
 
@@ -311,12 +311,12 @@
                         <template for:each={metrics.campaigns} for:item="row">
                             <tr key={row.Id}>
                                 <td><strong>{row.Campaign_Name__c}</strong></td>
-                                <td class="slds-text-align_right">${row.Spend__c}</td>
+                                <td class="slds-text-align_right">₹{row.Spend__c}</td>
                                 <td class="slds-text-align_right">{row.Leads__c}</td>
                                 <td class="slds-text-align_right"><span class="badge-rate">${row.CPL__c}</span></td>
                                 <td class="slds-text-align_right">{row.Clicks__c}</td>
                                 <td class="slds-text-align_right">{row.CTR__c}%</td>
-                                <td class="slds-text-align_right">${row.CPC__c}</td>
+                                <td class="slds-text-align_right">₹{row.CPC__c}</td>
                                 <td class="slds-text-align_right">{row.Impressions__c}</td>
                             </tr>
                         </template>

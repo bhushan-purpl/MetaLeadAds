@@ -67,11 +67,14 @@ export default class MetaLeadIntelligence extends LightningElement {
     @wire(getOpportunityTracking)
     wiredOppTracking({ data, error }) {
         if (data) {
-            this.oppTracking = {
-                ...data,
-                totalPipelineValue: data.totalPipelineValue ? Number(data.totalPipelineValue).toLocaleString('en-IN', { maximumFractionDigits: 0 }) : '0',
-                closedWonAmount: data.closedWonAmount ? Number(data.closedWonAmount).toLocaleString('en-IN', { maximumFractionDigits: 0 }) : '0'
-            };
+            this.wiredOppTrackingData = data;
+            if (!this.isDemoMode) {
+                this.oppTracking = {
+                    ...data,
+                    totalPipelineValue: data.totalPipelineValue ? Number(data.totalPipelineValue).toLocaleString('en-IN', { maximumFractionDigits: 0 }) : '0',
+                    closedWonAmount: data.closedWonAmount ? Number(data.closedWonAmount).toLocaleString('en-IN', { maximumFractionDigits: 0 }) : '0'
+                };
+            }
         }
     }
 
@@ -137,10 +140,10 @@ export default class MetaLeadIntelligence extends LightningElement {
             displayData = {
                 ...data,
                 kpiList: [
-                    { label: 'Total Leads', value: 1248, key: 'total', variant: 'brand', iconName: 'utility:groups' },
-                    { label: 'Qualified', value: 186, key: 'qualified', variant: 'success', iconName: 'utility:success' },
-                    { label: 'Converted', value: 74, key: 'converted', variant: 'warning', iconName: 'utility:money' },
-                    { label: 'Duplicate', value: 38, key: 'duplicate', variant: 'error', iconName: 'utility:copy' }
+                    { label: 'Total Leads', count: 1248, percentage: 100, trend: '+12%', key: 'total', variant: 'brand', icon: 'utility:groups' },
+                    { label: 'Qualified', count: 186, percentage: 14.9, trend: '+5%', key: 'qualified', variant: 'success', icon: 'utility:success' },
+                    { label: 'Converted', count: 74, percentage: 5.9, trend: '+2%', key: 'converted', variant: 'warning', icon: 'utility:money' },
+                    { label: 'Duplicate', count: 38, percentage: 3.0, trend: '-1%', key: 'duplicate', variant: 'error', icon: 'utility:copy' }
                 ],
                 funnelStages: [
                     { stageName: 'Total Leads', count: 1248, conversionPct: 100 },
@@ -148,6 +151,30 @@ export default class MetaLeadIntelligence extends LightningElement {
                     { stageName: 'Converted', count: 74, conversionPct: 6 }
                 ]
             };
+            this.oppTracking = {
+                totalOpportunities: 42,
+                totalPipelineValue: '2,45,000',
+                closedWonAmount: '85,000',
+                closedWonCount: 12,
+                closedLostCount: 8,
+                openCount: 22,
+                conversionRate: 28,
+                stageBreakdown: [
+                    { stage: 'Prospecting', count: 10, color: '#3498db' },
+                    { stage: 'Qualification', count: 8, color: '#f1c40f' },
+                    { stage: 'Needs Analysis', count: 4, color: '#e67e22' }
+                ],
+                recentOpportunities: []
+            };
+        } else {
+            // Restore from wired if live mode
+            if (this.wiredOppTrackingData) {
+                this.oppTracking = {
+                    ...this.wiredOppTrackingData,
+                    totalPipelineValue: this.wiredOppTrackingData.totalPipelineValue ? Number(this.wiredOppTrackingData.totalPipelineValue).toLocaleString('en-IN', { maximumFractionDigits: 0 }) : '0',
+                    closedWonAmount: this.wiredOppTrackingData.closedWonAmount ? Number(this.wiredOppTrackingData.closedWonAmount).toLocaleString('en-IN', { maximumFractionDigits: 0 }) : '0'
+                };
+            }
         }
 
         // 1. Process KPI Cards
