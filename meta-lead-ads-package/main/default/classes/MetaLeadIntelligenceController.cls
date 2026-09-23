@@ -836,18 +836,29 @@ public with sharing class MetaLeadIntelligenceController {
                 oppIdToLeadName.put(l.ConvertedOpportunityId, l.Name);
             }
 
-            // Build stage breakdown map
-                        Map<String, Integer> stageCounts = new Map<String, Integer>();
+            // Build stage breakdown using OpportunityStage SOQL for correct sort order & IsWon/IsClosed
+            List<OpportunityStage> orgStages = [
+                SELECT MasterLabel, IsWon, IsClosed, SortOrder
+                FROM OpportunityStage
+                WHERE IsActive = true
+                ORDER BY SortOrder ASC NULLS LAST
+            ];
+
+            Map<String, Integer> stageCounts = new Map<String, Integer>();
             Map<String, Decimal> stageAmounts = new Map<String, Decimal>();
-            
-            // Initialize with all Opportunity Stage values from Schema
-            for (Schema.PicklistEntry pe : Opportunity.StageName.getDescribe().getPicklistValues()) {
-                if (pe.isActive()) {
-                    stageCounts.put(pe.getValue(), 0);
-                    stageAmounts.put(pe.getValue(), 0);
-                }
+            Map<String, Boolean> stageIsWon = new Map<String, Boolean>();
+            Map<String, Boolean> stageIsClosed = new Map<String, Boolean>();
+            List<String> stageOrder = new List<String>();
+
+            for (OpportunityStage os : orgStages) {
+                stageCounts.put(os.MasterLabel, 0);
+                stageAmounts.put(os.MasterLabel, 0);
+                stageIsWon.put(os.MasterLabel, os.IsWon);
+                stageIsClosed.put(os.MasterLabel, os.IsClosed);
+                stageOrder.add(os.MasterLabel);
             }
-            String[] stageColors = new String[]{'#3b82f6','#8b5cf6','#f59e0b','#10b981','#ef4444','#06b6d4','#ec4899'};
+
+            String[] stageColors = new String[]{'#3b82f6','#8b5cf6','#f59e0b','#10b981','#ef4444','#06b6d4','#ec4899','#f97316','#14b8a6','#a855f7'};
             Integer scIdx = 0;
 
             wrapper.totalOpportunities = oppMap.size();
@@ -859,10 +870,14 @@ public with sharing class MetaLeadIntelligenceController {
                 stageCounts.put(stage, stageCounts.containsKey(stage) ? stageCounts.get(stage) + 1 : 1);
                 stageAmounts.put(stage, (stageAmounts.containsKey(stage) ? stageAmounts.get(stage) : 0) + amt);
 
-                if (o.IsWon) {
+                // Use stage-level IsWon/IsClosed for correct bucketing
+                Boolean isWon    = stageIsWon.containsKey(stage)    ? stageIsWon.get(stage)    : o.IsWon;
+                Boolean isClosed = stageIsClosed.containsKey(stage) ? stageIsClosed.get(stage) : o.IsClosed;
+
+                if (isWon) {
                     wrapper.closedWonCount++;
                     wrapper.closedWonAmount += amt;
-                } else if (o.IsClosed && !o.IsWon) {
+                } else if (isClosed && !isWon) {
                     wrapper.closedLostCount++;
                 } else {
                     wrapper.openCount++;
@@ -883,12 +898,14 @@ public with sharing class MetaLeadIntelligenceController {
                 }
             }
 
-            // Build stage breakdown list
-            for (String stage : stageCounts.keySet()) {
+            // Build stage breakdown in proper org sort order
+            for (String stage : stageOrder) {
                 Map<String, Object> sb = new Map<String, Object>();
                 sb.put('stage', stage);
                 sb.put('count', stageCounts.get(stage));
                 sb.put('amount', stageAmounts.get(stage));
+                sb.put('isWon', stageIsWon.get(stage));
+                sb.put('isClosed', stageIsClosed.get(stage));
                 sb.put('color', stageColors[Math.mod(scIdx, stageColors.size())]);
                 wrapper.stageBreakdown.add(sb);
                 scIdx++;
