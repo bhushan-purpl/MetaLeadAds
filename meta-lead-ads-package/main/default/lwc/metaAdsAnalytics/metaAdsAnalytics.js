@@ -11,7 +11,7 @@ export default class MetaAdsAnalytics extends LightningElement {
     @track isLoading = true;
     
     // Demo Mode
-    @track isDemoMode = true;
+    @track isDemoMode = false;
     get isLiveMode() {
         return !this.isDemoMode;
     }

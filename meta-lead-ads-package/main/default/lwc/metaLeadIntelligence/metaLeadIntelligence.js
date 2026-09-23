@@ -12,7 +12,7 @@ export default class MetaLeadIntelligence extends LightningElement {
     wiredDataResult;
 
     // Demo Mode
-    @track isDemoMode = true;
+    @track isDemoMode = false;
     get isLiveMode() {
         return !this.isDemoMode;
     }
