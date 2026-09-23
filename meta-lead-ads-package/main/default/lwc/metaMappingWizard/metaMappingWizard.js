@@ -55,10 +55,15 @@ export default class MetaMappingWizard extends LightningElement {
         this.loadLeadFields();
     }
 
-    // After each render, sync values if needed (not needed for custom combobox)
+    // After each render, sync the native <select> selected values to match allMappings data
     renderedCallback() {
         if (this.currentStep !== 3 || !this.allMappings || this.allMappings.length === 0) return;
-        // Native selects removed; custom combobox binds 'value' natively.
+        const selects = this.template.querySelectorAll('select.native-select');
+        selects.forEach(sel => {
+            const rowId = sel.dataset.id;
+            const row = this.allMappings.find(r => r.id === rowId);
+            if (row) sel.value = row.sfField || '';
+        });
     }
 
     // ─── Step navigation ─────────────────────────────────────────────
