@@ -368,7 +368,13 @@ public with sharing class MetaLeadIntelligenceController {
         Map<String, PerformanceRow> pageMap = new Map<String, PerformanceRow>();
         Map<String, FormPerformanceRow> formMap = new Map<String, FormPerformanceRow>();
         Map<String, PerformanceRow> ownerMap = new Map<String, PerformanceRow>();
-        Map<String, Integer> statusCounts = new Map<String, Integer>();
+                Map<String, Integer> statusCounts = new Map<String, Integer>();
+        // Initialize with all Lead Status values from Schema
+        for (Schema.PicklistEntry pe : Lead.Status.getDescribe().getPicklistValues()) {
+            if (pe.isActive()) {
+                statusCounts.put(pe.getValue(), 0);
+            }
+        }
 
         Set<String> projectSet = new Set<String>();
         Set<String> statusSet = new Set<String>();
@@ -778,7 +784,7 @@ public with sharing class MetaLeadIntelligenceController {
             }
             Boolean hasIntSource = (oppIntSourceApi != null);
 
-            String oppQuery = 'SELECT Id, Name, StageName, Amount, CloseDate, OwnerId, Owner.Name, AccountId, Account.Name';
+            String oppQuery = 'SELECT Id, Name, StageName, Amount, CloseDate, OwnerId, Owner.Name, AccountId, Account.Name, IsWon, IsClosed';
             if (hasIntSource) oppQuery += ', ' + oppIntSourceApi;
             oppQuery += ' FROM Opportunity WHERE ';
             if (hasIntSource) {
@@ -815,7 +821,7 @@ public with sharing class MetaLeadIntelligenceController {
                     if (!allOppIds.contains(cid)) missingIds.add(cid);
                 }
                 if (!missingIds.isEmpty()) {
-                    for (Opportunity o : [SELECT Id, Name, StageName, Amount, CloseDate, OwnerId, Owner.Name, AccountId, Account.Name FROM Opportunity WHERE Id IN :missingIds]) {
+                    for (Opportunity o : [SELECT Id, Name, StageName, Amount, CloseDate, OwnerId, Owner.Name, AccountId, Account.Name, IsWon, IsClosed FROM Opportunity WHERE Id IN :missingIds]) {
                         oppMap.put(o.Id, o);
                     }
                 }
@@ -831,8 +837,16 @@ public with sharing class MetaLeadIntelligenceController {
             }
 
             // Build stage breakdown map
-            Map<String, Integer> stageCounts = new Map<String, Integer>();
+                        Map<String, Integer> stageCounts = new Map<String, Integer>();
             Map<String, Decimal> stageAmounts = new Map<String, Decimal>();
+            
+            // Initialize with all Opportunity Stage values from Schema
+            for (Schema.PicklistEntry pe : Opportunity.StageName.getDescribe().getPicklistValues()) {
+                if (pe.isActive()) {
+                    stageCounts.put(pe.getValue(), 0);
+                    stageAmounts.put(pe.getValue(), 0);
+                }
+            }
             String[] stageColors = new String[]{'#3b82f6','#8b5cf6','#f59e0b','#10b981','#ef4444','#06b6d4','#ec4899'};
             Integer scIdx = 0;
 
@@ -845,10 +859,10 @@ public with sharing class MetaLeadIntelligenceController {
                 stageCounts.put(stage, stageCounts.containsKey(stage) ? stageCounts.get(stage) + 1 : 1);
                 stageAmounts.put(stage, (stageAmounts.containsKey(stage) ? stageAmounts.get(stage) : 0) + amt);
 
-                if (stage.containsIgnoreCase('Closed Won') || stage.containsIgnoreCase('Won')) {
+                if (o.IsWon) {
                     wrapper.closedWonCount++;
                     wrapper.closedWonAmount += amt;
-                } else if (stage.containsIgnoreCase('Closed Lost') || stage.containsIgnoreCase('Lost')) {
+                } else if (o.IsClosed && !o.IsWon) {
                     wrapper.closedLostCount++;
                 } else {
                     wrapper.openCount++;
